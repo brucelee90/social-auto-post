@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://deluxe-reproduce-jeep-highs.trycloudflare.com"
+application_url = "https://venture-taiwan-heavily-tank.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://deluxe-reproduce-jeep-highs.trycloudflare.com/auth/callback",
-  "https://deluxe-reproduce-jeep-highs.trycloudflare.com/auth/shopify/callback",
-  "https://deluxe-reproduce-jeep-highs.trycloudflare.com/api/auth/callback"
+  "https://venture-taiwan-heavily-tank.trycloudflare.com/auth/callback",
+  "https://venture-taiwan-heavily-tank.trycloudflare.com/auth/shopify/callback",
+  "https://venture-taiwan-heavily-tank.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
