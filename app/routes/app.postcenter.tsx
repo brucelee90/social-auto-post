@@ -3,27 +3,8 @@ import React from 'react'
 
 import type { ActionFunctionArgs, LoaderFunctionArgs} from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
-import { PostPagePhotoMediaRequest, PostPublishMediaRequest } from 'instagram-graph-api'
 import { authenticate } from '~/shopify.server';
-
-
-
-export async function publishMedia(featuredImageUrl : string, caption : string) {
-
-    if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
-
-        let pagePhotoMediaRequest : PostPagePhotoMediaRequest = new PostPagePhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, featuredImageUrl, caption)
-        let containerId = await pagePhotoMediaRequest.execute();
-        // console.log('containerId', containerId.getData().id)
-
-        // let containerReq = new GetContainerRequest(process.env.ACCESS_TOKEN, containerId.getData().id, ContainerField.STATUS_CODE)
-        // let statusCode = await containerReq.execute()
-        // console.log('status Code:', statusCode.getContainerStatusCode());
-
-        let publishMediaRequest : PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
-        publishMediaRequest.execute().then(res => console.log('res:', res))
-    }
-};
+import { publishMedia } from '~/models/instagram.server';
 
 export async function loader({request} : LoaderFunctionArgs ) {
   const {admin} = await authenticate.admin(request);
@@ -101,7 +82,7 @@ export default function PublishMedia(props: Props) {
 
           {isCustomDescription && <textarea rows={4} name="customUserDescription" onInput={handleTextAreaInput} value={textareaInput} cols={50} />}
           <input type='hidden' name='selectedProductDescription' value={selectedProductDescription} />
-
+          
           <button type="submit">PUBLISH MEDIA</button>
           {actionData && (<div>{actionData}</div>)}
       </Form>

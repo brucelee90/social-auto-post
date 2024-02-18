@@ -8,7 +8,7 @@ export async function loader() {
 
     try {    
         if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
-            let request : GetPageInfoRequest = new GetPageInfoRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, ...[PageField.FOLLOWERS_COUNT, PageField.FOLLOWS_COUNT, PageField.MEDIA_COUNT, PageField.NAME, PageField.USERNAME ] );
+            const request : GetPageInfoRequest = new GetPageInfoRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, ...[PageField.FOLLOWERS_COUNT, PageField.FOLLOWS_COUNT, PageField.MEDIA_COUNT, PageField.NAME, PageField.USERNAME ] );
             return  ((await request.execute()).getData());
         }
     } catch (error) {
