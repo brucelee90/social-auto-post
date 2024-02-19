@@ -1,8 +1,6 @@
 import React from 'react'
 import { getSettings } from "../models/settings.server";
-import { json, useLoaderData } from '@remix-run/react';
-import db from "../db.server";
-import { debug } from '~/utils/debug';
+import { useLoaderData } from '@remix-run/react';
 
 export async function loader() {    
     return await getSettings(1)
