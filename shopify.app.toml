@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://www-represent-gsm-ill.trycloudflare.com"
+application_url = "https://counseling-affiliates-vast-rpm.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://www-represent-gsm-ill.trycloudflare.com/auth/callback",
-  "https://www-represent-gsm-ill.trycloudflare.com/auth/shopify/callback",
-  "https://www-represent-gsm-ill.trycloudflare.com/api/auth/callback"
+  "https://counseling-affiliates-vast-rpm.trycloudflare.com/auth/callback",
+  "https://counseling-affiliates-vast-rpm.trycloudflare.com/auth/shopify/callback",
+  "https://counseling-affiliates-vast-rpm.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
