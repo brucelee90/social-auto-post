@@ -18,19 +18,19 @@ export async function loader({request} : LoaderFunctionArgs) {
 
 export async function action({request } : ActionFunctionArgs) {
 
-        const { session } = await authenticate.admin(request);
-        const { shop } = session;
+    const { session } = await authenticate.admin(request);
+    const { shop } = session;
 
-        const formData = await request.formData();
-        let customDescription = formData.get('customDescription') as string
-        let iscustomDescription = customDescription === "on";        
+    const formData = await request.formData();
+    let customDescription = formData.get('customDescription') as string
+    let iscustomDescription = customDescription === "on";        
 
-        try {
-            postSettings(shop, iscustomDescription )
-        } catch (error) {
-            throw new Error("Could not get settings")
-        }
-        return "Settings Saved!"
+    try {
+        postSettings(shop, iscustomDescription )
+    } catch (error) {
+        throw new Error("Could not get settings")
+    }
+    return "Settings Saved!"
 }
 
 interface Props{}

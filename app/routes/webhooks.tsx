@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
-export const action = async ({ request }: ActionFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => { 
   const { topic, shop, session, admin, payload } = await authenticate.webhook(
     request
   );
@@ -19,6 +19,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       break;
+
+    case "PRODUCTS_CREATE":
+      console.log("---- HIT WEBHOOK ----");
+      
     case "CUSTOMERS_DATA_REQUEST":
     case "CUSTOMERS_REDACT":
     case "SHOP_REDACT":
