@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://newcastle-pn-none-thus.trycloudflare.com"
+application_url = "https://bumper-loading-avon-democracy.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://newcastle-pn-none-thus.trycloudflare.com/auth/callback",
-  "https://newcastle-pn-none-thus.trycloudflare.com/auth/shopify/callback",
-  "https://newcastle-pn-none-thus.trycloudflare.com/api/auth/callback"
+  "https://bumper-loading-avon-democracy.trycloudflare.com/auth/callback",
+  "https://bumper-loading-avon-democracy.trycloudflare.com/auth/shopify/callback",
+  "https://bumper-loading-avon-democracy.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

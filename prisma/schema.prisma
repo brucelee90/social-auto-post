@@ -25,3 +25,9 @@ model Settings {
   id                  String  @id
   isCustomDescription Boolean @default(false)
 }
+
+model MediaQueue {
+  id        Int    @id @default(autoincrement())
+  shopId    String
+  productId String
+}

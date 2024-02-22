@@ -26,6 +26,7 @@ export default function App() {
         <Link to="/app/additional">Additional page</Link>
         <Link to="/app/dashboard">Dashboard</Link>
         <Link to="/app/postcenter">Post Center</Link>
+        <Link to="/app/mediaqueue">Media Queue</Link>
         <Link to="/app/settings">Settings</Link>
       </ui-nav-menu>
       <Outlet />

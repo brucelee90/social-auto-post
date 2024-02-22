@@ -22,6 +22,7 @@ export async function loader({request} : LoaderFunctionArgs ) {
         }
       }
     }
+    
     `
   )
   return res.json();

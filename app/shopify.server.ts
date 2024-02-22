@@ -32,7 +32,6 @@ const shopify = shopifyApp({
   },
   hooks: {
     afterAuth: async ({ session }) => {
-      console.log('AUTHINGGG');
       shopify.registerWebhooks({ session });
       
     },
