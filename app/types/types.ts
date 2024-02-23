@@ -3,8 +3,8 @@ export interface PostMediaAttributes {
     title: string, 
     description: string
     images: {
-        nodes: {
+        nodes: [{
             url: string
-        }
+        }]
     }
 }

@@ -1,21 +1,17 @@
 import { LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react';
-import React from 'react'
-import { json } from 'stream/consumers';
 import { getMediaQueue } from '~/models/mediaqueue.server';
 import { authenticate } from '~/shopify.server';
 import { PostMediaAttributes } from '~/types/types';
 import { queries } from '~/utils/queries';
-
-
 
 export async function loader({request}: LoaderFunctionArgs) {
     const { session, admin } = await authenticate.admin(request);
     const { shop } = session;
 
     try {
-        let mediaQueue  = await getMediaQueue(shop)
-        let mediaQueueIds : string[] = []
+        const mediaQueueIds : string[] = []
+        const mediaQueue  = await getMediaQueue(shop)
 
         mediaQueue.map((e : any) => {
             mediaQueueIds.push(`gid://shopify/Product/${e?.productId}`)
@@ -23,32 +19,22 @@ export async function loader({request}: LoaderFunctionArgs) {
         
         const response = await admin.graphql(
             `${queries.queryProductsById}`,
-            {
-              variables: {
-                "ids": mediaQueueIds
-              },
-            }
-          );
+            {variables: {"ids": mediaQueueIds},}
+        );
 
-          let responseJson = await response.json();
-
-          console.log("responseJson:", responseJson);
-          
-          if (responseJson) {            
-              return responseJson
-          } else {
+        const responseJson = await response.json();
+  
+        if (responseJson) {            
+            return responseJson
+        } else {
             throw new Error()
-          }
-
+        }
     } catch (error) {
         return "Media couldn't be fetched"
     }
-
-
 }
 
 interface Props {}
-
 
 export default function Mediaqueue(props: Props) {
     const {} = props
@@ -67,20 +53,23 @@ export default function Mediaqueue(props: Props) {
     return (
         <div>
             <h1>Media Queue</h1>
-            
             {postMediaQueue?.length &&
-                postMediaQueue.map((e : PostMediaAttributes) => {
+                postMediaQueue.map((e : PostMediaAttributes , key) => {
+                    
                     return (
-                        <div>
+                        <div key={key}>
                             <p>title: {e.title}</p>
-                            <p>description: {e.description}</p>
+                            <div style={{display: "flex"} }>
+                                <img src={e.images.nodes[0].url} alt={e.title} />
+                                <p>description: {e.description}</p>
+                            </div>
                             <button>Post now</button>
                             <hr />
                         </div>
                     )
-                } )
+                    
+                })
             }
-
         </div>
     )
 }
