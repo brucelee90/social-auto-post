@@ -27,7 +27,6 @@ model Settings {
 }
 
 model MediaQueue {
-  id        Int    @id @default(autoincrement())
+  productId String @id
   shopId    String
-  productId String
 }
