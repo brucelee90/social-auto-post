@@ -2,10 +2,7 @@ import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import { publishMedia } from '~/models/instagram.server';
-import {
-  deleteMediaQueueItem,
-  getMediaQueue
-} from '~/models/mediaqueue.server';
+import { deleteMediaQueueItem, getMediaQueue } from '~/models/mediaqueue.server';
 import { authenticate } from '~/shopify.server';
 import { PostMediaAttributes } from '~/types/types';
 import { queries } from '~/utils/queries';
@@ -60,11 +57,6 @@ export default function Mediaqueue(props: Props) {
   const loaderData = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
 
-  console.log('fetcher.state', fetcher.state);
-
-  const isPostPublishing =
-    fetcher.state === 'submitting' || fetcher.state === 'loading';
-
   let json;
   let postMediaQueue: [PostMediaAttributes];
 
@@ -85,6 +77,7 @@ export default function Mediaqueue(props: Props) {
           const title = e.title;
           const description = e.description;
           const imgSrcUrl = e.images.nodes[0].url;
+          const isPostPublishing = fetcher?.formData?.get('id') === e.id;
 
           return (
             <div key={key}>
