@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://sheriff-careers-participate-managed.trycloudflare.com"
+application_url = "https://personally-mandate-chancellor-blanket.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://sheriff-careers-participate-managed.trycloudflare.com/auth/callback",
-  "https://sheriff-careers-participate-managed.trycloudflare.com/auth/shopify/callback",
-  "https://sheriff-careers-participate-managed.trycloudflare.com/api/auth/callback"
+  "https://personally-mandate-chancellor-blanket.trycloudflare.com/auth/callback",
+  "https://personally-mandate-chancellor-blanket.trycloudflare.com/auth/shopify/callback",
+  "https://personally-mandate-chancellor-blanket.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

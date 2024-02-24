@@ -36,6 +36,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  let parsedProductId: number;
   const formData = await request.formData();
   const id = formData.get('id') as string;
   const imgSrcUrl = formData.get('imgSrcUrl') as string;
@@ -44,10 +45,16 @@ export async function action({ request }: ActionFunctionArgs) {
   let publishingProductId: string[] = id.split('/');
   let productId: string = publishingProductId[publishingProductId.length - 1];
 
-  publishMedia(imgSrcUrl, description);
-  deleteMediaQueueItem(productId);
+  try {
+    parsedProductId = parseInt(productId);
+    deleteMediaQueueItem(parsedProductId);
+  } catch (error) {
+    console.log('Could not delete Queue Item:', productId);
+  }
 
-  return 'action handled';
+  publishMedia(imgSrcUrl, description);
+
+  return 'Media published and queue item deleted';
 }
 
 interface Props {}
@@ -73,10 +80,10 @@ export default function Mediaqueue(props: Props) {
       <h1>Media Queue</h1>
       {postMediaQueue?.length &&
         postMediaQueue.map((e: PostMediaAttributes, key) => {
-          const id = e.id;
-          const title = e.title;
-          const description = e.description;
-          const imgSrcUrl = e.images.nodes[0].url;
+          const id = e?.id;
+          const title = e?.title;
+          const description = e?.description;
+          const imgSrcUrl = e?.images?.nodes[0]?.url;
           const isPostPublishing = fetcher?.formData?.get('id') === e.id;
 
           return (

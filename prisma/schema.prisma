@@ -27,6 +27,6 @@ model Settings {
 }
 
 model MediaQueue {
-  productId String @id
+  productId BigInt @id
   shopId    String
 }
