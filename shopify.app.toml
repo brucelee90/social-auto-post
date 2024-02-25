@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://nail-remembered-technology-reported.trycloudflare.com"
+application_url = "https://across-advances-seas-dvds.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://nail-remembered-technology-reported.trycloudflare.com/auth/callback",
-  "https://nail-remembered-technology-reported.trycloudflare.com/auth/shopify/callback",
-  "https://nail-remembered-technology-reported.trycloudflare.com/api/auth/callback"
+  "https://across-advances-seas-dvds.trycloudflare.com/auth/callback",
+  "https://across-advances-seas-dvds.trycloudflare.com/auth/shopify/callback",
+  "https://across-advances-seas-dvds.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
