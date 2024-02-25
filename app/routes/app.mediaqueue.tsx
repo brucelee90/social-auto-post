@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
-import { useFetcher, useLoaderData } from '@remix-run/react';
+import { useFetcher, useLoaderData, useSubmit } from '@remix-run/react';
 import { useState } from 'react';
 import { publishMedia } from '~/models/instagram.server';
 import { deleteMediaQueueItem, getMediaQueue } from '~/models/mediaqueue.server';
@@ -38,21 +38,34 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   let parsedProductId: number;
   const formData = await request.formData();
+
   const id = formData.get('id') as string;
   const imgSrcUrl = formData.get('imgSrcUrl') as string;
   const description = formData.get('description') as string;
+  const isPosting = formData.get('post') !== null;
+  const isRemoving = formData.get('remove') !== null;
+
+  console.log('isPosting', isPosting, 'isRemoving:', isRemoving);
 
   let publishingProductId: string[] = id.split('/');
   let productId: string = publishingProductId[publishingProductId.length - 1];
 
   try {
     parsedProductId = parseInt(productId);
-    deleteMediaQueueItem(parsedProductId);
-  } catch (error) {
-    console.log('Could not delete Queue Item:', productId);
-  }
+    if (isRemoving) {
+      deleteMediaQueueItem(parsedProductId);
+    }
 
-  publishMedia(imgSrcUrl, description);
+    if (isPosting && imgSrcUrl.length && description.length) {
+      publishMedia(imgSrcUrl, description);
+      deleteMediaQueueItem(parsedProductId);
+    } else {
+      console.log('no image or description');
+      throw new Error();
+    }
+  } catch (error) {
+    console.log('Could not publish Queue Item:', productId);
+  }
 
   return 'Media published and queue item deleted';
 }
@@ -115,6 +128,7 @@ interface MediaQueueItemProps {
 export function MediaQueueItem(props: MediaQueueItemProps) {
   const { id, imgSrcUrl, description, title, isPostPublishing } = props;
   const [isItemHidden] = useState(isPostPublishing);
+  let submit = useSubmit();
 
   return (
     <div style={{ display: `${isItemHidden && 'none'}` }}>
@@ -126,7 +140,12 @@ export function MediaQueueItem(props: MediaQueueItemProps) {
         <img src={imgSrcUrl} alt={title} />
         <p>description: {description}</p>
       </div>
-      <button>Post now</button>
+      <button name="post" value="post" type="submit">
+        Post now
+      </button>
+      <button name="remove" value="remove" type="submit">
+        Remove Item
+      </button>
       <hr />
     </div>
   );

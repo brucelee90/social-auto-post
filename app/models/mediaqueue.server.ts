@@ -19,8 +19,6 @@ export async function createMediaQueueItem(productId: number, shopId: string) {
     }
   })
 
-  console.log('createdProductId', createdProductId);
-
   return createdProductId;
 
 }
