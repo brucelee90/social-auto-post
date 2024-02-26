@@ -2,7 +2,15 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
+<<<<<<< HEAD
 application_url = "https://consisting-floating-integer-aka.trycloudflare.com"
+=======
+<<<<<<< HEAD
+application_url = "https://collective-rural-edges-downloaded.trycloudflare.com"
+=======
+application_url = "https://have-pf-submitting-incorporate.trycloudflare.com"
+>>>>>>> 00ca00f
+>>>>>>> e8268b34e77954f08bc75cec6d79b26b3a5b9c7f
 embedded = true
 
 [build]
@@ -16,9 +24,21 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
+<<<<<<< HEAD
   "https://consisting-floating-integer-aka.trycloudflare.com/auth/callback",
   "https://consisting-floating-integer-aka.trycloudflare.com/auth/shopify/callback",
   "https://consisting-floating-integer-aka.trycloudflare.com/api/auth/callback"
+=======
+<<<<<<< HEAD
+  "https://collective-rural-edges-downloaded.trycloudflare.com/auth/callback",
+  "https://collective-rural-edges-downloaded.trycloudflare.com/auth/shopify/callback",
+  "https://collective-rural-edges-downloaded.trycloudflare.com/api/auth/callback"
+=======
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/shopify/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/api/auth/callback"
+>>>>>>> 00ca00f
+>>>>>>> e8268b34e77954f08bc75cec6d79b26b3a5b9c7f
 ]
 
 [webhooks]
