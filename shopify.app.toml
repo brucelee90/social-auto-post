@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://extending-african-ellis-charging.trycloudflare.com"
+application_url = "https://have-pf-submitting-incorporate.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://extending-african-ellis-charging.trycloudflare.com/auth/callback",
-  "https://extending-african-ellis-charging.trycloudflare.com/auth/shopify/callback",
-  "https://extending-african-ellis-charging.trycloudflare.com/api/auth/callback"
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/shopify/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

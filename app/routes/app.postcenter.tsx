@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
@@ -24,34 +24,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
-    publishMedia(featuredImageUrl, postDescription);
-    return 'PUBLISHED IMAGE SUCCESFULLY !';
+    await publishMedia(featuredImageUrl, postDescription);
+    return 'PUBLISHED SUCCESFULLY !';
   } catch (error) {
-    return 'An error occured while posting';
+    return `${error}`;
   }
 };
 
-interface Props {}
-
-export default function PublishMedia(props: Props) {
-  const [textareaInput, setTextareaInput] = React.useState('');
-  const [selectedProductId, setSelectedProductId] = React.useState('');
+export default function PublishMedia() {
+  const [textareaInput, setTextareaInput] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
 
   const actionData = useActionData<typeof action>();
   const loaderData = useLoaderData<typeof loader>();
   const productsArray = [...loaderData.data.products.nodes];
 
   const handleChange = (e: any) => {
-    setSelectedProductId(e.target.id);
+    setSelectedProductId(e.target.id as string);
   };
 
   const handleTextAreaInput = (e: any) => {
     setTextareaInput(e.target.value);
   };
 
-  const selectedProductDescription = productsArray.find(
+  let selectedProductDescription = productsArray.find(
     (obj) => obj.id === selectedProductId
   )?.description;
+
+  if (selectedProductDescription === undefined) {
+    selectedProductDescription = '';
+  }
+
   const isCustomDescription = true;
 
   return (
