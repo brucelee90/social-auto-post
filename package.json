@@ -34,6 +34,7 @@
     "dotenv": "^16.4.4",
     "instagram-graph-api": "^6.1.0",
     "isbot": "^4.1.0",
+    "node-cron": "^3.0.3",
     "prisma": "^5.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
