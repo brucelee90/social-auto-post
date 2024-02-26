@@ -2,7 +2,11 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
+<<<<<<< HEAD
 application_url = "https://collective-rural-edges-downloaded.trycloudflare.com"
+=======
+application_url = "https://have-pf-submitting-incorporate.trycloudflare.com"
+>>>>>>> 00ca00f
 embedded = true
 
 [build]
@@ -16,9 +20,15 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
+<<<<<<< HEAD
   "https://collective-rural-edges-downloaded.trycloudflare.com/auth/callback",
   "https://collective-rural-edges-downloaded.trycloudflare.com/auth/shopify/callback",
   "https://collective-rural-edges-downloaded.trycloudflare.com/api/auth/callback"
+=======
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/auth/shopify/callback",
+  "https://have-pf-submitting-incorporate.trycloudflare.com/api/auth/callback"
+>>>>>>> 00ca00f
 ]
 
 [webhooks]
