@@ -2,7 +2,7 @@
 
 client_id = "4ac274f0529979afe56e2ebc7a04200d"
 name = "social-auto-post"
-application_url = "https://across-advances-seas-dvds.trycloudflare.com"
+application_url = "https://collective-rural-edges-downloaded.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://across-advances-seas-dvds.trycloudflare.com/auth/callback",
-  "https://across-advances-seas-dvds.trycloudflare.com/auth/shopify/callback",
-  "https://across-advances-seas-dvds.trycloudflare.com/api/auth/callback"
+  "https://collective-rural-edges-downloaded.trycloudflare.com/auth/callback",
+  "https://collective-rural-edges-downloaded.trycloudflare.com/auth/shopify/callback",
+  "https://collective-rural-edges-downloaded.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
