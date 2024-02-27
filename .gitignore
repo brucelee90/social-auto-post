@@ -11,7 +11,7 @@ node_modules
 database.sqlite
 /app/logs
 
-/shopify.app.toml
+shopify.app.toml
 
 .env
 package-lock.json
