@@ -30,3 +30,8 @@ model MediaQueue {
   productId BigInt @id
   shopId    String
 }
+
+model Campaign {
+  productId BigInt @id
+  postDate  String
+}

@@ -20,11 +20,5 @@ export const logger = createLogger({
             maxsize: 3000,
             level: 'warn'
         }),
-    ],
-    exceptionHandlers: [
-        new transports.File({
-            filename: './app/logs/exceptions.log',
-            maxsize: 3000,
-        })
     ]
 });
