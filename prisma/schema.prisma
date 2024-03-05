@@ -32,6 +32,8 @@ model MediaQueue {
 }
 
 model PostScheduleQueue {
-  productId     BigInt   @id
-  dateScheduled DateTime @default(now())
+  productId       BigInt   @id
+  dateScheduled   DateTime @default(now())
+  postImgUrl      String
+  postDescription String
 }

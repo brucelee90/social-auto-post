@@ -1,14 +1,13 @@
 const amqp = require('amqplib');
 
 const QUEUE = 'post_schedule';
+const CONNECTION_URL = process.env.AMQPS_URL as string;
 
 
 export async function addItemToRabbitMQPostQueue(messageText: string) {
     let connection;
     try {
-        connection = await amqp.connect(
-            'amqps://unmsawam:3yFMd757D_ziB7S-w55gtixr4MIqztNk@sparrow.rmq.cloudamqp.com/unmsawam'
-        );
+        connection = await amqp.connect(CONNECTION_URL);
         const channel = await connection.createChannel();
 
         await channel.assertQueue(QUEUE, { durable: false });
@@ -19,7 +18,7 @@ export async function addItemToRabbitMQPostQueue(messageText: string) {
         // to fire before writing again. We're just doing the one write,
         // so we'll ignore it.
         channel.sendToQueue(QUEUE, Buffer.from(messageText));
-        console.log(" [x] Added To post_schedule '%s'", messageText);
+        console.log(` [x] Added To ${QUEUE}; ${messageText} `);
         await channel.close();
     } catch (err) {
         console.warn(err);

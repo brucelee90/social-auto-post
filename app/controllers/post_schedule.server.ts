@@ -1,12 +1,4 @@
-// export async function addToPostScheduleQueue(productId: number, dateScheduled: string) {
-//     return prisma.postScheduleQueue.create({
-//         data: {
-//             productId: productId,
-//             dateScheduled: dateScheduled
-//         }
-//     })
-// }
-export async function addToPostScheduleQueue(productId: number, dateScheduled: string) {
+export async function addToPostScheduleQueue(productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) {
     return prisma.postScheduleQueue.upsert({
         where: { productId: productId },
         update: {
@@ -15,7 +7,9 @@ export async function addToPostScheduleQueue(productId: number, dateScheduled: s
         },
         create: {
             productId: productId,
-            dateScheduled: dateScheduled
+            dateScheduled: dateScheduled,
+            postImgUrl: postImgUrl,
+            postDescription: postDescriptiop
         }
     })
 }

@@ -1,6 +1,7 @@
 import { ActionFunctionArgs } from '@remix-run/node';
-import { Form, useLoaderData } from '@remix-run/react';
+import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
+import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import React, { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
@@ -20,48 +21,110 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
+    const postDescription = formData.get('post_description') as string;
+    const postImageUrl = formData.get('post_image_url') as string;
 
     var scheduledPostDateTime = moment(
         scheduledDate + ' ' + scheduledTime,
         'YYYY-MM-DD HH:mm'
     ).toISOString();
 
-    console.log('post Product', productId, 'on', scheduledPostDateTime);
-
-    addItemToRabbitMQPostQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
-    addToPostScheduleQueue(parseInt(productId), scheduledPostDateTime);
-
-    return null;
+    try {
+        addItemToRabbitMQPostQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
+        addToPostScheduleQueue(
+            parseInt(productId),
+            scheduledPostDateTime,
+            postImageUrl,
+            postDescription
+        );
+        console.log('post Product', productId, 'on', scheduledPostDateTime);
+        return {
+            error: false,
+            message: `Product set to be scheduled on ${scheduledDate} at ${scheduledTime}`,
+            productId: productId
+        };
+    } catch (error) {
+        return {
+            error: true,
+            message: 'Product Could not be posted, please',
+            productId: productId
+        };
+    }
 };
 
 export default function Schedule() {
     // const minDate = new Date().toISOString().split('T')[0];
 
     const loaderData = useLoaderData<typeof loader>();
+    const actionData = useActionData<typeof action>();
     const productsArray = [...loaderData.data.products.nodes];
+
+    const isScheduleSuccessfull = !actionData?.error;
+    const actionMessage = actionData?.message;
+    const actionProductId = actionData?.productId;
+
+    console.log(actionData?.error, 'actionData:', actionData, '');
 
     return (
         <div>
-            Campaigns!
+            <Text variant="heading2xl" as="h3">
+                Schedule
+            </Text>
             {productsArray.map((e, key) => {
                 let productId = e.id.split('/');
                 productId = productId[productId.length - 1];
-                let imgSrcUrl = e.featuredImage.url;
+                let postImageUrl = e.featuredImage.url;
 
                 return (
-                    <Form method="post" key={key}>
-                        <div>
+                    <Form method="post">
+                        <div key={key}>
                             <input type="hidden" name="product_id" value={productId} />
-                            {/* <input type='hidden' name="img_url" value={imgSrcUrl} /> */}
-                            <img alt="img" width={'150px'} src={e.featuredImage.url} />
-                            <label htmlFor="featuredImageUrl">{e.title}</label>
-                            <div style={{ width: '30rem', background: '#ccc' }}>
-                                {e.description}
+                            <input type="hidden" name="post_image_url" value={postImageUrl} />
+                            <div>
+                                <Text variant="headingXl" as="h4">
+                                    {e.title}
+                                </Text>
+                                <img alt="img" width={'150px'} src={e.featuredImage.url} />
                             </div>
-                            <DatePicker name={`scheduled_date`} />
-                            <input type="time" id="scheduled_time" name={`scheduled_time`} />
+                            <div>
+                                <textarea
+                                    style={{ width: '30rem', background: '#ccc' }}
+                                    name="post_description"
+                                    rows={10}
+                                    defaultValue={e.description}
+                                />
+                            </div>
+
+                            {actionProductId === productId ? (
+                                <div>
+                                    <div>{actionMessage}</div>
+                                    {isScheduleSuccessfull ? (
+                                        <button type="submit" name="reschedule">
+                                            Cancel and Reschedule Post
+                                        </button>
+                                    ) : (
+                                        <button type="submit" name="reschedule">
+                                            Retry Schedule
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div>
+                                    <div>
+                                        <DatePicker name={`scheduled_date`} />
+                                        <input
+                                            type="time"
+                                            id="scheduled_time"
+                                            name={`scheduled_time`}
+                                        />
+                                    </div>
+                                    <button type="submit" name="schedule">
+                                        Schedule Post
+                                    </button>
+                                </div>
+                            )}
+                            <hr />
                         </div>
-                        <button type="submit">Schedule Post</button>
                     </Form>
                 );
             })}

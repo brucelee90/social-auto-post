@@ -14,6 +14,8 @@ const schedule = require('node-schedule');
 const amqp = require('amqplib');
 
 const ABORT_DELAY = 5000;
+const QUEUE = 'post_schedule';
+const CONNECTION_URL = process.env.AMQPS_URL as string;
 
 export async function runScheduledPostsByDate(date: Date) {
     try {
@@ -24,10 +26,7 @@ export async function runScheduledPostsByDate(date: Date) {
             console.log(el.productId + ' will be posted at:', el.dateScheduled);
             const publishDate = moment(el.dateScheduled).toISOString();
             schedule.scheduleJob(publishDate, function () {
-                publishMedia(
-                    'https://cdn.shopify.com/s/files/1/0585/4239/1487/files/air-jordan-5-aqua-mrkicks-2.png?v=1708688484',
-                    'Scheduled Post Works as well'
-                );
+                publishMedia(el.postImgUrl, el.postDescription);
 
                 removeScheduledItemFromQueue(el.productId);
 
@@ -61,13 +60,9 @@ export default async function handleRequest(
 
                     // runScheduledPostsByDate(new Date());
 
-                    const QUEUE = 'post_schedule';
-
                     (async () => {
                         try {
-                            const connection = await amqp.connect(
-                                'amqps://unmsawam:3yFMd757D_ziB7S-w55gtixr4MIqztNk@sparrow.rmq.cloudamqp.com/unmsawam'
-                            );
+                            const connection = await amqp.connect(CONNECTION_URL);
                             const channel = await connection.createChannel();
 
                             process.once('SIGINT', async () => {

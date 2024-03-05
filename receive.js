@@ -4,9 +4,7 @@ const queue = 'hello';
 
 (async () => {
     try {
-        const connection = await amqp.connect(
-            'amqps://unmsawam:3yFMd757D_ziB7S-w55gtixr4MIqztNk@sparrow.rmq.cloudamqp.com/unmsawam'
-        );
+        const connection = await amqp.connect('amqps://localhost');
         const channel = await connection.createChannel();
 
         process.once('SIGINT', async () => {
