@@ -31,7 +31,7 @@ model MediaQueue {
   shopId    String
 }
 
-model Campaign {
-  productId BigInt @id
-  postDate  String
+model PostScheduleQueue {
+  productId     BigInt   @id
+  dateScheduled DateTime @default(now())
 }

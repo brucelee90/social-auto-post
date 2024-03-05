@@ -1,8 +1,8 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
 import { MediaQueueItem } from '~/components/mediaqueue/MediaQueueItem';
-import { publishMedia } from '~/models/instagram.server';
-import { deleteMediaQueueItem, getMediaQueue } from '~/models/mediaqueue.server';
+import { publishMedia } from '~/controllers/instagram.server';
+import { deleteMediaQueueItem, getMediaQueue } from '~/controllers/mediaqueue.server';
 import { logger } from '~/services/logger.server';
 import { authenticate } from '~/shopify.server';
 import { PostMediaAttributes } from '~/types/types';

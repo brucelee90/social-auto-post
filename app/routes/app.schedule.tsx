@@ -4,6 +4,7 @@ import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import moment from 'moment';
 import React, { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
+import { addToPostScheduleQueue } from '~/controllers/post_schedule.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 
@@ -15,13 +16,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const productId = formData.get('product_id');
+    const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
 
-    var dateTime = moment(scheduledDate + ' ' + scheduledTime, 'YYYY-MM-DD HH:mm').toISOString();
+    var scheduledPostDateTime = moment(
+        scheduledDate + ' ' + scheduledTime,
+        'YYYY-MM-DD HH:mm'
+    ).toISOString();
 
-    console.log('post Product', productId, 'on', dateTime);
+    console.log('post Product', productId, 'on', scheduledPostDateTime);
+
+    addToPostScheduleQueue(parseInt(productId), scheduledPostDateTime);
 
     return null;
 };
