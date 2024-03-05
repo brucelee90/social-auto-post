@@ -5,6 +5,7 @@ import moment from 'moment';
 import React, { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
 import { addToPostScheduleQueue } from '~/controllers/post_schedule.server';
+import { addItemToRabbitMQPostQueue } from '~/controllers/rabbitmq.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 
@@ -27,6 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     console.log('post Product', productId, 'on', scheduledPostDateTime);
 
+    addItemToRabbitMQPostQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
     addToPostScheduleQueue(parseInt(productId), scheduledPostDateTime);
 
     return null;

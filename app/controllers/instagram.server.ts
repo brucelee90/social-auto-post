@@ -17,10 +17,7 @@ export async function publishMedia(featuredImageUrl: string, caption: string) {
         }
 
     } catch (error) {
-
         console.log(error);
-
-
     }
 
 };

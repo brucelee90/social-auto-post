@@ -28,7 +28,12 @@ export async function getScheduledItemsByDate(date: Date) {
         },
 
     });
-
     return scheduleQueue
 
+}
+
+export async function removeScheduledItemFromQueue(productId: bigint) {
+    return await prisma.postScheduleQueue.delete({
+        where: { productId: productId }
+    })
 }
