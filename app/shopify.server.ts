@@ -33,8 +33,9 @@ const shopify = shopifyApp({
   hooks: {
     afterAuth: async ({ session }) => {
       shopify.registerWebhooks({ session });
-      
+      console.log('AFTER AUTH!');
     },
+
   },
   future: {
     v3_webhookAdminContext: true,

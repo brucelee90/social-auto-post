@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.ts", "**/*.tsx", "app/routes/app.settings.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "app/routes/app.settings.tsx", "pm2.config.js", "server.js", "app/modules/messageServer.js", "app/modules/reiceiver.js", "app/modules/reiceiver.server.js", "app/socket.js"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "strict": true,

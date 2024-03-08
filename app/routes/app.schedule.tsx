@@ -6,7 +6,7 @@ import moment from 'moment';
 import React, { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
 import { addToPostScheduleQueue } from '~/controllers/post_schedule.server';
-import { addItemToRabbitMQPostQueue } from '~/controllers/rabbitmq.server';
+import { messagingBroker } from '~/modules/messagingBroker.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 
@@ -30,7 +30,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ).toISOString();
 
     try {
-        addItemToRabbitMQPostQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
+        messagingBroker.addItemToRabbitMQPostQueue(
+            `schedule ${productId} for ${scheduledPostDateTime}`
+        );
         addToPostScheduleQueue(
             parseInt(productId),
             scheduledPostDateTime,
@@ -63,8 +65,6 @@ export default function Schedule() {
     const actionMessage = actionData?.message;
     const actionProductId = actionData?.productId;
 
-    console.log(actionData?.error, 'actionData:', actionData, '');
-
     return (
         <div>
             <Text variant="heading2xl" as="h3">
@@ -77,7 +77,7 @@ export default function Schedule() {
 
                 return (
                     <Form method="post">
-                        <div key={key}>
+                        <div>
                             <input type="hidden" name="product_id" value={productId} />
                             <input type="hidden" name="post_image_url" value={postImageUrl} />
                             <div>
