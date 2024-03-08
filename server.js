@@ -10,10 +10,6 @@ const CONNECTION_URL = process.env.AMQPS_URL;
 
 let app = express();
 
-function updateSomething(thing) {
-    return myDb.save(thing);
-}
-
 app.use(express.static('public'));
 
 if (process.env.NODE_ENV === 'development') {
