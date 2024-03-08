@@ -10,9 +10,10 @@ node_modules
 /prisma/dev.sqlite-journal
 database.sqlite
 /app/logs
+metafile.*
+version.txt
 
 shopify.app.toml
 
 .env
-package-lock.json
 yarn.lock
