@@ -3,10 +3,10 @@ module.exports = {
         {
             name: 'Express',
             script: 'npm run dev:remix',
-            watch: ['build/index.js'],
-            watch_options: {
-                followSymlinks: false
-            },
+            // watch: ['build/index.js'],
+            // watch_options: {
+            //     followSymlinks: false
+            // },
             env: {
                 NODE_ENV: 'development'
             }

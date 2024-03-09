@@ -1,9 +1,13 @@
 import { useState } from 'react';
 
-import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+import {
+    writeAsyncIterableToWritable,
+    type ActionFunctionArgs,
+    type LoaderFunctionArgs
+} from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
-import { publishMedia } from '~/controllers/instagram.server';
+import instagramApiService from '~/services/instagramApiService.server';
 import { queries } from '~/utils/queries';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -24,7 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     try {
-        await publishMedia(featuredImageUrl, postDescription);
+        await instagramApiService.publishMedia(featuredImageUrl, postDescription);
         return 'PUBLISHED SUCCESFULLY !';
     } catch (error) {
         return `${error}`;

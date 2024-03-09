@@ -5,8 +5,8 @@ import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import React, { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
-import { addToPostScheduleQueue } from '~/controllers/post_schedule.server';
-import { messagingBroker } from '~/modules/messagingBroker.server';
+import messageBrokerService from '~/services/messagingBrokerService.server';
+import postScheduleQueueService from '~/services/postScheduleQueueService.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 
@@ -30,15 +30,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ).toISOString();
 
     try {
-        messagingBroker.addItemToRabbitMQPostQueue(
-            `schedule ${productId} for ${scheduledPostDateTime}`
-        );
-        addToPostScheduleQueue(
+        messageBrokerService.addItemToQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
+        postScheduleQueueService.addToPostScheduleQueue(
             parseInt(productId),
             scheduledPostDateTime,
             postImageUrl,
             postDescription
         );
+
         console.log('post Product', productId, 'on', scheduledPostDateTime);
         return {
             error: false,
@@ -55,8 +54,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Schedule() {
-    // const minDate = new Date().toISOString().split('T')[0];
-
     const loaderData = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
     const productsArray = [...loaderData.data.products.nodes];

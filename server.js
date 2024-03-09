@@ -1,12 +1,8 @@
 const express = require('express');
-const compression = require('compression');
 const morgan = require('morgan');
 const { createRequestHandler } = require('@remix-run/express');
-var request = require('request');
+const request = require('request');
 const amqp = require('amqplib');
-
-const QUEUE = 'post_queue';
-const CONNECTION_URL = process.env.AMQPS_URL;
 
 let app = express();
 
@@ -26,14 +22,21 @@ app.all(
     })
 );
 
+let host = process.env.HOST || 'localhost';
 let port = process.env.PORT || 3000;
 
+const createPostSchedule = () => {
+    request('http://localhost:3000/api/v1/schedule', function (error, response, body) {
+        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+    });
+};
+
 app.listen(port, () => {
-    console.log(`Express server started on http://localhost:${port}`);
+    console.log(`Express server started on http://${host}:${port}`);
 
     (async () => {
         try {
-            const connection = await amqp.connect(CONNECTION_URL);
+            const connection = await amqp.connect(process.env.AMQPS_CONNECTION_URL);
             const channel = await connection.createChannel();
 
             process.once('SIGINT', async () => {
@@ -41,18 +44,12 @@ app.listen(port, () => {
                 await connection.close();
             });
 
-            await channel.assertQueue(QUEUE, { durable: false });
+            await channel.assertQueue(process.env.AMQPS_QUEUE, { durable: false });
             await channel.consume(
-                QUEUE,
+                process.env.AMQPS_QUEUE,
                 (message) => {
                     console.log(" [x] Received '%s'", message.content.toString());
-
-                    request(
-                        'http://localhost:3000/api/v1/schedule',
-                        function (error, response, body) {
-                            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                        }
-                    );
+                    createPostSchedule();
                 },
                 { noAck: true }
             );

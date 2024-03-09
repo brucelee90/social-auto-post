@@ -6,6 +6,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     // const pdf = await generateRepoærtPDF(report);
 
     postScheduler.runScheduledPostsByDate(new Date());
+
     let message = 'SCHEDULE CALLED WITHOUT ERROR';
 
     return new Response(`-- HIT SCHEDULE ROUTE ${message}--`, {

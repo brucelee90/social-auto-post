@@ -4,7 +4,6 @@ import { RemixServer } from '@remix-run/react';
 import { createReadableStreamFromReadable, type EntryContext } from '@remix-run/node';
 import { isbot } from 'isbot';
 import { addDocumentResponseHeaders } from './shopify.server';
-import { messagingBroker } from './modules/messagingBroker.server';
 
 const ABORT_DELAY = 5000;
 
@@ -25,8 +24,6 @@ export default async function handleRequest(
                 [callbackName]: () => {
                     const body = new PassThrough();
                     const stream = createReadableStreamFromReadable(body);
-
-                    // messagingBroker.subscribeToMessageQueue();
 
                     responseHeaders.set('Content-Type', 'text/html');
                     resolve(

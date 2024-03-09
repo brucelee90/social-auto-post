@@ -1,9 +1,9 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
 import { MediaQueueItem } from '~/components/mediaqueue/MediaQueueItem';
-import { publishMedia } from '~/controllers/instagram.server';
+import instagramApiService from '~/services/instagramApiService.server';
 import { deleteMediaQueueItem, getMediaQueue } from '~/controllers/mediaqueue.server';
-import { logger } from '~/services/logger.server';
+import { logger } from '~/utils/logger.server';
 import { authenticate } from '~/shopify.server';
 import { PostMediaAttributes } from '~/types/types';
 import { queries } from '~/utils/queries';
@@ -56,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
             deleteMediaQueueItem(parsedProductId);
             actionMessage = 'Item removed from Media queue successfully';
         } else if (isPosting === true && imgSrcUrl.length && description.length) {
-            publishMedia(imgSrcUrl, description);
+            instagramApiService.publishMedia(imgSrcUrl, description);
             deleteMediaQueueItem(parsedProductId);
             actionMessage = 'Item was posted successfully';
         } else {
