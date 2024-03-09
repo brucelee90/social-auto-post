@@ -1,18 +1,35 @@
+import { LoaderFunction } from '@remix-run/node';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import postScheduler from '~/modules/postScheduler.server';
 
-export async function loader({ params }: LoaderFunctionArgs) {
-    // const report = await getReport(params.id);
-    // const pdf = await generateRepoærtPDF(report);
+export const loader: LoaderFunction = async ({ request }) => {
+    const url = new URL(request.url);
+    const scheduleAction = url.searchParams.get('schedule_action');
+    let message: string;
 
-    postScheduler.runScheduledPostsByDate(new Date());
+    try {
+        switch (scheduleAction) {
+            case 'cancel':
+                postScheduler.cancelScheduledPost();
+                break;
 
-    let message = 'SCHEDULE CALLED WITHOUT ERROR';
-
-    return new Response(`-- HIT SCHEDULE ROUTE ${message}--`, {
-        status: 200,
-        headers: {
-            'Content-Type': 'text/html'
+            default:
+                postScheduler.runScheduledPostsByDate(new Date());
+                break;
         }
-    });
-}
+
+        message = 'NO ERROR';
+    } catch (error) {
+        message = 'AN ERROR OCCURED';
+    }
+
+    return new Response(
+        `-- HIT SCHEDULE ROUTE with scheduleAction: ${scheduleAction}; ${message} --`,
+        {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/html'
+            }
+        }
+    );
+};

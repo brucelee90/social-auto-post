@@ -4,7 +4,8 @@ import postScheduleQueueService from "~/services/postScheduleQueueService.server
 const schedule = require('node-schedule');
 
 interface PostScheduler {
-    runScheduledPostsByDate: (date: Date) => Promise<{ error: boolean; }>
+    runScheduledPostsByDate: (date: Date) => Promise<void>,
+    cancelScheduledPost: () => Promise<void>
 }
 
 const postScheduler = {} as PostScheduler
@@ -24,9 +25,8 @@ postScheduler.runScheduledPostsByDate = async function (date: Date) {
             });
         });
 
-        return { error: false };
     } catch (error) {
-        return { error: true };
+        throw new Error()
     }
 }
 
