@@ -24,6 +24,7 @@ instagramApiService.publishMedia = async function publishMedia(featuredImageUrl:
 
     } catch (error) {
         console.log(error);
+        throw new Error(`An error occured while posting: ${featuredImageUrl}`)
     }
 
 };

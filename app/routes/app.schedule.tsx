@@ -70,18 +70,23 @@ export default function Schedule() {
             {productsArray.map((e, key) => {
                 let productId = e.id.split('/');
                 productId = productId[productId.length - 1];
-                let postImageUrl = e.featuredImage.url;
+                let imageUrl = e.featuredImage?.url;
+
+                let isEligibleForScheduling = false;
+                if (productId !== undefined && imageUrl !== undefined) {
+                    isEligibleForScheduling = true;
+                }
 
                 return (
                     <Form method="post">
                         <div>
                             <input type="hidden" name="product_id" value={productId} />
-                            <input type="hidden" name="post_image_url" value={postImageUrl} />
+                            <input type="hidden" name="post_image_url" value={imageUrl} />
                             <div>
                                 <Text variant="headingXl" as="h4">
                                     {e.title}
                                 </Text>
-                                <img alt="img" width={'150px'} src={e.featuredImage.url} />
+                                <img alt="img" width={'150px'} src={imageUrl} />
                             </div>
                             <div>
                                 <textarea
@@ -91,40 +96,65 @@ export default function Schedule() {
                                     defaultValue={e.description}
                                 />
                             </div>
-
-                            {actionProductId === productId ? (
-                                <div>
-                                    <div>{actionMessage}</div>
-                                    {isScheduleSuccessfull ? (
-                                        <button type="submit" name="reschedule">
-                                            Cancel and Reschedule Post
-                                        </button>
-                                    ) : (
-                                        <button type="submit" name="reschedule">
-                                            Retry Schedule
-                                        </button>
-                                    )}
-                                </div>
+                            {isEligibleForScheduling ? (
+                                <PostBtn
+                                    actionProductId={actionProductId}
+                                    productId={productId}
+                                    actionMessage={actionMessage}
+                                    isScheduleSuccessfull={isScheduleSuccessfull}
+                                />
                             ) : (
                                 <div>
-                                    <div>
-                                        <DatePicker name={`scheduled_date`} />
-                                        <input
-                                            type="time"
-                                            id="scheduled_time"
-                                            name={`scheduled_time`}
-                                        />
-                                    </div>
-                                    <button type="submit" name="schedule">
-                                        Schedule Post
-                                    </button>
+                                    Please make sure that you have set an image and a description
+                                    for this product
                                 </div>
                             )}
+
                             <hr />
                         </div>
                     </Form>
                 );
             })}
+        </div>
+    );
+}
+
+interface Props {
+    actionProductId: string | undefined;
+    productId: string;
+    actionMessage: string | undefined;
+    isScheduleSuccessfull: boolean;
+}
+
+export function PostBtn(props: Props) {
+    const { actionProductId, productId, actionMessage, isScheduleSuccessfull } = props;
+
+    return (
+        <div>
+            {actionProductId === productId ? (
+                <div>
+                    <div>{actionMessage}</div>
+                    {isScheduleSuccessfull ? (
+                        <button type="submit" name="reschedule">
+                            Cancel and Reschedule Post
+                        </button>
+                    ) : (
+                        <button type="submit" name="reschedule">
+                            Retry Schedule
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <div>
+                    <div>
+                        <DatePicker name={`scheduled_date`} />
+                        <input type="time" id="scheduled_time" name={`scheduled_time`} />
+                    </div>
+                    <button type="submit" name="schedule">
+                        Schedule Post
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
