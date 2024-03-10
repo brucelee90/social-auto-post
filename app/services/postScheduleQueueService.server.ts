@@ -1,7 +1,7 @@
 interface postScheduleQueueService {
     addToPostScheduleQueue: (productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
-    removeScheduledItemFromQueue: (productId: bigint) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
+    removeScheduledItemFromQueue: (productId: number) => Promise<void>,
 }
 
 const postScheduleQueueService = {} as postScheduleQueueService
@@ -34,10 +34,16 @@ postScheduleQueueService.getScheduledItemsByDate = async function getScheduledIt
 
 }
 
-postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: bigint) {
-    return await prisma.postScheduleQueue.delete({
-        where: { productId: productId }
-    })
+postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: number) {
+    try {
+
+        await prisma.postScheduleQueue.delete({
+            where: { productId: productId }
+        })
+    } catch (error) {
+        console.log(`${productId} could not be deleted`);
+
+    }
 }
 
 export default postScheduleQueueService

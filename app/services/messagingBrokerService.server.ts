@@ -1,5 +1,5 @@
 
-import postScheduler from "../modules/postScheduler.server";
+import jobService from "./jobService.server";
 
 const amqp = require('amqplib');
 const QUEUE = "post_queue"
@@ -53,7 +53,7 @@ const messageBrokerService = {
                 QUEUE,
                 (message: any) => {
                     console.log(" [x] Received '%s'", message.content.toString());
-                    postScheduler.runScheduledPostsByDate(new Date());
+                    jobService.runScheduledJobsByDate(new Date());
                 },
                 { noAck: true }
             );

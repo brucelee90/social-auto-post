@@ -3,10 +3,11 @@ const morgan = require('morgan');
 const { createRequestHandler } = require('@remix-run/express');
 const request = require('request');
 const amqp = require('amqplib');
+const Agenda = require('@hokify/agenda');
 
 let app = express();
 
-app.use(express.static('public'));
+app.use(express.static('./build'));
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
@@ -25,10 +26,19 @@ app.all(
 let host = process.env.HOST || 'localhost';
 let port = process.env.PORT || 3000;
 
-const createPostSchedule = () => {
-    request('http://localhost:3000/api/v1/schedule', function (error, response, body) {
+const scheduleJob = () => {
+    request(`http://localhost:3000/api/v1/job`, function (error, response, body) {
         console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
     });
+};
+
+const cancelJob = (jobId) => {
+    request(
+        `http://localhost:3000/api/v1/job?job_action=cancel_job&job_id=${jobId}`,
+        function (error, response, body) {
+            console.log('statusCode:', response && response.statusCode, 'HIT CANCEL ROUTE'); // Print the response status code if a response was received
+        }
+    );
 };
 
 app.listen(port, () => {
@@ -48,8 +58,23 @@ app.listen(port, () => {
             await channel.consume(
                 process.env.AMQPS_QUEUE,
                 (message) => {
+                    let messageContent = message.content.toString();
                     console.log(" [x] Received '%s'", message.content.toString());
-                    createPostSchedule();
+
+                    let messageJSON;
+
+                    try {
+                        messageJSON = JSON.parse(message.content.toString());
+                        console.log('messageJSON:', messageJSON);
+                    } catch (error) {
+                        console.log('ERROR while parsing message content');
+                    }
+
+                    if (messageJSON.action === 'cancel') {
+                        cancelJob(messageJSON.productId);
+                    } else if (messageJSON.action === 'schedule') {
+                        scheduleJob();
+                    }
                 },
                 { noAck: true }
             );

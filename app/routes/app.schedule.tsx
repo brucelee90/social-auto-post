@@ -3,7 +3,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
 import messageBrokerService from '~/services/messagingBrokerService.server';
 import postScheduleQueueService from '~/services/postScheduleQueueService.server';
@@ -23,14 +23,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const scheduledTime = formData.get('scheduled_time');
     const postDescription = formData.get('post_description') as string;
     const postImageUrl = formData.get('post_image_url') as string;
+    const cancelJob = formData.get('cancel_job') as string;
+    const scheduleJob = formData.get('schedule_job') as string;
 
-    var scheduledPostDateTime = moment(
-        scheduledDate + ' ' + scheduledTime,
-        'YYYY-MM-DD HH:mm'
-    ).toISOString();
+    const scheduleJobFunc = (
+        productId: string,
+        scheduledPostDateTime: string,
+        postImageUrl: string,
+        postDescription: string
+    ) => {
+        messageBrokerService.addItemToQueue(
+            `{"action": "schedule", "productId": "${productId}", "scheduledTime": "${scheduledTime}"}`
+        );
 
-    try {
-        messageBrokerService.addItemToQueue(`schedule ${productId} for ${scheduledPostDateTime}`);
         postScheduleQueueService.addToPostScheduleQueue(
             parseInt(productId),
             scheduledPostDateTime,
@@ -39,11 +44,48 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         );
 
         console.log('post Product', productId, 'on', scheduledPostDateTime);
+
         return {
             error: false,
             message: `Product set to be scheduled on ${scheduledDate} at ${scheduledTime}`,
+            action: 'schedule',
             productId: productId
         };
+    };
+
+    const cancelJobFunc = (productId: string) => {
+        messageBrokerService.addItemToQueue(
+            `{"action": "cancel", "productId": "${productId}", "scheduledTime": ""}`
+        );
+        try {
+            postScheduleQueueService.removeScheduledItemFromQueue(parseInt(productId));
+        } catch (error) {
+            console.log(
+                `${productId} could not be deleted from post ScheduleService. The current queue contains ${postScheduleQueueService.getScheduledItemsByDate(new Date())}`
+            );
+        }
+
+        console.log('Cancel Product', productId, 'on', scheduledPostDateTime);
+
+        return {
+            error: false,
+            message: `Scheduled product was successfully cancelled ${scheduledDate}`,
+            action: 'cancel',
+            productId: productId
+        };
+    };
+
+    let scheduledPostDateTime = moment(
+        scheduledDate + ' ' + scheduledTime,
+        'YYYY-MM-DD HH:mm'
+    ).toISOString();
+
+    try {
+        if (scheduleJob) {
+            return scheduleJobFunc(productId, scheduledPostDateTime, postImageUrl, postDescription);
+        } else if (cancelJob) {
+            return cancelJobFunc(productId);
+        }
     } catch (error) {
         return {
             error: true,
@@ -128,18 +170,19 @@ interface Props {
 
 export function PostBtn(props: Props) {
     const { actionProductId, productId, actionMessage, isScheduleSuccessfull } = props;
+    const isScheduled = actionMessage?.includes('schedule');
 
     return (
         <div>
-            {actionProductId === productId ? (
+            <div>{actionMessage}</div>
+            {actionProductId === productId && isScheduled === true ? (
                 <div>
-                    <div>{actionMessage}</div>
                     {isScheduleSuccessfull ? (
-                        <button type="submit" name="reschedule">
+                        <button type="submit" name="cancel_job" value="cancel_job">
                             Cancel and Reschedule Post
                         </button>
                     ) : (
-                        <button type="submit" name="reschedule">
+                        <button type="submit" name="schedule_job">
                             Retry Schedule
                         </button>
                     )}
@@ -150,7 +193,7 @@ export function PostBtn(props: Props) {
                         <DatePicker name={`scheduled_date`} />
                         <input type="time" id="scheduled_time" name={`scheduled_time`} />
                     </div>
-                    <button type="submit" name="schedule">
+                    <button type="submit" name="schedule_job" value="schedule_job">
                         Schedule Post
                     </button>
                 </div>
