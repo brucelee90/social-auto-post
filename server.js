@@ -56,6 +56,13 @@ const cancelJob = (jobId) => {
 app.listen(port, () => {
     console.log(`Express server started on http://${host}:${port}`);
 
+    request(
+        `http://localhost:3000/api/v1/job?job_action=start_service`,
+        function (error, response, body) {
+            console.log('statusCode:', response && response.statusCode, 'agenda service started'); // Print the response status code if a response was received
+        }
+    );
+
     (async () => {
         try {
             const connection = await amqp.connect(process.env.AMQPS_CONNECTION_URL);

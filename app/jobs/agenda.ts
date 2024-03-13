@@ -1,30 +1,28 @@
-import { Agenda } from "@hokify/agenda";
+// import moment from "moment";
+// import instagramApiService from "~/services/instagramApiService.server";
+// import postScheduleQueueService from "~/services/postScheduleQueueService.server";
+import { Agenda, Job } from "@hokify/agenda";
 
-const mongoConnectionString = 'mongodb+srv://l4webdsgn:4fIIZs5ldzOblFD3@social-auto-post.ecwtgph.mongodb.net//agenda';
+// const scheduler = require('node-schedule');
+// const env = process.env.NODE_ENV || "development";
+// const config = require(__dirname + "/../config/config.js")[env];
+// const { allDefinitions } = require("./definitions");
 
-const agenda = new Agenda({ db: { address: mongoConnectionString } });
-
-// Or override the default collection name:
-// const agenda = new Agenda({db: {address: mongoConnectionString, collection: 'jobCollectionName'}});
-
-// or pass additional connection options:
-// const agenda = new Agenda({db: {address: mongoConnectionString, collection: 'jobCollectionName', options: {ssl: true}}});
-
-// or pass in an existing mongodb-native MongoClient instance
-// const agenda = new Agenda({mongo: myMongoClient});
-
-agenda.define('delete old users', async job => {
-    // await User.remove({ lastLogIn: { $lt: twoDaysAgo } });
-    console.log("DELETE ALL USERS THAT ARE OLDER THAN 73 YEARS");
-
+// establised a connection to our mongoDB database.
+const agenda = new Agenda({
+    db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" }, processEvery: "1 minute",
+    maxConcurrency: 20,
 });
 
-(async function () {
-    // IIFE to give access to async/await
-    await agenda.start();
+// listen for the ready or error event.
+agenda
+    .on("ready", () => console.log("Agenda started!"))
+    .on("error", () => console.log("Agenda connection error!"));
 
-    await agenda.every('3 minutes', 'delete old users');
+// define all agenda jobs
+// allDefinitions(agenda);
 
-    // Alternatively, you could also do:
-    await agenda.every('*/3 * * * *', 'delete old users');
-})();
+// logs all registered jobs 
+console.log({ jobs: agenda.definitions });
+
+module.exports = agenda;

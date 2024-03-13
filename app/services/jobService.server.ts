@@ -2,6 +2,7 @@ import moment from "moment";
 import instagramApiService from "~/services/instagramApiService.server";
 import postScheduleQueueService from "~/services/postScheduleQueueService.server";
 import { Agenda, Job } from "@hokify/agenda";
+import email from "./lib/jobs/email";
 const scheduler = require('node-schedule');
 
 
@@ -15,9 +16,27 @@ interface JobService {
 
 const jobService = {} as JobService
 
+
 jobService.start = async () => {
     const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" } });
-    agenda.start()
+
+    jobService.runScheduledJobsByDate(new Date())
+
+    let unremovedItems = await postScheduleQueueService.getUnremovedItems()
+    console.log("unremovedItems:", unremovedItems);
+    unremovedItems.map((job) => {
+        jobService.cancelScheduledJob(job.productId)
+    })
+
+
+    async function graceful() {
+        await agenda.stop();
+        process.exit(0);
+    }
+
+    process.on('SIGTERM', graceful);
+    process.on('SIGINT', graceful);
+
 }
 
 jobService.getAllJobs = async () => {
@@ -49,20 +68,22 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
             const publishDate = moment(el.dateScheduled).toISOString();
 
             agenda.define(
-                `porudctId${el.productId}`,
-                async job => {
+                `${el.productId}`,
+                async (job, done) => {
+
+                    console.log("job", job);
+
 
                     instagramApiService.publishMedia(el.postImgUrl, el.postDescription)
                     postScheduleQueueService.removeScheduledItemFromQueue(el.productId)
                     console.log('Posted media at.', publishDate);
+                    done()
+                });
 
-                },
-                { priority: 'high', concurrency: 10 }
-            );
 
             (async function () {
                 await agenda.start();
-                await agenda.schedule(publishDate, `porudctId${el.productId}`, { to: 'info@l4webdesign.de' });
+                await agenda.schedule(publishDate, `${el.productId}`, { to: 'info@l4webdesign.de' });
             })();
         })
 
@@ -105,8 +126,8 @@ jobService.cancelScheduledJob = async (jobId) => {
 
     try {
         agenda.on("ready", async () => {
-            const numRemoved = await agenda.cancel({ name: `porudctId${jobId}` });
-            console.log(await agenda.db.getJobs({}), 'numRemoved', numRemoved);
+            const numRemoved = await agenda.cancel({ name: `${jobId}` });
+            console.log('numRemoved', numRemoved);
         })
 
     } catch (error) {
@@ -114,9 +135,5 @@ jobService.cancelScheduledJob = async (jobId) => {
         throw new Error(error as string)
     }
 }
-
-
-
-
 
 export default jobService;

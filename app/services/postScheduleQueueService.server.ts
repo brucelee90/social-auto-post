@@ -1,7 +1,16 @@
+interface PostScheduleQueue {
+
+    productId: bigint;
+    dateScheduled: Date;
+    postImgUrl: string;
+    postDescription: string;
+}
+
 interface postScheduleQueueService {
     addToPostScheduleQueue: (productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
     removeScheduledItemFromQueue: (productId: number) => Promise<void>,
+    getUnremovedItems: () => Promise<PostScheduleQueue[]>,
 }
 
 const postScheduleQueueService = {} as postScheduleQueueService
@@ -31,7 +40,16 @@ postScheduleQueueService.getScheduledItemsByDate = async function getScheduledIt
 
     });
     return scheduleQueue
+}
 
+postScheduleQueueService.getUnremovedItems = async () => {
+    let unremovedItems = await prisma.postScheduleQueue.findMany({
+        where: {
+            dateScheduled: { lt: new Date() }
+        }
+    })
+
+    return unremovedItems
 }
 
 postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: number) {

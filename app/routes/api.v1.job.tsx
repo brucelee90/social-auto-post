@@ -1,7 +1,5 @@
 import { LoaderFunction } from '@remix-run/node';
-import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import jobService from '~/services/jobService.server';
-import postScheduleQueueService from '~/services/postScheduleQueueService.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
     const url = new URL(request.url);
