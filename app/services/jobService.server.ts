@@ -2,7 +2,7 @@ import moment from "moment";
 import instagramApiService from "~/services/instagramApiService.server";
 import postScheduleQueueService from "~/services/postScheduleQueueService.server";
 import { Agenda, Job } from "@hokify/agenda";
-import email from "./lib/jobs/email";
+import definitions from "./lib/jobs/definitions";
 const scheduler = require('node-schedule');
 
 
@@ -10,23 +10,72 @@ interface JobService {
     start: () => void
     getAllJobs: () => void
     runScheduledJobsByDate: (date: Date) => Promise<void>,
-    cancelScheduledJob: (jobId: BigInt) => void
+    cancelScheduledJob: (jobId: string) => void
     jobs: [{}]
 }
 
 const jobService = {} as JobService
 
-
 jobService.start = async () => {
+
+    // this whole function has to handle the situation if a server is restarted while there are scheduled jobs that should have been posted.
     const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" } });
 
-    jobService.runScheduledJobsByDate(new Date())
+    // reschedule all jobs that are supposed to be scheduled in the future
+    // jobService.runScheduledJobsByDate(new Date())
 
-    let unremovedItems = await postScheduleQueueService.getUnremovedItems()
-    console.log("unremovedItems:", unremovedItems);
-    unremovedItems.map((job) => {
-        jobService.cancelScheduledJob(job.productId)
+    // zombie jobs are jobs that should have been done and deleted but are still saved in the apps database post schedule queue
+    // let zombieJobs = await postScheduleQueueService.getUnremovedItems()
+
+    agenda.on("ready", async () => {
+        // @ts-ignore
+        // a queued job will stay queued forever by agenda js if it didn't run. If the server is stopped during the time a job should have run.
+        let allQueuedJobs = await agenda.jobs({ lastRunAt: { $in: [null, false] } })
+
+        allQueuedJobs.map((job: any) => {
+            console.log('job.attrs.nextRunAt', job.attrs.nextRunAt, (job.attrs.nextRunAt as Date) > new Date(), (job.attrs.nextRunAt as Date) < new Date());
+
+            // finish job now if job should have been done by now
+            if ((job.attrs.nextRunAt as Date) > new Date()) {
+                console.log('hey-------------------', job.attrs.nextRunAt, new Date());
+
+                agenda.define(
+                    `${job.attrs.name}_rescheduled`,
+                    async (job, done) => {
+                        instagramApiService.publishMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        console.log('Posted media at.', job.attrs.lastRunAt);
+                        done()
+                    });
+                (async function () {
+                    await agenda.start();
+                    await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: 'https://cdn.shopify.com/s/files/1/0585/4239/1487/products/air-jordan-1-mid-paint-drip-gs-1-1000.png?v=1631324039', description: "Scheduled Element" });
+                })();
+            } else if ((job.attrs.nextRunAt as Date) <= new Date()) {
+                console.log('ho------------------------', job.attrs.nextRunAt, new Date());
+
+                agenda.define(
+                    `${job.attrs.name}_rescheduled`,
+                    async (job, done) => {
+                        instagramApiService.publishMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        console.log('Posted media at.', job.attrs.lastRunAt);
+                        done()
+                    });
+
+                (async function () {
+                    await agenda.start();
+                    await agenda.schedule("10 second", `${job.attrs.name}_rescheduled`, { imgUrl: 'https://cdn.shopify.com/s/files/1/0585/4239/1487/products/air-jordan-1-mid-paint-drip-gs-1-1000.png?v=1631324039', description: "Scheduled Element" });
+                })();
+            }
+
+            // reschedule job if job is in the future
+            jobService.cancelScheduledJob(job.attrs.name)
+
+        })
+
+        console.log("allJobs", allQueuedJobs);
     })
+
+
 
 
     async function graceful() {
@@ -59,7 +108,6 @@ jobService.getAllJobs = async () => {
 
 jobService.runScheduledJobsByDate = async function (date: Date) {
     try {
-
         const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
         let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
 
@@ -71,9 +119,6 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
                 `${el.productId}`,
                 async (job, done) => {
 
-                    console.log("job", job);
-
-
                     instagramApiService.publishMedia(el.postImgUrl, el.postDescription)
                     postScheduleQueueService.removeScheduledItemFromQueue(el.productId)
                     console.log('Posted media at.', publishDate);
@@ -83,7 +128,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
 
             (async function () {
                 await agenda.start();
-                await agenda.schedule(publishDate, `${el.productId}`, { to: 'info@l4webdesign.de' });
+                await agenda.schedule(publishDate, `${el.productId}`, { imgUrl: `${el.postImgUrl}`, description: `${el.postDescription}` });
             })();
         })
 

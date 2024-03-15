@@ -10,14 +10,14 @@ require('dotenv').config();
 let app = express();
 
 // create agenda dashboard route
-const CONNECTION_URL = process.env.MONGO_DB_CONNECTION_URL;
-let agendaConnectionConfig = {
-    db: {
-        address: `${CONNECTION_URL}`
-    }
-};
-let agenda = new Agenda(agendaConnectionConfig);
-app.use('/dash', Agendash(agenda));
+// const CONNECTION_URL = process.env.MONGO_DB_CONNECTION_URL;
+// let agendaConnectionConfig = {
+//     db: {
+//         address: `${CONNECTION_URL}`
+//     }
+// };
+// let agenda = new Agenda(agendaConnectionConfig);
+// app.use('/dash', Agendash(agenda));
 
 app.use(express.static('./build'));
 

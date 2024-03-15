@@ -9,7 +9,7 @@ interface PostScheduleQueue {
 interface postScheduleQueueService {
     addToPostScheduleQueue: (productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
-    removeScheduledItemFromQueue: (productId: number) => Promise<void>,
+    removeScheduledItemFromQueue: (productId: string) => Promise<void>,
     getUnremovedItems: () => Promise<PostScheduleQueue[]>,
 }
 
@@ -52,11 +52,11 @@ postScheduleQueueService.getUnremovedItems = async () => {
     return unremovedItems
 }
 
-postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: number) {
+postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: string) {
     try {
 
         await prisma.postScheduleQueue.delete({
-            where: { productId: productId }
+            where: { productId: BigInt(productId) }
         })
     } catch (error) {
         console.log(`${productId} could not be deleted`);

@@ -11,16 +11,15 @@ export const loader: LoaderFunction = async ({ request }) => {
         switch (jobAction) {
             case 'start_service':
                 jobService.start();
+
                 responseMessage = 'started service successfully';
                 break;
 
             case 'cancel_job':
                 // jobService.getAllJobs();
                 if (jobId) {
-                    let jobIdToBeCancelled: BigInt = BigInt(jobId);
-                    jobService.cancelScheduledJob(jobIdToBeCancelled);
-                    // postScheduleQueueService.removeScheduledItemFromQueue(parseInt(jobId));
-                    responseMessage = 'canceld Job succesfully';
+                    jobService.cancelScheduledJob(jobId);
+                    responseMessage = 'cancelled Job succesfully';
                 } else {
                     responseMessage = 'please provide jobId';
                 }

@@ -58,7 +58,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             `{"action": "cancel", "productId": "${productId}", "scheduledTime": ""}`
         );
         try {
-            postScheduleQueueService.removeScheduledItemFromQueue(parseInt(productId));
+            postScheduleQueueService.removeScheduledItemFromQueue(productId);
         } catch (error) {
             console.log(
                 `${productId} could not be deleted from post ScheduleService. The current queue contains ${postScheduleQueueService.getScheduledItemsByDate(new Date())}`
