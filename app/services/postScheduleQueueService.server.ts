@@ -11,6 +11,7 @@ interface postScheduleQueueService {
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
     removeScheduledItemFromQueue: (productId: string) => Promise<void>,
     getUnremovedItems: () => Promise<PostScheduleQueue[]>,
+    getScheduledItem: (productId: string) => Promise<PostScheduleQueue>,
 }
 
 const postScheduleQueueService = {} as postScheduleQueueService
@@ -62,6 +63,14 @@ postScheduleQueueService.removeScheduledItemFromQueue = async function removeSch
         console.log(`${productId} could not be deleted`);
 
     }
+}
+
+postScheduleQueueService.getScheduledItem = async function (productId: string) {
+    return await prisma.postScheduleQueue.findFirstOrThrow({
+        where: {
+            productId: BigInt(productId)
+        }
+    })
 }
 
 export default postScheduleQueueService

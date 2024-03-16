@@ -2,7 +2,7 @@ import moment from "moment";
 import instagramApiService from "~/services/instagramApiService.server";
 import postScheduleQueueService from "~/services/postScheduleQueueService.server";
 import { Agenda, Job } from "@hokify/agenda";
-import definitions from "./lib/jobs/definitions";
+
 const scheduler = require('node-schedule');
 
 
@@ -10,6 +10,7 @@ interface JobService {
     start: () => void
     getAllJobs: () => void
     runScheduledJobsByDate: (date: Date) => Promise<void>,
+    scheduleJob: (jobId: string) => Promise<void>,
     cancelScheduledJob: (jobId: string) => void
     jobs: [{}]
 }
@@ -108,6 +109,7 @@ jobService.getAllJobs = async () => {
 
 jobService.runScheduledJobsByDate = async function (date: Date) {
     try {
+        // REFACTOR AGENDA TO BE A SINGLETON SO IT DOESN'T HAVE TO BE INSTANCIATED EVERYTIME
         const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
         let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
 
@@ -179,6 +181,29 @@ jobService.cancelScheduledJob = async (jobId) => {
         console.log(error);
         throw new Error(error as string)
     }
+}
+
+jobService.scheduleJob = async (jobId) => {
+    const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
+
+    let scheduleItem = await postScheduleQueueService.getScheduledItem(jobId)
+
+    console.log('scheduleItem', scheduleItem);
+
+    agenda.define(
+        `${jobId}`,
+        async (job, done) => {
+
+            instagramApiService.publishMedia(scheduleItem.postImgUrl, scheduleItem.postDescription)
+            postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
+            console.log('Posted media at.', scheduleItem.dateScheduled);
+            done()
+        });
+
+    (async function () {
+        await agenda.start();
+        await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItem.postImgUrl}`, description: `${scheduleItem.postDescription}` });
+    })();
 }
 
 export default jobService;

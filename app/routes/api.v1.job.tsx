@@ -1,4 +1,5 @@
 import { LoaderFunction } from '@remix-run/node';
+import { ActionFunctionArgs } from '@remix-run/server-runtime';
 import jobService from '~/services/jobService.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -6,6 +7,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     const jobAction = url.searchParams.get('job_action');
     let jobId = url.searchParams.get('job_id') as string;
     let responseMessage: string;
+
+    console.log(request);
 
     try {
         switch (jobAction) {
@@ -30,6 +33,18 @@ export const loader: LoaderFunction = async ({ request }) => {
                 // jobService.getAllJobs();
                 jobService.getAllJobs();
                 responseMessage = 'ALL JOBS';
+                break;
+
+            case 'schedule_job':
+                // jobService.getAllJobs();
+                // jobService.getAllJobs();
+                if (jobId) {
+                    jobService.scheduleJob(jobId);
+                } else {
+                    throw new Error('NO JOB ID!!');
+                }
+
+                responseMessage = 'SCHEDULED JOB';
                 break;
 
             default:
@@ -58,3 +73,7 @@ export const loader: LoaderFunction = async ({ request }) => {
         );
     }
 };
+
+export async function action(req: ActionFunctionArgs) {
+    return { req };
+}

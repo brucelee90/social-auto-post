@@ -1,3 +1,4 @@
+import { Agenda } from '@hokify/agenda';
 import { ActionFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
@@ -5,6 +6,7 @@ import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
+import instagramApiService from '~/services/instagramApiService.server';
 import messageBrokerService from '~/services/messagingBrokerService.server';
 import postScheduleQueueService from '~/services/postScheduleQueueService.server';
 import { authenticate } from '~/shopify.server';
@@ -32,6 +34,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         postImageUrl: string,
         postDescription: string
     ) => {
+        // REFACTOR THIS TO BETTER MAKE SURE THAT JSON ALWAYS HAS SAME STRUCTURE
         messageBrokerService.addItemToQueue(
             `{"action": "schedule", "productId": "${productId}", "scheduledTime": "${scheduledTime}"}`
         );
@@ -54,6 +57,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     };
 
     const cancelJobFunc = (productId: string) => {
+        // REFACTOR THIS TO BETTER MAKE SURE THAT JSON ALWAYS HAS SAME STRUCTURE
         messageBrokerService.addItemToQueue(
             `{"action": "cancel", "productId": "${productId}", "scheduledTime": ""}`
         );
