@@ -10,6 +10,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
     console.log(request);
 
+    // REFACTOR: There should be different way to handle the different parameters
     try {
         switch (jobAction) {
             case 'start_service':

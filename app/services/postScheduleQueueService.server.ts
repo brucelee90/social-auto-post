@@ -1,3 +1,6 @@
+import { PromiseType } from "@prisma/client/extension";
+import { post } from "axios";
+
 interface PostScheduleQueue {
 
     productId: bigint;
@@ -7,24 +10,25 @@ interface PostScheduleQueue {
 }
 
 interface postScheduleQueueService {
-    addToPostScheduleQueue: (productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
+    addToPostScheduleQueue: (productId: string, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
     removeScheduledItemFromQueue: (productId: string) => Promise<void>,
     getUnremovedItems: () => Promise<PostScheduleQueue[]>,
     getScheduledItem: (productId: string) => Promise<PostScheduleQueue>,
+    getAllScheduledItems: () => Promise<PostScheduleQueue[]>
 }
 
 const postScheduleQueueService = {} as postScheduleQueueService
 
-postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: number, dateScheduled: string, postImgUrl: string, postDescriptiop: string) {
+postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string, postDescriptiop: string) {
     return prisma.postScheduleQueue.upsert({
-        where: { productId: productId },
+        where: { productId: BigInt(productId) },
         update: {
-            productId: productId,
+            productId: BigInt(productId),
             dateScheduled: dateScheduled
         },
         create: {
-            productId: productId,
+            productId: BigInt(productId),
             dateScheduled: dateScheduled,
             postImgUrl: postImgUrl,
             postDescription: postDescriptiop
@@ -71,6 +75,10 @@ postScheduleQueueService.getScheduledItem = async function (productId: string) {
             productId: BigInt(productId)
         }
     })
+}
+
+postScheduleQueueService.getAllScheduledItems = async () => {
+    return await prisma.postScheduleQueue.findMany()
 }
 
 export default postScheduleQueueService

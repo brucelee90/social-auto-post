@@ -1,21 +1,31 @@
-import { Agenda } from '@hokify/agenda';
 import { ActionFunctionArgs } from '@remix-run/node';
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, json, useActionData, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import { useState } from 'react';
+import { TSMap } from 'typescript-map';
 import DatePicker from '~/components/mediaqueue/DatePicker';
-import instagramApiService from '~/services/instagramApiService.server';
 import messageBrokerService from '~/services/messagingBrokerService.server';
 import postScheduleQueueService from '~/services/postScheduleQueueService.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 
+// Refactor: create seperate route directory and put components, loaders and actions in seperate files
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
     const res = await admin.graphql(`${queries.queryAllProducts}`);
-    return res.json();
+
+    // Bigint is not serializable that's why
+    let allScheduledItems = new TSMap();
+    (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
+        allScheduledItems.set(e.productId, e.dateScheduled);
+    });
+
+    return json({
+        allAvailableProducts: await res.json(),
+        allScheduledItems: allScheduledItems.toJSON()
+    });
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -40,7 +50,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         );
 
         postScheduleQueueService.addToPostScheduleQueue(
-            parseInt(productId),
+            productId,
             scheduledPostDateTime,
             postImageUrl,
             postDescription
@@ -50,7 +60,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
         return {
             error: false,
-            message: `Product set to be scheduled on ${scheduledDate} at ${scheduledTime}`,
+            message: `Set to be scheduled on ${moment(scheduledPostDateTime).format('YYYY MM DD')} at ${moment(scheduledPostDateTime).format('hh:mm')}`,
             action: 'schedule',
             productId: productId
         };
@@ -69,11 +79,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             );
         }
 
-        console.log('Cancel Product', productId, 'on', scheduledPostDateTime);
-
         return {
             error: false,
-            message: `Scheduled product was successfully cancelled ${scheduledDate}`,
+            message: `Scheduled product was cancelled successfully`,
             action: 'cancel',
             productId: productId
         };
@@ -94,75 +102,92 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         return {
             error: true,
             message: 'Product Could not be posted, please',
-            productId: productId
+            productId: productId,
+            action: 'error'
         };
     }
 };
 
 export default function Schedule() {
-    const loaderData = useLoaderData<typeof loader>();
+    // const loaderData = useLoaderData<typeof loader>();
+    const { allAvailableProducts, allScheduledItems } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
-    const productsArray = [...loaderData.data.products.nodes];
+    const allScheduledItemsMap = new TSMap().fromJSON(allScheduledItems);
 
-    const isScheduleSuccessfull = !actionData?.error;
-    const actionMessage = actionData?.message;
-    const actionProductId = actionData?.productId;
+    try {
+        let productsArray = [...allAvailableProducts?.data?.products?.nodes];
 
-    return (
-        <div>
-            <Text variant="heading2xl" as="h3">
-                Schedule
-            </Text>
-            {productsArray.map((e, key) => {
-                let productId = e.id.split('/');
-                productId = productId[productId.length - 1];
-                let imageUrl = e.featuredImage?.url;
+        const isScheduleSuccessfull = !actionData?.error as boolean;
+        const actionMessage = actionData?.message as string;
+        const actionProductId = actionData?.productId as string;
+        const action = actionData?.action as string;
 
-                let isEligibleForScheduling = false;
-                if (productId !== undefined && imageUrl !== undefined) {
-                    isEligibleForScheduling = true;
-                }
+        let isProductsArrayAvailable = productsArray?.length > 0;
 
-                return (
-                    <Form method="post">
-                        <div>
-                            <input type="hidden" name="product_id" value={productId} />
-                            <input type="hidden" name="post_image_url" value={imageUrl} />
-                            <div>
-                                <Text variant="headingXl" as="h4">
-                                    {e.title}
-                                </Text>
-                                <img alt="img" width={'150px'} src={imageUrl} />
-                            </div>
-                            <div>
-                                <textarea
-                                    style={{ width: '30rem', background: '#ccc' }}
-                                    name="post_description"
-                                    rows={10}
-                                    defaultValue={e.description}
-                                />
-                            </div>
-                            {isEligibleForScheduling ? (
-                                <PostBtn
-                                    actionProductId={actionProductId}
-                                    productId={productId}
-                                    actionMessage={actionMessage}
-                                    isScheduleSuccessfull={isScheduleSuccessfull}
-                                />
-                            ) : (
+        return (
+            <div>
+                <Text variant="heading2xl" as="h3">
+                    Schedule
+                </Text>
+
+                {productsArray.map((e, key) => {
+                    let productIdArr = e.id.split('/');
+                    let productId = productIdArr[productIdArr.length - 1];
+                    let imageUrl = e.featuredImage?.url;
+                    let scheduledDate = allScheduledItemsMap.get(`${productId}`) as string;
+
+                    let isEligibleForScheduling = false;
+                    if (productId !== undefined && imageUrl !== undefined) {
+                        isEligibleForScheduling = true;
+                    }
+
+                    return (
+                        <div key={key}>
+                            <Form method="post">
                                 <div>
-                                    Please make sure that you have set an image and a description
-                                    for this product
-                                </div>
-                            )}
+                                    <input type="hidden" name="product_id" value={productId} />
+                                    <input type="hidden" name="post_image_url" value={imageUrl} />
+                                    <div>
+                                        <Text variant="headingXl" as="h4">
+                                            {e.title}
+                                        </Text>
+                                        <img alt="img" width={'150px'} src={imageUrl} />
+                                    </div>
+                                    <div>
+                                        <textarea
+                                            style={{ width: '30rem', background: '#ccc' }}
+                                            name="post_description"
+                                            rows={10}
+                                            defaultValue={e.description}
+                                        />
+                                    </div>
+                                    {isEligibleForScheduling ? (
+                                        <PostBtn
+                                            actionProductId={actionProductId}
+                                            productId={productId}
+                                            actionMessage={actionMessage}
+                                            isScheduleSuccessfull={isScheduleSuccessfull}
+                                            scheduledDate={scheduledDate}
+                                            action={action}
+                                        />
+                                    ) : (
+                                        <div>
+                                            Please make sure that you have set an image and a
+                                            description for this product
+                                        </div>
+                                    )}
 
-                            <hr />
+                                    <hr />
+                                </div>
+                            </Form>
                         </div>
-                    </Form>
-                );
-            })}
-        </div>
-    );
+                    );
+                })}
+            </div>
+        );
+    } catch (error) {
+        return <div>There are no items to be scheduled </div>;
+    }
 }
 
 interface Props {
@@ -170,17 +195,49 @@ interface Props {
     productId: string;
     actionMessage: string | undefined;
     isScheduleSuccessfull: boolean;
+    scheduledDate: string;
+    action: string;
 }
 
 export function PostBtn(props: Props) {
-    const { actionProductId, productId, actionMessage, isScheduleSuccessfull } = props;
-    const isScheduled = actionMessage?.includes('schedule');
+    const {
+        actionProductId,
+        productId,
+        actionMessage,
+        isScheduleSuccessfull,
+        scheduledDate,
+        action
+    } = props;
+
+    const [scheduledDateStr, setScheduledDate] = useState(scheduledDate);
+
+    // Refactor: shouldn
+    let isScheduled = actionMessage?.includes('schedule');
+    let isCurrentProductEdited = actionProductId === productId;
+    let hasScheduledDate = scheduledDateStr !== undefined;
+
+    let showCancelButton = (isScheduled && isCurrentProductEdited) || hasScheduledDate;
+
+    // A cancellation will override everything
+    let isCancelled = action === 'cancel';
+    if (isCurrentProductEdited && isCancelled) {
+        showCancelButton = false;
+    }
+
+    console.log('isCancelled', isCancelled);
+
+    let notification = actionMessage;
+
+    if (scheduledDate) {
+        notification = `Set to be scheduled on ${moment(scheduledDate).format('YYYY MM DD')} at ${moment(scheduledDate).format('hh:mm')}`;
+    }
 
     return (
         <div>
-            <div>{actionMessage}</div>
-            {actionProductId === productId && isScheduled === true ? (
+            {showCancelButton ? (
                 <div>
+                    <div>{notification}</div>
+                    {/* Refactor: Button sollte eigene komponente haben und nur parameter entgegennehmen */}
                     {isScheduleSuccessfull ? (
                         <button type="submit" name="cancel_job" value="cancel_job">
                             Cancel and Reschedule Post
