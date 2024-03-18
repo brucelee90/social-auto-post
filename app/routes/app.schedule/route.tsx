@@ -10,6 +10,7 @@ import messageBrokerService from '~/services/messagingBrokerService.server';
 import postScheduleQueueService from '~/services/postScheduleQueueService.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
+import { scheduleUtils } from './scheduleUtils';
 
 // Refactor: create seperate route directory and put components, loaders and actions in seperate files
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -38,55 +39,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const cancelJob = formData.get('cancel_job') as string;
     const scheduleJob = formData.get('schedule_job') as string;
 
-    const scheduleJobFunc = (
-        productId: string,
-        scheduledPostDateTime: string,
-        postImageUrl: string,
-        postDescription: string
-    ) => {
-        // REFACTOR THIS TO BETTER MAKE SURE THAT JSON ALWAYS HAS SAME STRUCTURE
-        messageBrokerService.addItemToQueue(
-            `{"action": "schedule", "productId": "${productId}", "scheduledTime": "${scheduledTime}"}`
-        );
-
-        postScheduleQueueService.addToPostScheduleQueue(
-            productId,
-            scheduledPostDateTime,
-            postImageUrl,
-            postDescription
-        );
-
-        console.log('post Product', productId, 'on', scheduledPostDateTime);
-
-        return {
-            error: false,
-            message: `Set to be scheduled on ${moment(scheduledPostDateTime).format('YYYY MM DD')} at ${moment(scheduledPostDateTime).format('hh:mm')}`,
-            action: 'schedule',
-            productId: productId
-        };
-    };
-
-    const cancelJobFunc = (productId: string) => {
-        // REFACTOR THIS TO BETTER MAKE SURE THAT JSON ALWAYS HAS SAME STRUCTURE
-        messageBrokerService.addItemToQueue(
-            `{"action": "cancel", "productId": "${productId}", "scheduledTime": ""}`
-        );
-        try {
-            postScheduleQueueService.removeScheduledItemFromQueue(productId);
-        } catch (error) {
-            console.log(
-                `${productId} could not be deleted from post ScheduleService. The current queue contains ${postScheduleQueueService.getScheduledItemsByDate(new Date())}`
-            );
-        }
-
-        return {
-            error: false,
-            message: `Scheduled product was cancelled successfully`,
-            action: 'cancel',
-            productId: productId
-        };
-    };
-
     let scheduledPostDateTime = moment(
         scheduledDate + ' ' + scheduledTime,
         'YYYY-MM-DD HH:mm'
@@ -94,9 +46,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     try {
         if (scheduleJob) {
-            return scheduleJobFunc(productId, scheduledPostDateTime, postImageUrl, postDescription);
+            return scheduleUtils.scheduleJobFunc(
+                productId,
+                scheduledPostDateTime,
+                postImageUrl,
+                postDescription
+            );
         } else if (cancelJob) {
-            return cancelJobFunc(productId);
+            return scheduleUtils.cancelJobFunc(productId);
         }
     } catch (error) {
         return {
