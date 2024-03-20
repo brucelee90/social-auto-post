@@ -8,19 +8,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     let jobId = url.searchParams.get('job_id') as string;
     let responseMessage: string;
 
-    console.log(request);
-
     // REFACTOR: There should be different way to handle the different parameters
     try {
         switch (jobAction) {
             case 'start_service':
                 jobService.start();
-
                 responseMessage = 'started service successfully';
                 break;
 
             case 'cancel_job':
-                // jobService.getAllJobs();
                 if (jobId) {
                     jobService.cancelScheduledJob(jobId);
                     responseMessage = 'cancelled Job succesfully';
@@ -31,14 +27,11 @@ export const loader: LoaderFunction = async ({ request }) => {
                 break;
 
             case 'get_jobs':
-                // jobService.getAllJobs();
                 jobService.getAllJobs();
                 responseMessage = 'ALL JOBS';
                 break;
 
             case 'schedule_job':
-                // jobService.getAllJobs();
-                // jobService.getAllJobs();
                 if (jobId) {
                     jobService.scheduleJob(jobId);
                 } else {
