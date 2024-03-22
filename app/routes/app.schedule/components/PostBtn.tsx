@@ -1,12 +1,8 @@
 import moment from 'moment';
 import { useState } from 'react';
 import DatePicker from '~/components/mediaqueue/DatePicker';
-import { Action } from '../types';
-
-enum BtnAction {
-    schedule = 'schedule_job',
-    cancel = 'cancel_job'
-}
+import { Action } from '../../global_utils/types';
+import { JobAction as BtnAction } from '../../global_utils/types';
 
 interface Props {
     actionProductId: string | undefined;

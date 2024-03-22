@@ -1,7 +1,7 @@
 import moment from "moment";
 import messageBrokerService from "~/services/messagingBrokerService.server";
 import postScheduleQueueService from "~/services/postScheduleQueueService.server";
-import { Action as MqAction } from './types'
+import { Action as MqAction } from '../global_utils/types'
 
 type MqMessageKeys = "action" | "productId" | "scheduledTime";
 

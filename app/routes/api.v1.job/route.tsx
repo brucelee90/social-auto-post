@@ -1,6 +1,7 @@
 import { LoaderFunction } from '@remix-run/node';
 import { ActionFunctionArgs } from '@remix-run/server-runtime';
 import jobService from '~/services/jobService.server';
+import { JobAction } from '../global_utils/types';
 
 export const loader: LoaderFunction = async ({ request }) => {
     const url = new URL(request.url);
@@ -8,34 +9,33 @@ export const loader: LoaderFunction = async ({ request }) => {
     let jobId = url.searchParams.get('job_id') as string;
     let responseMessage: string;
 
-    // REFACTOR: There should be different way to handle the different parameters
     try {
         switch (jobAction) {
-            case 'start_service':
+            case JobAction.start:
                 jobService.start();
                 responseMessage = 'started service successfully';
                 break;
 
-            case 'cancel_job':
+            case JobAction.cancel:
                 if (jobId) {
                     jobService.cancelScheduledJob(jobId);
                     responseMessage = 'cancelled Job succesfully';
                 } else {
                     responseMessage = 'please provide jobId';
+                    throw new Error('No job ID provided');
                 }
-
                 break;
 
-            case 'get_jobs':
+            case JobAction.get:
                 jobService.getAllJobs();
-                responseMessage = 'ALL JOBS';
+                responseMessage = 'All job done';
                 break;
 
-            case 'schedule_job':
+            case JobAction.schedule:
                 if (jobId) {
                     jobService.scheduleJob(jobId);
                 } else {
-                    throw new Error('NO JOB ID!!');
+                    throw new Error('No job ID provided');
                 }
 
                 responseMessage = 'SCHEDULED JOB';

@@ -1,7 +1,7 @@
 import moment from "moment";
 import instagramApiService from "~/services/instagramApiService.server";
 import postScheduleQueueService from "~/services/postScheduleQueueService.server";
-import { Agenda, Job } from "@hokify/agenda";
+import { Agenda } from "@hokify/agenda";
 
 const scheduler = require('node-schedule');
 
@@ -15,18 +15,11 @@ interface JobService {
     jobs: [{}]
 }
 
+const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" } });
+
 const jobService = {} as JobService
 
 jobService.start = async () => {
-
-    // this whole function has to handle the situation if a server is restarted while there are scheduled jobs that should have been posted.
-    const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" } });
-
-    // reschedule all jobs that are supposed to be scheduled in the future
-    // jobService.runScheduledJobsByDate(new Date())
-
-    // zombie jobs are jobs that should have been done and deleted but are still saved in the apps database post schedule queue
-    // let zombieJobs = await postScheduleQueueService.getUnremovedItems()
 
     agenda.on("ready", async () => {
         // @ts-ignore
@@ -52,8 +45,6 @@ jobService.start = async () => {
                     await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: 'https://cdn.shopify.com/s/files/1/0585/4239/1487/products/air-jordan-1-mid-paint-drip-gs-1-1000.png?v=1631324039', description: "Scheduled Element" });
                 })();
             } else if ((job.attrs.nextRunAt as Date) <= new Date()) {
-                console.log('ho------------------------', job.attrs.nextRunAt, new Date());
-
                 agenda.define(
                     `${job.attrs.name}_rescheduled`,
                     async (job, done) => {
@@ -72,8 +63,6 @@ jobService.start = async () => {
             jobService.cancelScheduledJob(job.attrs.name)
 
         })
-
-        console.log("allJobs", allQueuedJobs);
     })
 
 
@@ -91,11 +80,6 @@ jobService.start = async () => {
 
 jobService.getAllJobs = async () => {
 
-    const agenda = new Agenda({
-        db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" }, processEvery: "1 minute",
-        maxConcurrency: 20,
-    });
-
     agenda
         .on("ready", () => console.log("Agenda started!"))
         .on("error", () => console.log("Agenda connection error!"));
@@ -104,13 +88,11 @@ jobService.getAllJobs = async () => {
         console.log(await agenda.db.getJobs({}));
     })
 
-
 }
 
 jobService.runScheduledJobsByDate = async function (date: Date) {
     try {
-        // REFACTOR AGENDA TO BE A SINGLETON SO IT DOESN'T HAVE TO BE INSTANCIATED EVERYTIME
-        const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
+
         let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
 
         postQueue.map((el: any) => {
@@ -169,8 +151,6 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
 
 jobService.cancelScheduledJob = async (jobId) => {
 
-    const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
-
     try {
         agenda.on("ready", async () => {
             const numRemoved = await agenda.cancel({ name: `${jobId}` });
@@ -184,10 +164,7 @@ jobService.cancelScheduledJob = async (jobId) => {
 }
 
 jobService.scheduleJob = async (jobId) => {
-    const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string } });
-
     let scheduleItem = await postScheduleQueueService.getScheduledItem(jobId)
-
     console.log('scheduleItem', scheduleItem);
 
     agenda.define(
