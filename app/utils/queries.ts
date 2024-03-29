@@ -3,7 +3,7 @@ interface Queries {
     queryAllProducts: string
 }
 
-export const queries : Queries =  {
+export const queries: Queries = {
     queryProductsById: `
     #graphql
     query Products($ids: [ID!]!) {
@@ -30,6 +30,11 @@ export const queries : Queries =  {
           id
           featuredImage{
             url
+          }
+          images (first: 10){
+            nodes {
+              url(transform: {maxHeight: 500, maxWidth: 500})
+            }
           }
         }
       }

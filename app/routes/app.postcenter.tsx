@@ -3,9 +3,12 @@ import { useState } from 'react';
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
-import instagramApiService from '~/services/instagramApiService.server';
 import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
+import { ProductInfo } from './global_utils/types';
+import { PostForm } from './global_utils/enum';
+import instagramApiService from '~/services/instagramApiService.server';
+import { PostBtn } from './app.schedule/components/PostBtn';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
@@ -20,16 +23,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const imageUrl = formData.get('img_url') as string;
-    const postDescription = formData.get('post_description') as string;
-
-    console.log('formData', formData);
+    const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
+    const postDescription = formData.get(PostForm.description) as string;
+    const productId = formData.get('product_id') as string;
 
     try {
-        await instagramApiService.publishMedia(imageUrl, postDescription);
-        return { message: 'PUBLISHED SUCCESFULLY !', error: false };
+        if (imageUrl.length === 1) {
+            await instagramApiService.publishMedia(imageUrl[0], postDescription);
+        } else {
+            await instagramApiService.publishCarousel(imageUrl, postDescription);
+        }
+
+        return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
     } catch (error) {
-        return { message: `${error}`, error: true };
+        return { message: `${error}`, error: true, productId: productId };
     }
 };
 
@@ -38,12 +45,15 @@ export default function PublishMedia() {
     const loaderData = useLoaderData<typeof loader>();
     const productsArray = [...loaderData?.data?.products.nodes];
 
+    console.log('actionData', actionData);
+
     return (
         <div>
             {productsArray &&
-                productsArray.map((e: any, key) => {
+                productsArray.map((e: ProductInfo, key) => {
                     let productId = e.id;
                     let imageUrl = e.featuredImage?.url;
+                    let images = e.images?.nodes;
                     let title = e.title;
                     let description = e.description;
 
@@ -51,26 +61,39 @@ export default function PublishMedia() {
                         <>
                             <Form method="post">
                                 <div key={key} id={productId}>
+                                    <input type="hidden" name="product_id" value={productId} />
                                     <Text variant="headingLg" as="h3">
                                         {title}
                                     </Text>
-                                    <input type="hidden" name="img_url" value={imageUrl} />
-                                    <img alt="img" width={'150px'} src={imageUrl} />
+                                    {images.map((e, key) => {
+                                        return (
+                                            <div key={key}>
+                                                <input
+                                                    name={PostForm.imgUrl}
+                                                    value={e.url}
+                                                    type="hidden"
+                                                />
+                                                <img src={e.url} height={150} />
+                                            </div>
+                                        );
+                                    })}
 
                                     <div>
                                         <textarea
                                             rows={5}
-                                            name="post_description"
+                                            name={PostForm.description}
                                             defaultValue={description}
                                             cols={50}
                                         />
                                     </div>
 
                                     <div>
-                                        {imageUrl ? (
+                                        {images ? (
                                             <div>
                                                 <button type="submit">PUBLISH MEDIA</button>
-                                                {actionData && <div>{actionData.message}</div>}
+                                                {actionData?.productId === productId && (
+                                                    <div>{actionData.message}</div>
+                                                )}
                                             </div>
                                         ) : (
                                             <div>

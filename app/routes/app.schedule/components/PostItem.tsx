@@ -2,13 +2,7 @@ import { Form } from '@remix-run/react';
 import { Text } from '@shopify/polaris';
 import { PostBtn } from './PostBtn';
 import { TSMap } from 'typescript-map';
-
-type ProductInfo = {
-    id: string;
-    featuredImage: { url: string };
-    title: string;
-    description: string;
-};
+import { ProductInfo } from '../../global_utils/types';
 
 interface Props {
     actionProductId: string;
@@ -29,12 +23,15 @@ function PostItem(props: Props) {
         allScheduledItemsMap
     } = props;
 
+    console.log('productsArray:', productsArray);
+
     return (
         <div>
             {productsArray.map((e: ProductInfo, key) => {
                 let productIdArr = e.id.split('/');
                 let productId = productIdArr[productIdArr.length - 1];
                 let imageUrl = e.featuredImage?.url;
+                let images = e.images?.nodes;
                 let scheduledDate = allScheduledItemsMap.get(`${productId}`) as string;
 
                 let isEligibleForScheduling = false;
@@ -52,7 +49,9 @@ function PostItem(props: Props) {
                                     <Text variant="headingXl" as="h4">
                                         {e.title}
                                     </Text>
-                                    <img alt="img" width={'150px'} src={imageUrl} />
+                                    {images.map((e) => {
+                                        return <img src={e.url} height={150} />;
+                                    })}
                                 </div>
                                 <div>
                                     <textarea

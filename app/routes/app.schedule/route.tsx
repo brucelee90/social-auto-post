@@ -9,7 +9,7 @@ import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
 import PostItem from './components/PostItem';
-import { JobAction } from '../global_utils/types';
+import { JobAction } from '../global_utils/enum';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
