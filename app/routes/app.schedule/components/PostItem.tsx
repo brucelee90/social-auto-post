@@ -3,6 +3,7 @@ import { Text } from '@shopify/polaris';
 import { PostBtn } from './PostBtn';
 import { TSMap } from 'typescript-map';
 import { ProductInfo } from '../../global_utils/types';
+import { PostForm } from '~/routes/global_utils/enum';
 
 interface Props {
     actionProductId: string;
@@ -50,7 +51,16 @@ function PostItem(props: Props) {
                                         {e.title}
                                     </Text>
                                     {images.map((e) => {
-                                        return <img src={e.url} height={150} />;
+                                        return (
+                                            <div key={key}>
+                                                <input
+                                                    name={PostForm.imgUrl}
+                                                    value={e.url}
+                                                    type="hidden"
+                                                />
+                                                <img src={e.url} height={150} />
+                                            </div>
+                                        );
                                     })}
                                 </div>
                                 <div>

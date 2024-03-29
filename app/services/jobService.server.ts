@@ -31,12 +31,12 @@ jobService.start = async () => {
 
             // finish job now if job should have been done by now
             if ((job.attrs.nextRunAt as Date) > new Date()) {
-                console.log('hey-------------------', job.attrs.nextRunAt, new Date());
+                console.log('hey', job.attrs.nextRunAt, new Date());
 
                 agenda.define(
                     `${job.attrs.name}_rescheduled`,
                     async (job, done) => {
-                        instagramApiService.publishMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        publishCarouselOrSingleMedia(job.attrs.data.imgUrl, job.attrs.data.description)
                         console.log('Posted media at.', job.attrs.lastRunAt);
                         done()
                     });
@@ -48,7 +48,7 @@ jobService.start = async () => {
                 agenda.define(
                     `${job.attrs.name}_rescheduled`,
                     async (job, done) => {
-                        instagramApiService.publishMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        publishCarouselOrSingleMedia(job.attrs.data.imgUrl, job.attrs.data.description)
                         console.log('Posted media at.', job.attrs.lastRunAt);
                         done()
                     });
@@ -103,7 +103,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
                 `${el.productId}`,
                 async (job, done) => {
 
-                    instagramApiService.publishMedia(el.postImgUrl, el.postDescription)
+                    publishCarouselOrSingleMedia(el.postImgUrl, el.postDescription)
                     postScheduleQueueService.removeScheduledItemFromQueue(el.productId)
                     console.log('Posted media at.', publishDate);
                     done()
@@ -165,13 +165,12 @@ jobService.cancelScheduledJob = async (jobId) => {
 
 jobService.scheduleJob = async (jobId) => {
     let scheduleItem = await postScheduleQueueService.getScheduledItem(jobId)
-    console.log('scheduleItem', scheduleItem);
 
     agenda.define(
         `${jobId}`,
         async (job, done) => {
 
-            instagramApiService.publishMedia(scheduleItem.postImgUrl, scheduleItem.postDescription)
+            publishCarouselOrSingleMedia(scheduleItem.postImgUrl, scheduleItem.postDescription)
             postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
             console.log('Posted media at.', scheduleItem.dateScheduled);
             done()
@@ -181,6 +180,17 @@ jobService.scheduleJob = async (jobId) => {
         await agenda.start();
         await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItem.postImgUrl}`, description: `${scheduleItem.postDescription}` });
     })();
+}
+
+function publishCarouselOrSingleMedia(imgUrl: string, postDescription: string) {
+    let postImgUrlArray = imgUrl.split(";")
+    let postCarousel = postImgUrlArray.length > 1 ? true : false
+    console.log('postImgUrlArray', postImgUrlArray);
+    if (postCarousel) {
+        instagramApiService.publishCarousel(postImgUrlArray, postDescription)
+    } else {
+        instagramApiService.publishMedia(imgUrl, postDescription)
+    }
 }
 
 export default jobService;

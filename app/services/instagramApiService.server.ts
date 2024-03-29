@@ -46,6 +46,10 @@ instagramApiService.publishCarousel = async function (images: string[], caption:
                 const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(ACCESS_TOKEN, PAGE_ID, containerId.getData().id);
                 publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
             });
+        } else {
+            let accessTokenMessage = process.env.ACCESS_TOKEN === undefined ? "No Access Token available" : ""
+            let pageIdMessage = process.env.PAGE_ID === undefined ? "No Page ID available" : ""
+            throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
         }
     } catch (error) {
         console.log("Carousel could not be published:", error);

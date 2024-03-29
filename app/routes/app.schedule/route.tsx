@@ -9,7 +9,7 @@ import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
 import PostItem from './components/PostItem';
-import { JobAction } from '../global_utils/enum';
+import { JobAction, PostForm } from '../global_utils/enum';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
@@ -33,7 +33,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
     const postDescription = formData.get('post_description') as string;
-    const postImageUrl = formData.get('post_image_url') as string;
+    // const postImageUrl = formData.get('post_image_url') as string;
+    const postImageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const cancelJob = formData.get(JobAction.cancel) as string;
     const scheduleJob = formData.get(JobAction.schedule) as string;
     const scheduledPostDateTime = moment(

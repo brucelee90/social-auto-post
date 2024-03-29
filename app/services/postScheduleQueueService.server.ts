@@ -10,7 +10,7 @@ interface PostScheduleQueue {
 }
 
 interface postScheduleQueueService {
-    addToPostScheduleQueue: (productId: string, dateScheduled: string, postImgUrl: string, postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
+    addToPostScheduleQueue: (productId: string, dateScheduled: string, postImgUrl: string[], postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
     getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
     removeScheduledItemFromQueue: (productId: string) => Promise<void>,
     getUnremovedItems: () => Promise<PostScheduleQueue[]>,
@@ -20,7 +20,10 @@ interface postScheduleQueueService {
 
 const postScheduleQueueService = {} as postScheduleQueueService
 
-postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string, postDescriptiop: string) {
+postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescriptiop: string) {
+
+    let postImgUrlStr = postImgUrl.join(";")
+
     return prisma.postScheduleQueue.upsert({
         where: { productId: BigInt(productId) },
         update: {
@@ -30,7 +33,7 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
         create: {
             productId: BigInt(productId),
             dateScheduled: dateScheduled,
-            postImgUrl: postImgUrl,
+            postImgUrl: postImgUrlStr,
             postDescription: postDescriptiop
         }
     })

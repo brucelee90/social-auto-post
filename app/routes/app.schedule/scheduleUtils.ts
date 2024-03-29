@@ -17,7 +17,7 @@ export interface ScheduleAction {
 export interface ScheduleUtils {
     scheduleJobFunc: (productId: string,
         scheduledPostDateTime: string,
-        postImageUrl: string,
+        postImageUrl: string[],
         postDescription: string) => ScheduleAction,
     cancelJobFunc: (productId: string) => ScheduleAction,
     errorMessage: (productId: string) => ScheduleAction
@@ -49,7 +49,7 @@ export const scheduleUtils: ScheduleUtils = {
     scheduleJobFunc: (
         productId: string,
         scheduledPostDateTime: string,
-        postImageUrl: string,
+        postImageUrl: string[],
         postDescription: string
     ) => {
 
