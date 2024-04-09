@@ -50,18 +50,20 @@ function PostItem(props: Props) {
                                     <Text variant="headingXl" as="h4">
                                         {e.title}
                                     </Text>
-                                    {images.map((e) => {
-                                        return (
-                                            <div key={key}>
-                                                <input
-                                                    name={PostForm.imgUrl}
-                                                    value={e.url}
-                                                    type="hidden"
-                                                />
-                                                <img src={e.url} height={150} />
-                                            </div>
-                                        );
-                                    })}
+                                    <div style={{ display: 'flex' }}>
+                                        {images.map((e) => {
+                                            return (
+                                                <div className="" key={key}>
+                                                    <input
+                                                        name={PostForm.imgUrl}
+                                                        value={e.url}
+                                                        type="hidden"
+                                                    />
+                                                    <img src={e.url} height={150} />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                                 <div>
                                     <textarea

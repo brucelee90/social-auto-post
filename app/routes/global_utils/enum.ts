@@ -1,4 +1,5 @@
 export enum Action {
+    post = "post",
     schedule = "schedule",
     cancel = "cancel",
     error = "error",
@@ -17,4 +18,9 @@ export enum PostForm {
     productId = "product_id",
     scheduledDate = "scheduled_date",
     scheduledTime = "scheduled_time",
+}
+
+export enum PublishType {
+    publishStory = "publish_story",
+    publishMedia = "publish_media"
 }

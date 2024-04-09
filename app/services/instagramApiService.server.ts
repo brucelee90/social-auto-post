@@ -1,8 +1,9 @@
-import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest } from 'instagram-graph-api'
+import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
 
 interface InstagramApiService {
-    publishMedia: (featuredImageUrl: string, caption: string) => Promise<void>
+    publishMedia: (featuredImageUrl: string[], caption: string) => Promise<void>
     publishCarousel: (featuredImageUrl: string[], caption: string) => Promise<void>
+    publishStoryMedia: (image: string) => Promise<void>
 }
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string
@@ -10,7 +11,16 @@ const PAGE_ID = process.env.PAGE_ID as string
 
 const instagramApiService = {} as InstagramApiService
 
-instagramApiService.publishMedia = async function publishMedia(featuredImageUrl: string, caption: string) {
+instagramApiService.publishMedia = async function publishMedia(featuredImageUrlArray: string[], caption: string) {
+
+    let featuredImageUrl = ""
+    if (featuredImageUrlArray.length > 1) {
+        instagramApiService.publishCarousel(featuredImageUrlArray, caption)
+        return
+    } else {
+        featuredImageUrl = featuredImageUrlArray[0]
+    }
+
     try {
         if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
             const pagePhotoMediaRequest: PostPagePhotoMediaRequest = new PostPagePhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, featuredImageUrl, caption)
@@ -53,6 +63,15 @@ instagramApiService.publishCarousel = async function (images: string[], caption:
         }
     } catch (error) {
         console.log("Carousel could not be published:", error);
+    }
+}
+
+instagramApiService.publishStoryMedia = async function (imageUrl: string) {
+    if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
+        const storiesPhotoMediaReq: PostPageStoriesPhotoMediaRequest = new PostPageStoriesPhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, imageUrl)
+        const containerId = await storiesPhotoMediaReq.execute();
+        const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
+        publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
     }
 }
 

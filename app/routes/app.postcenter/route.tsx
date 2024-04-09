@@ -5,10 +5,9 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
-import { ProductInfo } from './global_utils/types';
-import { PostForm } from './global_utils/enum';
 import instagramApiService from '~/services/instagramApiService.server';
-import { PostBtn } from './app.schedule/components/PostBtn';
+import { Action, PostForm, PublishType } from '../global_utils/enum';
+import { ProductInfo } from '../global_utils/types';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
@@ -26,12 +25,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
     const productId = formData.get('product_id') as string;
+    const publishAction = formData.getAll(Action.post) as string[];
+
+    console.log('imageUrl:', imageUrl[0]);
 
     try {
-        if (imageUrl.length === 1) {
-            await instagramApiService.publishMedia(imageUrl[0], postDescription);
-        } else {
-            await instagramApiService.publishCarousel(imageUrl, postDescription);
+        if (publishAction.includes(PublishType.publishStory)) {
+            await instagramApiService.publishStoryMedia(imageUrl[0]);
+        } else if (publishAction.includes(PublishType.publishMedia)) {
+            await instagramApiService.publishMedia(imageUrl, postDescription);
         }
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
@@ -65,18 +67,20 @@ export default function PublishMedia() {
                                     <Text variant="headingLg" as="h3">
                                         {title}
                                     </Text>
-                                    {images.map((e, key) => {
-                                        return (
-                                            <div key={key}>
-                                                <input
-                                                    name={PostForm.imgUrl}
-                                                    value={e.url}
-                                                    type="hidden"
-                                                />
-                                                <img src={e.url} height={150} />
-                                            </div>
-                                        );
-                                    })}
+                                    <div style={{ display: 'flex' }}>
+                                        {images.map((e, key) => {
+                                            return (
+                                                <div key={key}>
+                                                    <input
+                                                        name={PostForm.imgUrl}
+                                                        value={e.url}
+                                                        type="hidden"
+                                                    />
+                                                    <img src={e.url} height={150} />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
 
                                     <div>
                                         <textarea
@@ -90,7 +94,20 @@ export default function PublishMedia() {
                                     <div>
                                         {images ? (
                                             <div>
-                                                <button type="submit">PUBLISH MEDIA</button>
+                                                <button
+                                                    type="submit"
+                                                    name={Action.post}
+                                                    value={PublishType.publishMedia}
+                                                >
+                                                    PUBLISH MEDIA
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    name={Action.post}
+                                                    value={PublishType.publishStory}
+                                                >
+                                                    PUBLISH STORY
+                                                </button>
                                                 {actionData?.productId === productId && (
                                                     <div>{actionData.message}</div>
                                                 )}
