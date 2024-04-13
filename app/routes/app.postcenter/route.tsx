@@ -67,20 +67,28 @@ export default function PublishMedia() {
                                     <Text variant="headingLg" as="h3">
                                         {title}
                                     </Text>
-                                    <div style={{ display: 'flex' }}>
-                                        {images.map((e, key) => {
-                                            return (
-                                                <div key={key}>
-                                                    <input
-                                                        name={PostForm.imgUrl}
-                                                        value={e.url}
-                                                        type="hidden"
-                                                    />
-                                                    <img src={e.url} height={150} />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <ul>
+                                        <fieldset style={{ display: 'flex' }}>
+                                            {images.map((e, key) => {
+                                                return (
+                                                    <li key={key}>
+                                                        <input
+                                                            type="checkbox"
+                                                            id={PostForm.imgUrl}
+                                                            name={PostForm.imgUrl}
+                                                            value={e.url}
+                                                        />
+                                                        {/* <input
+                                                            name={PostForm.imgUrl}
+                                                            value={e.url}
+                                                            type="hidden"
+                                                        /> */}
+                                                        <img src={e.url} height={150} />
+                                                    </li>
+                                                );
+                                            })}
+                                        </fieldset>
+                                    </ul>
 
                                     <div>
                                         <textarea
