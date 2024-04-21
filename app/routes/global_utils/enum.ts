@@ -18,9 +18,14 @@ export enum PostForm {
     productId = "product_id",
     scheduledDate = "scheduled_date",
     scheduledTime = "scheduled_time",
+    codeDiscount = "code_discount"
 }
 
 export enum PublishType {
     publishStory = "publish_story",
     publishMedia = "publish_media"
+}
+
+export enum PlaceholderVariable {
+    codeDiscount = "#DISCOUNT#"
 }

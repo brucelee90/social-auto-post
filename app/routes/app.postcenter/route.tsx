@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, json, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
 import instagramApiService from '~/services/instagramApiService.server';
-import { Action, PostForm, PublishType } from '../global_utils/enum';
+import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import { ProductInfo } from '../global_utils/types';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -14,9 +14,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     try {
         const res = await admin.graphql(`${queries.queryAllProducts}`);
-        return res.json();
+        const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
+        return json({
+            allAvailableProducts: await res.json(),
+            allAvailableDiscounts: await discountRes.json()
+        });
     } catch (error) {
-        return { data: null };
+        return {
+            allAvailableProducts: null,
+            allAvailableDiscounts: null
+        };
     }
 }
 
@@ -26,14 +33,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const postDescription = formData.get(PostForm.description) as string;
     const productId = formData.get('product_id') as string;
     const publishAction = formData.getAll(Action.post) as string[];
+    const codeDiscount = formData.get(PostForm.codeDiscount) as string;
 
-    console.log('imageUrl:', imageUrl[0]);
+    let description = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
 
     try {
         if (publishAction.includes(PublishType.publishStory)) {
             await instagramApiService.publishStoryMedia(imageUrl[0]);
         } else if (publishAction.includes(PublishType.publishMedia)) {
-            await instagramApiService.publishMedia(imageUrl, postDescription);
+            await instagramApiService.publishMedia(imageUrl, description);
         }
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
@@ -44,10 +52,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function PublishMedia() {
     const actionData = useActionData<typeof action>();
-    const loaderData = useLoaderData<typeof loader>();
-    const productsArray = [...loaderData?.data?.products.nodes];
-
-    console.log('actionData', actionData);
+    const { allAvailableProducts, allAvailableDiscounts } = useLoaderData<typeof loader>();
+    const productsArray = [...allAvailableProducts?.data?.products?.nodes];
+    const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
 
     return (
         <div>
@@ -78,16 +85,32 @@ export default function PublishMedia() {
                                                             name={PostForm.imgUrl}
                                                             value={e.url}
                                                         />
-                                                        {/* <input
-                                                            name={PostForm.imgUrl}
-                                                            value={e.url}
-                                                            type="hidden"
-                                                        /> */}
                                                         <img src={e.url} height={150} />
                                                     </li>
                                                 );
                                             })}
                                         </fieldset>
+                                    </ul>
+
+                                    <div>Discounts:</div>
+                                    <ul>
+                                        {discountsArray.map((e, key) => {
+                                            return (
+                                                <li key={key}>
+                                                    <input
+                                                        type="radio"
+                                                        id={`code-discount-${e.codeDiscount.title}`}
+                                                        name="code_discount"
+                                                        value={e.codeDiscount.title}
+                                                    />
+                                                    <label
+                                                        htmlFor={`code-discount-${e.codeDiscount.title}`}
+                                                    >
+                                                        {e.codeDiscount.title}
+                                                    </label>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
 
                                     <div>

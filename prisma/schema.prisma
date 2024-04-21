@@ -32,8 +32,15 @@ model MediaQueue {
 }
 
 model PostScheduleQueue {
-  productId       BigInt   @id
-  dateScheduled   DateTime @default(now())
-  postImgUrl      String
-  postDescription String
+  productId          BigInt    @id
+  dateScheduled      DateTime  @default(now())
+  postImgUrl         String
+  postDescription    String
+  Campaign           Campaign? @relation(fields: [campaignCampaignId], references: [campaignId])
+  campaignCampaignId String?
+}
+
+model Campaign {
+  campaignId        String              @id
+  PostScheduleQueue PostScheduleQueue[]
 }

@@ -1,10 +1,11 @@
 interface Queries {
-    queryProductsById: string,
-    queryAllProducts: string
+  queryProductsById: string,
+  queryAllProducts: string,
+  queryAllDiscounts: string
 }
 
 export const queries: Queries = {
-    queryProductsById: `
+  queryProductsById: `
     #graphql
     query Products($ids: [ID!]!) {
         nodes(ids: $ids) {
@@ -20,7 +21,7 @@ export const queries: Queries = {
             }
         }
     }`,
-    queryAllProducts: `
+  queryAllProducts: `
     #graphql
     query products {
         products (first:50, query:"status:active AND published_status:published") {
@@ -39,6 +40,22 @@ export const queries: Queries = {
         }
       }
     }
-    `
+    `,
+  queryAllDiscounts: `
+    #graphql
+    query ListDiscountCodes {
+      codeDiscountNodes(first: 250) {
+        nodes {
+          id
+          codeDiscount {
+            ... on DiscountCodeBasic {
+              title
+              summary
+            }
+          }
+        }
+      }
+    }
+    `,
 }
 
