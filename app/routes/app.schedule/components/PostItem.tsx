@@ -4,6 +4,8 @@ import { PostBtn } from './PostBtn';
 import { TSMap } from 'typescript-map';
 import { ProductInfo } from '../../global_utils/types';
 import { PostForm } from '~/routes/global_utils/enum';
+import ImagePicker from '~/components/PostRow/ImagePicker';
+import TextArea from '~/components/PostRow/TextArea';
 
 interface Props {
     actionProductId: string;
@@ -43,36 +45,15 @@ function PostItem(props: Props) {
                 return (
                     <div key={key}>
                         <Form method="post">
+                            <input type="hidden" name="product_id" value={productId} />
                             <div>
-                                <input type="hidden" name="product_id" value={productId} />
-                                <input type="hidden" name="post_image_url" value={imageUrl} />
-                                <div>
-                                    <Text variant="headingXl" as="h4">
-                                        {e.title}
-                                    </Text>
-                                    <div style={{ display: 'flex' }}>
-                                        {images.map((e) => {
-                                            return (
-                                                <div className="" key={key}>
-                                                    <input
-                                                        name={PostForm.imgUrl}
-                                                        value={e.url}
-                                                        type="hidden"
-                                                    />
-                                                    <img src={e.url} height={150} />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                                <div>
-                                    <textarea
-                                        style={{ width: '30rem', background: '#ccc' }}
-                                        name="post_description"
-                                        rows={10}
-                                        defaultValue={e.description}
-                                    />
-                                </div>
+                                <Text variant="headingXl" as="h4">
+                                    {e.title}
+                                </Text>
+
+                                <ImagePicker images={images} />
+                                <TextArea description={e.description} />
+
                                 {isEligibleForScheduling ? (
                                     <PostBtn
                                         actionProductId={actionProductId}

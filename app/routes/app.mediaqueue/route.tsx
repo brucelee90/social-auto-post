@@ -42,7 +42,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const formData = await request.formData();
     const id = formData.get('id') as string;
-    const imgSrcUrl = formData.get('imgSrcUrl') as string;
+    const imgSrcUrl = formData.getAll('imgSrcUrl') as string[];
     const description = formData.get('description') as string;
     const isPosting = formData.get('post') !== null;
     const isRemoving = formData.get('remove') !== null;

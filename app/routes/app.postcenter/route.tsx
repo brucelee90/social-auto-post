@@ -8,6 +8,10 @@ import { Text } from '@shopify/polaris';
 import instagramApiService from '~/services/instagramApiService.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import { ProductInfo } from '../global_utils/types';
+import PostItem from '../app.schedule/components/PostItem';
+import ImagePicker from '~/components/PostRow/ImagePicker';
+import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
+import TextArea from '~/components/PostRow/TextArea';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
@@ -69,58 +73,16 @@ export default function PublishMedia() {
                     return (
                         <>
                             <Form method="post">
+                                <input type="hidden" name="product_id" value={productId} />
+
                                 <div key={key} id={productId}>
-                                    <input type="hidden" name="product_id" value={productId} />
                                     <Text variant="headingLg" as="h3">
                                         {title}
                                     </Text>
-                                    <ul>
-                                        <fieldset style={{ display: 'flex' }}>
-                                            {images.map((e, key) => {
-                                                return (
-                                                    <li key={key}>
-                                                        <input
-                                                            type="checkbox"
-                                                            id={PostForm.imgUrl}
-                                                            name={PostForm.imgUrl}
-                                                            value={e.url}
-                                                        />
-                                                        <img src={e.url} height={150} />
-                                                    </li>
-                                                );
-                                            })}
-                                        </fieldset>
-                                    </ul>
 
-                                    <div>Discounts:</div>
-                                    <ul>
-                                        {discountsArray.map((e, key) => {
-                                            return (
-                                                <li key={key}>
-                                                    <input
-                                                        type="radio"
-                                                        id={`code-discount-${e.codeDiscount.title}`}
-                                                        name="code_discount"
-                                                        value={e.codeDiscount.title}
-                                                    />
-                                                    <label
-                                                        htmlFor={`code-discount-${e.codeDiscount.title}`}
-                                                    >
-                                                        {e.codeDiscount.title}
-                                                    </label>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-
-                                    <div>
-                                        <textarea
-                                            rows={5}
-                                            name={PostForm.description}
-                                            defaultValue={description}
-                                            cols={50}
-                                        />
-                                    </div>
+                                    <ImagePicker images={images} />
+                                    <DiscountsPicker discountsArray={discountsArray} />
+                                    <TextArea description={description} />
 
                                     <div>
                                         {images ? (
