@@ -6,6 +6,7 @@ import { ProductInfo } from '../../global_utils/types';
 import { PostForm } from '~/routes/global_utils/enum';
 import ImagePicker from '~/components/PostRow/ImagePicker';
 import TextArea from '~/components/PostRow/TextArea';
+import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
 
 interface Props {
     actionProductId: string;
@@ -14,6 +15,7 @@ interface Props {
     action: string;
     productsArray: any[];
     allScheduledItemsMap: TSMap<unknown, unknown>;
+    discountsArray: { codeDiscount: { title: string } }[];
 }
 
 function PostItem(props: Props) {
@@ -23,7 +25,8 @@ function PostItem(props: Props) {
         isScheduleSuccessfull,
         action,
         productsArray,
-        allScheduledItemsMap
+        allScheduledItemsMap,
+        discountsArray
     } = props;
 
     console.log('productsArray:', productsArray);
@@ -52,6 +55,7 @@ function PostItem(props: Props) {
                                 </Text>
 
                                 <ImagePicker images={images} />
+                                <DiscountsPicker discountsArray={discountsArray} />
                                 <TextArea description={e.description} />
 
                                 {isEligibleForScheduling ? (

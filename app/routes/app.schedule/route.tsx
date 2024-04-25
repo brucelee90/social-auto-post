@@ -9,11 +9,12 @@ import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
 import PostItem from './components/PostItem';
-import { JobAction, PostForm } from '../global_utils/enum';
+import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
     const res = await admin.graphql(`${queries.queryAllProducts}`);
+    const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
 
     // Bigint is not serializable that's why we have to create a Map
     let allScheduledItems = new TSMap();
@@ -23,7 +24,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     return json({
         allAvailableProducts: await res.json(),
-        allScheduledItems: allScheduledItems.toJSON()
+        allScheduledItems: allScheduledItems.toJSON(),
+        allAvailableDiscounts: await discountRes.json()
     });
 }
 
@@ -32,15 +34,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
-    const postDescription = formData.get('post_description') as string;
-    // const postImageUrl = formData.get('post_image_url') as string;
+    let postDescription = formData.get('post_description') as string;
     const postImageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const cancelJob = formData.get(JobAction.cancel) as string;
     const scheduleJob = formData.get(JobAction.schedule) as string;
+    const codeDiscount = formData.get(PostForm.codeDiscount) as string;
+
     const scheduledPostDateTime = moment(
         `${scheduledDate} ${scheduledTime}`,
         'YYYY-MM-DD HH:mm'
     ).toISOString();
+
+    postDescription = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
 
     try {
         if (scheduleJob) {
@@ -59,7 +64,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Schedule() {
-    const { allAvailableProducts, allScheduledItems } = useLoaderData<typeof loader>();
+    const { allAvailableProducts, allScheduledItems, allAvailableDiscounts } =
+        useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
     try {
@@ -69,6 +75,7 @@ export default function Schedule() {
         const actionMessage = actionData?.message as string;
         const actionProductId = actionData?.productId as string;
         const action = actionData?.action as string;
+        const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
 
         return (
             <div>
@@ -83,6 +90,7 @@ export default function Schedule() {
                     action={action}
                     productsArray={productsArray}
                     allScheduledItemsMap={allScheduledItemsMap}
+                    discountsArray={discountsArray}
                 />
             </div>
         );
