@@ -29,8 +29,6 @@ function PostItem(props: Props) {
         discountsArray
     } = props;
 
-    console.log('productsArray:', productsArray);
-
     return (
         <div>
             {productsArray.map((e: ProductInfo, key) => {
@@ -56,7 +54,7 @@ function PostItem(props: Props) {
 
                                 <ImagePicker images={images} />
                                 <DiscountsPicker discountsArray={discountsArray} />
-                                <TextArea description={e.description} />
+                                <TextArea description={e.description} title={e.title} />
 
                                 {isEligibleForScheduling ? (
                                     <PostBtn

@@ -82,7 +82,7 @@ export default function PublishMedia() {
 
                                     <ImagePicker images={images} />
                                     <DiscountsPicker discountsArray={discountsArray} />
-                                    <TextArea description={description} />
+                                    <TextArea description={description} title={title} />
 
                                     <div>
                                         {images ? (
