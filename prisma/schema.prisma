@@ -36,11 +36,12 @@ model PostScheduleQueue {
   dateScheduled      DateTime  @default(now())
   postImgUrl         String
   postDescription    String
+  campaignCampaignId Int?
   Campaign           Campaign? @relation(fields: [campaignCampaignId], references: [campaignId])
-  campaignCampaignId String?
 }
 
 model Campaign {
-  campaignId        String              @id
-  PostScheduleQueue PostScheduleQueue[]
+  campaignId   Int                 @id @default(autoincrement())
+  campaignName String
+  PostSchedule PostScheduleQueue[]
 }

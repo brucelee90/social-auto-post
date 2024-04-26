@@ -30,6 +30,7 @@ export default function App() {
                 <Link to="/app/postcenter">Post Center</Link>
                 <Link to="/app/mediaqueue">Media Queue</Link>
                 <Link to="/app/schedule">Schedule</Link>
+                <Link to="/app/campaigns">Campaigns</Link>
                 <Link to="/app/settings">Settings</Link>
             </ui-nav-menu>
             <Outlet />
