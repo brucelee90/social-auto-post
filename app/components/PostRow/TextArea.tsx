@@ -1,4 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { PostForm } from '~/routes/global_utils/enum';
+
+const initialText = `😍 {PRODUCT_TITLE} 😍
+
+{PRODUCT_DESCRIPTION}
+
+👉 Find the link to our store in our bio`;
 
 interface Props {
     title: string;
@@ -7,15 +14,13 @@ interface Props {
 
 function TextArea(props: Props) {
     const { title, description } = props;
-    const initialText = `{PRODUCT_TITLE} {PRODUCT_DESCRIPTION}`; // Starttext mit Platzhaltern für das Textfeld
 
     const [inputText, setInputText] = useState(initialText);
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        // Initialisiere displayText mit den ersetzten Werten
         processText(inputText);
-    }, [title, description]); // Reagiere auf Änderungen von `title` und `description`
+    }, [title, description]);
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newText = event.target.value;
@@ -24,9 +29,9 @@ function TextArea(props: Props) {
     };
 
     const processText = (text: string) => {
-        // Ersetzt die Platzhalter in displayText
-        let updatedText = text.replace(/{PRODUCT_TITLE}/g, title);
-        updatedText = updatedText.replace(/{PRODUCT_DESCRIPTION}/g, description);
+        let updatedText = text
+            .replace(/{PRODUCT_TITLE}/g, title)
+            .replace(/{PRODUCT_DESCRIPTION}/g, description);
         setDisplayText(updatedText);
     };
 
@@ -35,12 +40,16 @@ function TextArea(props: Props) {
             <textarea
                 style={{ width: '50%' }}
                 rows={10}
-                name="description"
+                name="description_test"
                 value={inputText}
                 onChange={handleChange}
                 cols={50}
             />
-            <div dangerouslySetInnerHTML={{ __html: displayText }} style={{ width: '50%' }}></div>
+            <input type="hidden" name={PostForm.description} value={displayText} />
+            <div
+                dangerouslySetInnerHTML={{ __html: displayText }}
+                style={{ width: '50%', whiteSpace: 'pre-wrap' }}
+            />
         </div>
     );
 }

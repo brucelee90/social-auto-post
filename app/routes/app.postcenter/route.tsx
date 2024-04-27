@@ -33,6 +33,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
+
+    console.log('formData', formData.getAll('description'));
+
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
     const productId = formData.get('product_id') as string;

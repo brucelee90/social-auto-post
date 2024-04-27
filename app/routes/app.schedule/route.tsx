@@ -34,7 +34,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
-    let postDescription = formData.get('post_description') as string;
+    let postDescription = formData.get(PostForm.description) as string;
     const postImageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const cancelJob = formData.get(JobAction.cancel) as string;
     const scheduleJob = formData.get(JobAction.schedule) as string;
