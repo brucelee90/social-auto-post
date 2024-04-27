@@ -22,8 +22,9 @@ model Session {
 }
 
 model Settings {
-  id                  String  @id
-  isCustomDescription Boolean @default(false)
+  id                  String              @id
+  isCustomDescription Boolean             @default(false)
+  customPlaceholder   CustomPlaceholder[]
 }
 
 model MediaQueue {
@@ -44,4 +45,11 @@ model Campaign {
   campaignId   Int                 @id @default(autoincrement())
   campaignName String
   PostSchedule PostScheduleQueue[]
+}
+
+model CustomPlaceholder {
+  customPlaceholderId      String    @id
+  customPlaceholderContent String
+  Settings                 Settings? @relation(fields: [settingsId], references: [id])
+  settingsId               String?
 }
