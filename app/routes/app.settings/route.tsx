@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import settingsService, { getSettings } from '../../services/SettingsService.server';
-import {
-    Form,
-    json,
-    useActionData,
-    useFetcher,
-    useFetchers,
-    useLoaderData,
-    useSubmit
-} from '@remix-run/react';
+import { Form, json, useActionData, useFetcher, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { Text } from '@shopify/polaris';
@@ -64,8 +56,6 @@ interface Props {}
 export default function Settings(props: Props) {
     const {} = props;
     const { customPlaceholder } = useLoaderData<typeof loader>();
-    const actionData = useActionData<typeof action>();
-    const fetcher = useFetcher({ key: 'add-to-bag' });
 
     return (
         <div>
