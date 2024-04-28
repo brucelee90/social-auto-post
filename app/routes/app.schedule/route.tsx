@@ -45,7 +45,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         'YYYY-MM-DD HH:mm'
     ).toISOString();
 
-    postDescription = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
+    postDescription = postDescription?.replace(PlaceholderVariable.codeDiscount, codeDiscount);
 
     try {
         if (scheduleJob) {

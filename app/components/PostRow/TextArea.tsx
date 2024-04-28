@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PostForm } from '~/routes/global_utils/enum';
+import { CustomPlaceholder } from '@prisma/client';
 
 const initialText = `😍 {PRODUCT_TITLE} 😍
 
@@ -10,29 +11,43 @@ const initialText = `😍 {PRODUCT_TITLE} 😍
 interface Props {
     title: string;
     description: string;
+    placeholders: CustomPlaceholder[];
 }
 
 function TextArea(props: Props) {
-    const { title, description } = props;
+    const { title, description, placeholders } = props;
 
     const [inputText, setInputText] = useState(initialText);
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        processText(inputText);
-    }, [title, description]);
+        const fixedReplacements: Record<string, string> = {
+            '{PRODUCT_TITLE}': title,
+            '{PRODUCT_DESCRIPTION}': description
+        };
+
+        const dynamicReplacements: Record<string, string> = placeholders.reduce(
+            (acc, placeholder) => ({
+                ...acc,
+                [`{${placeholder.customPlaceholderId}}`]: placeholder.customPlaceholderContent
+            }),
+            {}
+        );
+
+        const replacements = { ...fixedReplacements, ...dynamicReplacements };
+
+        const processText = (text: string) => {
+            return Object.keys(replacements).reduce((currentText, key) => {
+                const regex = new RegExp(key, 'g');
+                return currentText.replace(regex, replacements[key]);
+            }, text);
+        };
+
+        setDisplayText(processText(inputText));
+    }, [inputText, title, description, placeholders]);
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const newText = event.target.value;
-        setInputText(newText);
-        processText(newText);
-    };
-
-    const processText = (text: string) => {
-        let updatedText = text
-            .replace(/{PRODUCT_TITLE}/g, title)
-            .replace(/{PRODUCT_DESCRIPTION}/g, description);
-        setDisplayText(updatedText);
+        setInputText(event.target.value);
     };
 
     return (

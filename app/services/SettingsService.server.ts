@@ -14,11 +14,21 @@ export async function getSettings(id: string) {
 }
 
 interface SettingsService {
-    getCustomPlaceholder: (shop: string) => Promise<{ customPlaceholder: CustomPlaceholder[] }>
+    getSettings: (id: string) => Promise<Settings>,
+    getCustomPlaceholder: (shop: string) => Promise<{ customPlaceholder: CustomPlaceholder[] }>,
     upsertCustomPlaceholder: (shop: string, customPlaceholderName: string, customPlaceholderContent: string) => Promise<Settings | CustomPlaceholder>
 }
 
 const settingsService = {} as SettingsService
+
+settingsService.getSettings = async (id: string) => {
+    return await prisma.settings.findFirstOrThrow({
+        where: { id: id },
+        include: {
+            customPlaceholder: true
+        }
+    });
+}
 
 settingsService.getCustomPlaceholder = async (shop: string) => {
     return await prisma.settings.findFirstOrThrow({

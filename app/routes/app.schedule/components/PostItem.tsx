@@ -7,6 +7,7 @@ import { PostForm } from '~/routes/global_utils/enum';
 import ImagePicker from '~/components/PostRow/ImagePicker';
 import TextArea from '~/components/PostRow/TextArea';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
+import { CustomPlaceholder, Settings } from '@prisma/client';
 
 interface Props {
     actionProductId: string;
@@ -28,6 +29,34 @@ function PostItem(props: Props) {
         allScheduledItemsMap,
         discountsArray
     } = props;
+
+    const placeholders = [
+        {
+            customPlaceholderId: 'TEST',
+            customPlaceholderContent: '#Moinsen!!asdf',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'TEST_2',
+            customPlaceholderContent: 'hi',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: '{HASHTAG_1}',
+            customPlaceholderContent: '#supi',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'TEST_3',
+            customPlaceholderContent: '#TESTING motherfucker',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'test',
+            customPlaceholderContent: 'testtest',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        }
+    ];
 
     return (
         <div>
@@ -54,7 +83,11 @@ function PostItem(props: Props) {
 
                                 <ImagePicker images={images} />
                                 <DiscountsPicker discountsArray={discountsArray} />
-                                <TextArea description={e.description} title={e.title} />
+                                <TextArea
+                                    description={e.description}
+                                    title={e.title}
+                                    placeholders={placeholders}
+                                />
 
                                 {isEligibleForScheduling ? (
                                     <PostBtn
