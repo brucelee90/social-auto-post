@@ -18,13 +18,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     // Bigint is not serializable that's why we have to create a Map
     let allScheduledItems = new TSMap();
+    let allScheduledItemsDescription = new TSMap();
     (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
         allScheduledItems.set(e.productId, e.dateScheduled);
+    });
+
+    (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
+        allScheduledItemsDescription.set(e.productId, e.postDescription);
     });
 
     return json({
         allAvailableProducts: await res.json(),
         allScheduledItems: allScheduledItems.toJSON(),
+        allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
         allAvailableDiscounts: await discountRes.json()
     });
 }
@@ -64,12 +70,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Schedule() {
-    const { allAvailableProducts, allScheduledItems, allAvailableDiscounts } =
-        useLoaderData<typeof loader>();
+    const {
+        allAvailableProducts,
+        allScheduledItems,
+        allAvailableDiscounts,
+        allScheduledItemsDescription
+    } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
     try {
         const allScheduledItemsMap = new TSMap().fromJSON(allScheduledItems);
+        const allScheduledItemsDescriptionMap = new TSMap().fromJSON(allScheduledItemsDescription);
         const productsArray = [...allAvailableProducts?.data?.products?.nodes];
         const isScheduleSuccessfull = !actionData?.error as boolean;
         const actionMessage = actionData?.message as string;
@@ -90,6 +101,7 @@ export default function Schedule() {
                     action={action}
                     productsArray={productsArray}
                     allScheduledItemsMap={allScheduledItemsMap}
+                    allScheduledItemsDescriptionMap={allScheduledItemsDescriptionMap}
                     discountsArray={discountsArray}
                 />
             </div>

@@ -11,13 +11,17 @@ const initialText = `😍 {PRODUCT_TITLE} 😍
 interface Props {
     title: string;
     description: string;
+    scheduledItemDesc: string;
     placeholders: CustomPlaceholder[];
 }
 
 function TextArea(props: Props) {
-    const { title, description, placeholders } = props;
+    const { title, description, placeholders, scheduledItemDesc } = props;
 
-    const [inputText, setInputText] = useState(initialText);
+    let initialDesc =
+        scheduledItemDesc && scheduledItemDesc.trim() !== '' ? scheduledItemDesc : initialText;
+
+    const [inputText, setInputText] = useState(initialDesc);
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
@@ -29,7 +33,7 @@ function TextArea(props: Props) {
         const dynamicReplacements: Record<string, string> = placeholders.reduce(
             (acc, placeholder) => ({
                 ...acc,
-                [`{${placeholder.customPlaceholderId}}`]: placeholder.customPlaceholderContent
+                [`${placeholder.customPlaceholderId}`]: placeholder.customPlaceholderContent
             }),
             {}
         );
@@ -55,12 +59,12 @@ function TextArea(props: Props) {
             <textarea
                 style={{ width: '50%' }}
                 rows={10}
-                name="description_test"
+                name={PostForm.description}
                 value={inputText}
                 onChange={handleChange}
                 cols={50}
             />
-            <input type="hidden" name={PostForm.description} value={displayText} />
+            {/* <input type="hidden" name={PostForm.description} value={displayText} /> */}
             <div
                 dangerouslySetInnerHTML={{ __html: displayText }}
                 style={{ width: '50%', whiteSpace: 'pre-wrap' }}

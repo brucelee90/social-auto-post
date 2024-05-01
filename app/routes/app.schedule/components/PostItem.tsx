@@ -16,6 +16,7 @@ interface Props {
     action: string;
     productsArray: any[];
     allScheduledItemsMap: TSMap<unknown, unknown>;
+    allScheduledItemsDescriptionMap: TSMap<unknown, unknown>;
     discountsArray: { codeDiscount: { title: string } }[];
 }
 
@@ -27,6 +28,7 @@ function PostItem(props: Props) {
         action,
         productsArray,
         allScheduledItemsMap,
+        allScheduledItemsDescriptionMap,
         discountsArray
     } = props;
 
@@ -66,6 +68,10 @@ function PostItem(props: Props) {
                 let imageUrl = e.featuredImage?.url;
                 let images = e.images?.nodes;
                 let scheduledDate = allScheduledItemsMap.get(`${productId}`) as string;
+                let scheduledItemDesc = allScheduledItemsDescriptionMap.get(
+                    `${productId}`
+                ) as string;
+                console.log('allScheduledItemsMap', allScheduledItemsMap);
 
                 let isEligibleForScheduling = false;
                 if (productId !== undefined && imageUrl !== undefined) {
@@ -87,6 +93,7 @@ function PostItem(props: Props) {
                                     description={e.description}
                                     title={e.title}
                                     placeholders={placeholders}
+                                    scheduledItemDesc={scheduledItemDesc}
                                 />
 
                                 {isEligibleForScheduling ? (

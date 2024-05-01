@@ -20,7 +20,6 @@ const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL a
 const jobService = {} as JobService
 
 jobService.start = async () => {
-
     agenda.on("ready", async () => {
         // @ts-ignore
         // a queued job will stay queued forever by agenda js if it didn't run. If the server is stopped during the time a job should have run.
@@ -64,9 +63,6 @@ jobService.start = async () => {
 
         })
     })
-
-
-
 
     async function graceful() {
         await agenda.stop();
@@ -185,11 +181,10 @@ jobService.scheduleJob = async (jobId) => {
 function publishCarouselOrSingleMedia(imgUrl: string, postDescription: string) {
     let postImgUrlArray = imgUrl.split(";")
     let postCarousel = postImgUrlArray.length > 1 ? true : false
-    console.log('postImgUrlArray', postImgUrlArray);
     if (postCarousel) {
         instagramApiService.publishCarousel(postImgUrlArray, postDescription)
     } else {
-        instagramApiService.publishMedia(imgUrl, postDescription)
+        instagramApiService.publishMedia(postImgUrlArray, postDescription)
     }
 }
 

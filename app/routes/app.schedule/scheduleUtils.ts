@@ -51,6 +51,7 @@ export const scheduleUtils: ScheduleUtils = {
         scheduledPostDateTime: string,
         postImageUrl: string[],
         postDescription: string
+
     ) => {
 
         let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime)
@@ -59,7 +60,7 @@ export const scheduleUtils: ScheduleUtils = {
             productId,
             scheduledPostDateTime,
             postImageUrl,
-            postDescription
+            postDescription,
         );
 
         console.log('post Product', productId, 'on', scheduledPostDateTime);
