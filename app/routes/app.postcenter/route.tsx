@@ -12,12 +12,13 @@ import PostItem from '../app.schedule/components/PostItem';
 import ImagePicker from '~/components/PostRow/ImagePicker';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
 import TextArea from '~/components/PostRow/TextArea';
+import { IShopifyProduct } from '~/types/types';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin } = await authenticate.admin(request);
 
     try {
-        const res = await admin.graphql(`${queries.queryAllProducts}`);
+        const res = await admin.graphql(`${queries.getAllProducts}`);
         const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
         return json({
             allAvailableProducts: await res.json(),
@@ -94,7 +95,7 @@ export default function PublishMedia() {
     return (
         <div>
             {productsArray &&
-                productsArray.map((e: ProductInfo, key) => {
+                productsArray.map((e: IShopifyProduct, key) => {
                     let productId = e.id;
                     let images = e.images?.nodes;
                     let title = e.title;
@@ -116,6 +117,7 @@ export default function PublishMedia() {
                                         description={description}
                                         title={title}
                                         placeholders={placeholders}
+                                        product={e}
                                     />
 
                                     <div>

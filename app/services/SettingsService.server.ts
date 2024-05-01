@@ -40,37 +40,24 @@ settingsService.getCustomPlaceholder = async (shop: string) => {
 }
 
 settingsService.upsertCustomPlaceholder = async (shop: string, name: string, value: string) => {
-
-    const existingPlaceholder = await prisma.customPlaceholder.findUnique({
-        where: {
+    return await prisma.customPlaceholder.upsert({
+        where: { customPlaceholderId: name },
+        update: { customPlaceholderContent: value },
+        create: {
             customPlaceholderId: name,
-        }
-    });
-
-    if (existingPlaceholder) {
-        return await prisma.customPlaceholder.update({
-            where: {
-                customPlaceholderId: name,
-            },
-            data: {
-                customPlaceholderContent: value,
-            }
-        });
-    } else {
-        return await prisma.settings.update({
-            where: {
-                id: shop,
-            },
-            data: {
-                customPlaceholder: {
+            customPlaceholderContent: value,
+            Settings: {
+                connectOrCreate: {
+                    where: {
+                        id: shop,
+                    },
                     create: {
-                        customPlaceholderId: name,
-                        customPlaceholderContent: value
+                        id: shop,
                     },
                 },
             },
-        });
-    }
+        },
+    });
 }
 
 export default settingsService;

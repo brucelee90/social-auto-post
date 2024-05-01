@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { PostForm } from '~/routes/global_utils/enum';
 import { CustomPlaceholder } from '@prisma/client';
+import { IShopifyProduct } from '~/types/types';
+import { replacePlaceholders } from '~/utils/textUtils';
 
 const initialText = `😍 {PRODUCT_TITLE} 😍
 
 {PRODUCT_DESCRIPTION}
+
+{PRODUCT_TAGS}
 
 👉 Find the link to our store in our bio`;
 
@@ -13,10 +17,11 @@ interface Props {
     description: string;
     scheduledItemDesc?: string;
     placeholders: CustomPlaceholder[];
+    product: IShopifyProduct;
 }
 
 function TextArea(props: Props) {
-    const { title, description, placeholders, scheduledItemDesc } = props;
+    const { title, description, placeholders, scheduledItemDesc, product } = props;
 
     let initialDesc =
         scheduledItemDesc && scheduledItemDesc.trim() !== '' ? scheduledItemDesc : initialText;
@@ -25,12 +30,9 @@ function TextArea(props: Props) {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        const fixedReplacements: Record<string, string> = {
-            '{PRODUCT_TITLE}': title,
-            '{PRODUCT_DESCRIPTION}': description
-        };
+        console.log('PRODUCT ON TEXT AREA', product);
 
-        const dynamicReplacements: Record<string, string> = placeholders.reduce(
+        const replacements: Record<string, string> = placeholders.reduce(
             (acc, placeholder) => ({
                 ...acc,
                 [`${placeholder.customPlaceholderId}`]: placeholder.customPlaceholderContent
@@ -38,17 +40,22 @@ function TextArea(props: Props) {
             {}
         );
 
-        const replacements = { ...fixedReplacements, ...dynamicReplacements };
-
         const processText = (text: string) => {
-            return Object.keys(replacements).reduce((currentText, key) => {
+            return Object.keys(replacements).reduce((currentText, key: string) => {
                 const regex = new RegExp(key, 'g');
                 return currentText.replace(regex, replacements[key]);
             }, text);
         };
 
-        setDisplayText(processText(inputText));
-    }, [inputText, title, description, placeholders]);
+        console.log('processText', processText(inputText));
+        let processedText = processText(inputText);
+
+        console.log(processedText);
+
+        const displayText = replacePlaceholders(processText(inputText), product);
+
+        setDisplayText(displayText);
+    }, [inputText, product]);
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInputText(event.target.value);

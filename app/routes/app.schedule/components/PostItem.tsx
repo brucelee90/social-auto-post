@@ -8,6 +8,7 @@ import ImagePicker from '~/components/PostRow/ImagePicker';
 import TextArea from '~/components/PostRow/TextArea';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
 import { CustomPlaceholder, Settings } from '@prisma/client';
+import { IShopifyProduct } from '~/types/types';
 
 interface Props {
     actionProductId: string;
@@ -34,12 +35,12 @@ function PostItem(props: Props) {
 
     const placeholders = [
         {
-            customPlaceholderId: 'TEST',
+            customPlaceholderId: '{TEST}',
             customPlaceholderContent: '#Moinsen!!asdf',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {
-            customPlaceholderId: 'TEST_2',
+            customPlaceholderId: '{TEST_2}',
             customPlaceholderContent: 'hi',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
@@ -49,8 +50,8 @@ function PostItem(props: Props) {
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {
-            customPlaceholderId: 'TEST_3',
-            customPlaceholderContent: '#TESTING motherfucker',
+            customPlaceholderId: '{TEST_3}',
+            customPlaceholderContent: '{PRODUCT_TAGS}',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {
@@ -62,7 +63,7 @@ function PostItem(props: Props) {
 
     return (
         <div>
-            {productsArray.map((e: ProductInfo, key) => {
+            {productsArray.map((e: IShopifyProduct, key) => {
                 let productIdArr = e.id.split('/');
                 let productId = productIdArr[productIdArr.length - 1];
                 let imageUrl = e.featuredImage?.url;
@@ -93,6 +94,7 @@ function PostItem(props: Props) {
                                     title={e.title}
                                     placeholders={placeholders}
                                     scheduledItemDesc={scheduledItemDesc}
+                                    product={e}
                                 />
 
                                 {isEligibleForScheduling ? (

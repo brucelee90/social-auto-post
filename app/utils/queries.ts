@@ -3,7 +3,8 @@ interface Queries {
   queryProductWithPlacehoderFieldsById: string,
   queryAllProducts: string,
   queryAllDiscounts: string,
-
+  getAllProducts: string
+  getSingleProductById: string
 }
 
 export const queries: Queries = {
@@ -43,6 +44,25 @@ export const queries: Queries = {
   }
 `,
 
+  getSingleProductById: `
+    query ProductQuery($id: ID!) {
+        product(id: $id) {
+            ${getProductFields()}
+        }
+    }
+`,
+
+  getAllProducts: `
+    query products {
+        products(first: 250, query: "status:active AND published_status:published") {
+            nodes {
+                ${getProductFields()}
+            }
+        }
+    }
+`,
+
+
   queryAllProducts: `
     #graphql
     query products {
@@ -58,6 +78,15 @@ export const queries: Queries = {
             nodes {
               url(transform: {maxHeight: 500, maxWidth: 500})
             }
+          }
+          tags
+          priceRangeV2 {
+              minVariantPrice { amount, currencyCode }
+              maxVariantPrice { amount, currencyCode }
+          }
+          compareAtPriceRange {
+              minVariantCompareAtPrice { amount, currencyCode }
+              maxVariantCompareAtPrice { amount, currencyCode }
           }
         }
       }
@@ -81,3 +110,27 @@ export const queries: Queries = {
     `,
 }
 
+function getProductFields(): string {
+  return `
+      description
+      title
+      id
+      featuredImage {
+          url
+      }
+      images(first: 10) {
+          nodes {
+              url(transform: {maxHeight: 500, maxWidth: 500})
+          }
+      }
+      tags
+      priceRangeV2 {
+          minVariantPrice { amount, currencyCode }
+          maxVariantPrice { amount, currencyCode }
+      }
+      compareAtPriceRange {
+          minVariantCompareAtPrice { amount, currencyCode }
+          maxVariantCompareAtPrice { amount, currencyCode }
+      }
+  `;
+}

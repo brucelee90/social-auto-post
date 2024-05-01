@@ -38,6 +38,8 @@ export async function action({ request }: ActionFunctionArgs) {
     let customPlaceholderName = formData.get('custom_placeholder_name') as string;
     let customPlaceholderContent = formData.get('custom_placeholder_content') as string;
 
+    console.log(shop, customPlaceholderName, customPlaceholderContent);
+
     try {
         await settingsService.upsertCustomPlaceholder(
             shop,

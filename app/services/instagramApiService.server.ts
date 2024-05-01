@@ -1,6 +1,5 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
 import { createAdminApiClient } from '@shopify/admin-api-client';
-import { Prisma } from '@prisma/client';
 import { queries } from '~/utils/queries';
 import { IShopifyProduct } from '~/types/types';
 import { replacePlaceholders } from '~/utils/textUtils';
@@ -24,9 +23,7 @@ instagramApiService.publishMedia = async function publishMedia(featuredImageUrlA
     const productId = "6950087655615"
 
     const { product } = await fetchProductData(shop, productId);
-
     caption = replacePlaceholders(caption, product);
-
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {
@@ -99,28 +96,8 @@ async function fetchProductData(shop: string, productId: string) {
     });
 
     const variables = { variables: { id: `gid://shopify/Product/${productId}` } };
-
-    const { data, errors, extensions } = await client.request(queries.queryProductWithPlacehoderFieldsById, variables);
-
+    const { data, errors, extensions } = await client.request(queries.getSingleProductById, variables);
     return { product: data.product as IShopifyProduct, errors: errors, extensions: extensions };
 }
-
-// function replacePlaceholders(text: string, product: IShopifyProduct): string {
-
-//     text = text.replace("{PRODUCT_ID}", product?.id);
-//     text = text.replace("{PRODUCT_TITLE}", product?.title);
-//     text = text.replace("{PRODUCT_DESCRIPTION}", product?.description);
-//     text = text.replace("{PRODUCT_TAGS}", product?.tags.join(', '));
-
-//     text = text.replace("{PRODUCT_MIN_PRICE}", `${product?.priceRangeV2?.minVariantPrice?.amount} ${product?.priceRangeV2?.minVariantPrice?.currencyCode}`);
-//     text = text.replace("{PRODUCT_MAX_PRICE}", `${product?.priceRangeV2?.maxVariantPrice?.amount} ${product?.priceRangeV2?.maxVariantPrice?.currencyCode}`);
-
-//     text = text.replace("{PRODUCT_MIN_COMPARE_AT_PRICE}", `${product?.compareAtPriceRange?.minVariantCompareAtPrice?.amount} ${product?.compareAtPriceRange?.minVariantCompareAtPrice?.currencyCode}`);
-//     text = text.replace("{PRODUCT_MAX_COMPARE_AT_PRICE}", `${product?.compareAtPriceRange?.maxVariantCompareAtPrice?.amount} ${product?.compareAtPriceRange?.maxVariantCompareAtPrice?.currencyCode}`);
-
-//     return text;
-// }
-
-
 
 export default instagramApiService
