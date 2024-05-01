@@ -1,4 +1,11 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
+import { createAdminApiClient } from '@shopify/admin-api-client';
+import { Prisma } from '@prisma/client';
+import { queries } from '~/utils/queries';
+import { IShopifyProduct } from '~/types/types';
+import { replacePlaceholders } from '~/utils/textUtils';
+
+
 
 interface InstagramApiService {
     publishMedia: (featuredImageUrl: string[], caption: string) => Promise<void>
@@ -12,6 +19,14 @@ const PAGE_ID = process.env.PAGE_ID as string
 const instagramApiService = {} as InstagramApiService
 
 instagramApiService.publishMedia = async function publishMedia(featuredImageUrlArray: string[], caption: string) {
+
+    const shop = 'l4-dev-shop.myshopify.com'
+    const productId = "6950087655615"
+
+    const { product } = await fetchProductData(shop, productId);
+
+    caption = replacePlaceholders(caption, product);
+
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {
@@ -74,5 +89,38 @@ instagramApiService.publishStoryMedia = async function (imageUrl: string) {
         publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
     }
 }
+
+async function fetchProductData(shop: string, productId: string) {
+
+    const client = createAdminApiClient({
+        storeDomain: 'l4-dev-shop.myshopify.com',
+        apiVersion: '2024-01',
+        accessToken: "shpua_d5774321a2442c12a664c8724befea91",
+    });
+
+    const variables = { variables: { id: `gid://shopify/Product/${productId}` } };
+
+    const { data, errors, extensions } = await client.request(queries.queryProductWithPlacehoderFieldsById, variables);
+
+    return { product: data.product as IShopifyProduct, errors: errors, extensions: extensions };
+}
+
+// function replacePlaceholders(text: string, product: IShopifyProduct): string {
+
+//     text = text.replace("{PRODUCT_ID}", product?.id);
+//     text = text.replace("{PRODUCT_TITLE}", product?.title);
+//     text = text.replace("{PRODUCT_DESCRIPTION}", product?.description);
+//     text = text.replace("{PRODUCT_TAGS}", product?.tags.join(', '));
+
+//     text = text.replace("{PRODUCT_MIN_PRICE}", `${product?.priceRangeV2?.minVariantPrice?.amount} ${product?.priceRangeV2?.minVariantPrice?.currencyCode}`);
+//     text = text.replace("{PRODUCT_MAX_PRICE}", `${product?.priceRangeV2?.maxVariantPrice?.amount} ${product?.priceRangeV2?.maxVariantPrice?.currencyCode}`);
+
+//     text = text.replace("{PRODUCT_MIN_COMPARE_AT_PRICE}", `${product?.compareAtPriceRange?.minVariantCompareAtPrice?.amount} ${product?.compareAtPriceRange?.minVariantCompareAtPrice?.currencyCode}`);
+//     text = text.replace("{PRODUCT_MAX_COMPARE_AT_PRICE}", `${product?.compareAtPriceRange?.maxVariantCompareAtPrice?.amount} ${product?.compareAtPriceRange?.maxVariantCompareAtPrice?.currencyCode}`);
+
+//     return text;
+// }
+
+
 
 export default instagramApiService

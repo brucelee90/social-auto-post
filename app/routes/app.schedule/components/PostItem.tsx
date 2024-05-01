@@ -71,7 +71,6 @@ function PostItem(props: Props) {
                 let scheduledItemDesc = allScheduledItemsDescriptionMap.get(
                     `${productId}`
                 ) as string;
-                console.log('allScheduledItemsMap', allScheduledItemsMap);
 
                 let isEligibleForScheduling = false;
                 if (productId !== undefined && imageUrl !== undefined) {

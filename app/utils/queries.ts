@@ -1,7 +1,9 @@
 interface Queries {
   queryProductsById: string,
+  queryProductWithPlacehoderFieldsById: string,
   queryAllProducts: string,
-  queryAllDiscounts: string
+  queryAllDiscounts: string,
+
 }
 
 export const queries: Queries = {
@@ -21,10 +23,30 @@ export const queries: Queries = {
             }
         }
     }`,
+
+  queryProductWithPlacehoderFieldsById: `
+  query ProductQuery($id: ID!) {
+      product(id: $id) {
+          id
+          title
+          description
+          tags
+          priceRangeV2 {
+              minVariantPrice { amount, currencyCode }
+              maxVariantPrice { amount, currencyCode }
+          }
+          compareAtPriceRange {
+              minVariantCompareAtPrice { amount, currencyCode }
+              maxVariantCompareAtPrice { amount, currencyCode }
+          }
+      }
+  }
+`,
+
   queryAllProducts: `
     #graphql
     query products {
-        products (first:50, query:"status:active AND published_status:published") {
+        products (first:250, query:"status:active AND published_status:published") {
         nodes{
           description
           title

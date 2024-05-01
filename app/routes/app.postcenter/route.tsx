@@ -63,12 +63,39 @@ export default function PublishMedia() {
     const productsArray = [...allAvailableProducts?.data?.products?.nodes];
     const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
 
+    const placeholders = [
+        {
+            customPlaceholderId: 'TEST',
+            customPlaceholderContent: '#Moinsen!!asdf',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'TEST_2',
+            customPlaceholderContent: 'hi',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: '{HASHTAG_1}',
+            customPlaceholderContent: '#supi',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'TEST_3',
+            customPlaceholderContent: '#TESTING motherfucker',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        },
+        {
+            customPlaceholderId: 'test',
+            customPlaceholderContent: 'testtest',
+            settingsId: 'l4-dev-shop.myshopify.com'
+        }
+    ];
+
     return (
         <div>
             {productsArray &&
                 productsArray.map((e: ProductInfo, key) => {
                     let productId = e.id;
-                    let imageUrl = e.featuredImage?.url;
                     let images = e.images?.nodes;
                     let title = e.title;
                     let description = e.description;
@@ -85,7 +112,11 @@ export default function PublishMedia() {
 
                                     <ImagePicker images={images} />
                                     <DiscountsPicker discountsArray={discountsArray} />
-                                    <TextArea description={description} title={title} />
+                                    <TextArea
+                                        description={description}
+                                        title={title}
+                                        placeholders={placeholders}
+                                    />
 
                                     <div>
                                         {images ? (

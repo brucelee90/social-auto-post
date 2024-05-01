@@ -11,7 +11,7 @@ const initialText = `😍 {PRODUCT_TITLE} 😍
 interface Props {
     title: string;
     description: string;
-    scheduledItemDesc: string;
+    scheduledItemDesc?: string;
     placeholders: CustomPlaceholder[];
 }
 
@@ -64,7 +64,6 @@ function TextArea(props: Props) {
                 onChange={handleChange}
                 cols={50}
             />
-            {/* <input type="hidden" name={PostForm.description} value={displayText} /> */}
             <div
                 dangerouslySetInnerHTML={{ __html: displayText }}
                 style={{ width: '50%', whiteSpace: 'pre-wrap' }}
