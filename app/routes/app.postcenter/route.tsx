@@ -49,7 +49,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         if (publishAction.includes(PublishType.publishStory)) {
             await instagramApiService.publishStoryMedia(imageUrl[0]);
         } else if (publishAction.includes(PublishType.publishMedia)) {
-            await instagramApiService.publishMedia(imageUrl, description);
+            await instagramApiService.publishMedia(imageUrl, description, productId);
         }
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };

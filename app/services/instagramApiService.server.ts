@@ -7,7 +7,7 @@ import { replacePlaceholders } from '~/utils/textUtils';
 
 
 interface InstagramApiService {
-    publishMedia: (featuredImageUrl: string[], caption: string) => Promise<void>
+    publishMedia: (featuredImageUrl: string[], caption: string, prodId: string) => Promise<void>
     publishCarousel: (featuredImageUrl: string[], caption: string) => Promise<void>
     publishStoryMedia: (image: string) => Promise<void>
 }
@@ -17,12 +17,9 @@ const PAGE_ID = process.env.PAGE_ID as string
 
 const instagramApiService = {} as InstagramApiService
 
-instagramApiService.publishMedia = async function publishMedia(featuredImageUrlArray: string[], caption: string) {
+instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string) {
 
-    const shop = 'l4-dev-shop.myshopify.com'
-    const productId = "6950087655615"
-
-    const { product } = await fetchProductData(shop, productId);
+    const { product } = await fetchProductData(productId);
     caption = replacePlaceholders(caption, product);
 
     let featuredImageUrl = ""
@@ -87,7 +84,7 @@ instagramApiService.publishStoryMedia = async function (imageUrl: string) {
     }
 }
 
-async function fetchProductData(shop: string, productId: string) {
+async function fetchProductData(productId: string) {
 
     const client = createAdminApiClient({
         storeDomain: 'l4-dev-shop.myshopify.com',
@@ -95,7 +92,7 @@ async function fetchProductData(shop: string, productId: string) {
         accessToken: "shpua_d5774321a2442c12a664c8724befea91",
     });
 
-    const variables = { variables: { id: `gid://shopify/Product/${productId}` } };
+    const variables = { variables: { id: productId } };
     const { data, errors, extensions } = await client.request(queries.getSingleProductById, variables);
     return { product: data.product as IShopifyProduct, errors: errors, extensions: extensions };
 }
