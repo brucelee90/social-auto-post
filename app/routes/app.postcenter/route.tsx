@@ -66,12 +66,12 @@ export default function PublishMedia() {
 
     const placeholders = [
         {
-            customPlaceholderId: 'TEST',
+            customPlaceholderId: '{TEST}',
             customPlaceholderContent: '#Moinsen!!asdf',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {
-            customPlaceholderId: 'TEST_2',
+            customPlaceholderId: '{TEST_2}',
             customPlaceholderContent: 'hi',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
@@ -81,8 +81,8 @@ export default function PublishMedia() {
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {
-            customPlaceholderId: 'TEST_3',
-            customPlaceholderContent: '#TESTING motherfucker',
+            customPlaceholderId: '{TEST_3}',
+            customPlaceholderContent: '{PRODUCT_TAGS}',
             settingsId: 'l4-dev-shop.myshopify.com'
         },
         {

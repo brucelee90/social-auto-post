@@ -30,11 +30,9 @@ function TextArea(props: Props) {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        console.log('PRODUCT ON TEXT AREA', product);
-
         const replacements: Record<string, string> = placeholders.reduce(
-            (acc, placeholder) => ({
-                ...acc,
+            (accumulator, placeholder) => ({
+                ...accumulator,
                 [`${placeholder.customPlaceholderId}`]: placeholder.customPlaceholderContent
             }),
             {}
@@ -47,13 +45,7 @@ function TextArea(props: Props) {
             }, text);
         };
 
-        console.log('processText', processText(inputText));
-        let processedText = processText(inputText);
-
-        console.log(processedText);
-
         const displayText = replacePlaceholders(processText(inputText), product);
-
         setDisplayText(displayText);
     }, [inputText, product]);
 
