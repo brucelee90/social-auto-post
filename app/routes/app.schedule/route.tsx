@@ -12,9 +12,16 @@ import PostItem from './components/PostItem';
 import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
+    const { shop } = session;
     const res = await admin.graphql(`${queries.queryAllProducts}`);
     const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
+    const { customPlaceholder } = await prisma.settings.findFirstOrThrow({
+        where: { id: shop },
+        include: {
+            customPlaceholder: true
+        }
+    });
 
     // Bigint is not serializable that's why we have to create a Map
     let allScheduledItems = new TSMap();
@@ -31,7 +38,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
         allAvailableProducts: await res.json(),
         allScheduledItems: allScheduledItems.toJSON(),
         allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
-        allAvailableDiscounts: await discountRes.json()
+        allAvailableDiscounts: await discountRes.json(),
+        customPlaceholder: customPlaceholder
     });
 }
 
@@ -74,7 +82,8 @@ export default function Schedule() {
         allAvailableProducts,
         allScheduledItems,
         allAvailableDiscounts,
-        allScheduledItemsDescription
+        allScheduledItemsDescription,
+        customPlaceholder
     } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
@@ -103,6 +112,7 @@ export default function Schedule() {
                     allScheduledItemsMap={allScheduledItemsMap}
                     allScheduledItemsDescriptionMap={allScheduledItemsDescriptionMap}
                     discountsArray={discountsArray}
+                    placeholders={customPlaceholder}
                 />
             </div>
         );

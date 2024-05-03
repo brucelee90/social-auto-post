@@ -19,6 +19,11 @@ interface Props {
     allScheduledItemsMap: TSMap<unknown, unknown>;
     allScheduledItemsDescriptionMap: TSMap<unknown, unknown>;
     discountsArray: { codeDiscount: { title: string } }[];
+    placeholders: {
+        customPlaceholderId: string;
+        customPlaceholderContent: string;
+        settingsId: string | null;
+    }[];
 }
 
 function PostItem(props: Props) {
@@ -30,36 +35,9 @@ function PostItem(props: Props) {
         productsArray,
         allScheduledItemsMap,
         allScheduledItemsDescriptionMap,
-        discountsArray
+        discountsArray,
+        placeholders
     } = props;
-
-    const placeholders = [
-        {
-            customPlaceholderId: '{TEST}',
-            customPlaceholderContent: '#Moinsen!!asdf',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{TEST_2}',
-            customPlaceholderContent: 'hi',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{HASHTAG_1}',
-            customPlaceholderContent: '#supi',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{TEST_3}',
-            customPlaceholderContent: '{PRODUCT_TAGS}',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: 'test',
-            customPlaceholderContent: 'testtest',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        }
-    ];
 
     return (
         <div>
@@ -90,8 +68,6 @@ function PostItem(props: Props) {
                                 <ImagePicker images={images} />
                                 <DiscountsPicker discountsArray={discountsArray} />
                                 <TextArea
-                                    description={e.description}
-                                    title={e.title}
                                     placeholders={placeholders}
                                     scheduledItemDesc={scheduledItemDesc}
                                     product={e}

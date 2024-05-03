@@ -13,13 +13,14 @@ import TextArea from '~/components/PostRow/TextArea';
 import { IShopifyProduct } from '~/types/types';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
+    const { shop } = session;
 
     try {
         const res = await admin.graphql(`${queries.getAllProducts}`);
         const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
-        let { customPlaceholder } = await prisma.settings.findFirstOrThrow({
-            where: { id: 'l4-dev-shop.myshopify.com' },
+        const { customPlaceholder } = await prisma.settings.findFirstOrThrow({
+            where: { id: shop },
             include: {
                 customPlaceholder: true
             }
@@ -41,6 +42,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
+    const { session } = await authenticate.admin(request);
+    const { shop } = session;
 
     console.log('formData', formData.getAll('description'));
 
@@ -56,7 +59,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         if (publishAction.includes(PublishType.publishStory)) {
             await instagramApiService.publishStoryMedia(imageUrl[0]);
         } else if (publishAction.includes(PublishType.publishMedia)) {
-            await instagramApiService.publishMedia(imageUrl, description, productId);
+            await instagramApiService.publishMedia(imageUrl, description, productId, shop);
         }
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
