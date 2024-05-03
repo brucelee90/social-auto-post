@@ -45,8 +45,10 @@ model Campaign {
 }
 
 model CustomPlaceholder {
-  customPlaceholderId      String    @id
+  customPlaceholderName    String   @default("")
   customPlaceholderContent String
-  Settings                 Settings? @relation(fields: [settingsId], references: [id])
-  settingsId               String?
+  Settings                 Settings @relation(fields: [settingsId], references: [id])
+  settingsId               String
+
+  @@id([customPlaceholderName, settingsId])
 }

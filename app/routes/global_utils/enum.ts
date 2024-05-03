@@ -18,7 +18,9 @@ export enum PostForm {
     productId = "product_id",
     scheduledDate = "scheduled_date",
     scheduledTime = "scheduled_time",
-    codeDiscount = "code_discount"
+    codeDiscount = "code_discount",
+    placeholderName = "custom_placeholder_name",
+    placeholderContent = "custom_placeholder_content",
 }
 
 export enum PublishType {

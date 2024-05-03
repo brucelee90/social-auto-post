@@ -11,7 +11,7 @@ enum PlaceholderKeyEnum {
     PRODUCT_MAX_COMPARE_AT_PRICE = "{PRODUCT_MAX_COMPARE_AT_PRICE}",
 }
 
-type CustomPlaceholder = { customPlaceholderId: string, customPlaceholderContent: string }
+type CustomPlaceholder = { customPlaceholderName: string, customPlaceholderContent: string }
 
 type PlaceholderKey = PlaceholderKeyEnum.PRODUCT_ID
     | PlaceholderKeyEnum.PRODUCT_TITLE
@@ -69,7 +69,7 @@ export function replacePlaceholders(description: string, product: any, customPla
         replacements = customPlaceholders.reduce(
             (accumulator: Record<string, string>, customPlaceholders: CustomPlaceholder) => ({
                 ...accumulator,
-                [`${customPlaceholders.customPlaceholderId}`]: customPlaceholders.customPlaceholderContent
+                [`${customPlaceholders.customPlaceholderName}`]: customPlaceholders.customPlaceholderContent
             }),
             {}
         );

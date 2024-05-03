@@ -4,6 +4,7 @@ import { Form, json, useActionData, useFetcher, useLoaderData } from '@remix-run
 import { authenticate } from '~/shopify.server';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { Text } from '@shopify/polaris';
+import { PostForm } from '../global_utils/enum';
 
 interface ApiResponse {
     success: boolean;
@@ -35,21 +36,24 @@ export async function action({ request }: ActionFunctionArgs) {
     const { shop } = session;
 
     const formData = await request.formData();
-    let customPlaceholderName = formData.get('custom_placeholder_name') as string;
-    let customPlaceholderContent = formData.get('custom_placeholder_content') as string;
-
-    console.log(shop, customPlaceholderName, customPlaceholderContent);
+    let handlePlaceholder = formData.get('handle_placeholder') as string;
+    let customPlaceholderName = formData.get(PostForm.placeholderName) as string;
+    let customPlaceholderContent = formData.get(PostForm.placeholderContent) as string;
 
     try {
-        await settingsService.upsertCustomPlaceholder(
-            shop,
-            customPlaceholderName,
-            customPlaceholderContent
-        );
-        return createApiResponse(true, 'Settings saved successfully.');
+        if (handlePlaceholder === 'remove') {
+            await settingsService.removeCustomPlaceholder(shop, customPlaceholderName);
+        } else {
+            await settingsService.upsertCustomPlaceholder(
+                shop,
+                customPlaceholderName,
+                customPlaceholderContent
+            );
+        }
+        return createApiResponse(true, 'Settings updated successfully.');
     } catch (error) {
-        console.log('error while saving setting');
-        return createApiResponse(false, 'Failed to save settings.');
+        console.log(error, 'error while saving setting');
+        return createApiResponse(false, 'Failed to update settings.');
     }
 }
 
@@ -75,12 +79,12 @@ export default function Settings(props: Props) {
             ))}
             <Form method="post" style={{ paddingTop: '1rem' }}>
                 <div>
-                    <label htmlFor="custom_placeholder_name">Placeholder name</label>
-                    <input type="text" name="custom_placeholder_name" defaultValue="" />
+                    <label htmlFor={PostForm.placeholderName}>Placeholder name</label>
+                    <input type="text" name={PostForm.placeholderName} defaultValue="" />
                 </div>
                 <div>
-                    <label htmlFor="custom_placeholder_content">Placeholder value</label>
-                    <input type="text" name="custom_placeholder_content" defaultValue="" />
+                    <label htmlFor={PostForm.placeholderContent}>Placeholder value</label>
+                    <textarea name={PostForm.placeholderContent} defaultValue="" />
                 </div>
                 <button>Add new Text block</button>
             </Form>
@@ -90,14 +94,14 @@ export default function Settings(props: Props) {
 
 interface Props {
     placeholder: {
-        customPlaceholderId: string;
+        customPlaceholderName: string;
         customPlaceholderContent: string;
     };
 }
 
 function PlaceholderForm(props: Props) {
     const { placeholder } = props;
-    const fetcher = useFetcher({ key: placeholder.customPlaceholderId });
+    const fetcher = useFetcher({ key: placeholder.customPlaceholderName });
 
     let message;
 
@@ -107,25 +111,30 @@ function PlaceholderForm(props: Props) {
 
     return (
         <div style={{ display: 'flex', borderBottom: '1px solid black', paddingTop: '1rem' }}>
-            <fetcher.Form method="post" key={placeholder.customPlaceholderId}>
+            <fetcher.Form method="post" key={placeholder.customPlaceholderName}>
                 <input
                     type="hidden"
-                    name="custom_placeholder_name"
-                    value={placeholder.customPlaceholderId}
+                    name={PostForm.placeholderName}
+                    value={placeholder.customPlaceholderName}
                 />
                 <label
-                    htmlFor={`custom_placeholder_content_${placeholder.customPlaceholderId}`}
+                    htmlFor={`${PostForm.placeholderContent}_${placeholder.customPlaceholderName}`}
                     style={{ width: '25%' }}
                 >
-                    {placeholder.customPlaceholderId}:
+                    {placeholder.customPlaceholderName}:
                 </label>
                 <div>
                     <textarea
-                        id={`custom_placeholder_content_${placeholder.customPlaceholderId}`}
-                        name="custom_placeholder_content"
+                        id={`${PostForm.placeholderContent}_${placeholder.customPlaceholderName}`}
+                        name={PostForm.placeholderContent}
                         defaultValue={placeholder.customPlaceholderContent}
                     />
-                    <button type="submit">Update Text Block</button>
+                    <button type="submit" name="handle_placeholder" value="update">
+                        Update Text Block
+                    </button>
+                    <button type="submit" name="handle_placeholder" value="remove">
+                        Delete Text Block
+                    </button>
                 </div>
                 {message !== undefined && <div>{message}</div>}
             </fetcher.Form>

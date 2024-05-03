@@ -4,6 +4,7 @@ import { queries } from '~/utils/queries';
 import { IShopifyProduct } from '~/types/types';
 import { replacePlaceholders } from '~/utils/textUtils';
 
+const apiVersion = "2024-01"
 
 
 interface InstagramApiService {
@@ -105,7 +106,7 @@ async function fetchProductData(productId: string, shop: string) {
 
     const client = createAdminApiClient({
         storeDomain: shop,
-        apiVersion: '2024-01',
+        apiVersion: apiVersion,
         accessToken: accessToken,
     });
 

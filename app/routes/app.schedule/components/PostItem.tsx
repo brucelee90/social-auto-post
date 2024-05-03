@@ -19,11 +19,9 @@ interface Props {
     allScheduledItemsMap: TSMap<unknown, unknown>;
     allScheduledItemsDescriptionMap: TSMap<unknown, unknown>;
     discountsArray: { codeDiscount: { title: string } }[];
-    placeholders: {
-        customPlaceholderId: string;
-        customPlaceholderContent: string;
-        settingsId: string | null;
-    }[];
+    placeholders:
+        | { customPlaceholderName: string; customPlaceholderContent: string; settingsId: string }[]
+        | null;
 }
 
 function PostItem(props: Props) {
