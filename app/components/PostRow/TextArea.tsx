@@ -13,15 +13,13 @@ const initialText = `😍 {PRODUCT_TITLE} 😍
 👉 Find the link to our store in our bio`;
 
 interface Props {
-    title: string;
-    description: string;
     scheduledItemDesc?: string;
-    placeholders: CustomPlaceholder[];
+    placeholders: CustomPlaceholder[] | null;
     product: IShopifyProduct;
 }
 
 function TextArea(props: Props) {
-    const { title, description, placeholders, scheduledItemDesc, product } = props;
+    const { placeholders, scheduledItemDesc, product } = props;
 
     let initialDesc =
         scheduledItemDesc && scheduledItemDesc.trim() !== '' ? scheduledItemDesc : initialText;
@@ -30,22 +28,7 @@ function TextArea(props: Props) {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        const replacements: Record<string, string> = placeholders.reduce(
-            (accumulator, placeholder) => ({
-                ...accumulator,
-                [`${placeholder.customPlaceholderId}`]: placeholder.customPlaceholderContent
-            }),
-            {}
-        );
-
-        const processText = (text: string) => {
-            return Object.keys(replacements).reduce((currentText, key: string) => {
-                const regex = new RegExp(key, 'g');
-                return currentText.replace(regex, replacements[key]);
-            }, text);
-        };
-
-        const displayText = replacePlaceholders(processText(inputText), product);
+        const displayText = replacePlaceholders(inputText, product, placeholders);
         setDisplayText(displayText);
     }, [inputText, product]);
 

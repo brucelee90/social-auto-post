@@ -20,7 +20,15 @@ const instagramApiService = {} as InstagramApiService
 instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string) {
 
     const { product } = await fetchProductData(productId);
-    caption = replacePlaceholders(caption, product);
+
+    let { customPlaceholder } = await prisma.settings.findFirstOrThrow({
+        where: { id: "l4-dev-shop.myshopify.com" },
+        include: {
+            customPlaceholder: true
+        }
+    });
+
+    caption = replacePlaceholders(caption, product, customPlaceholder);
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {

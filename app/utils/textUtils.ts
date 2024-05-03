@@ -11,6 +11,8 @@ enum PlaceholderKeyEnum {
     PRODUCT_MAX_COMPARE_AT_PRICE = "{PRODUCT_MAX_COMPARE_AT_PRICE}",
 }
 
+type CustomPlaceholder = { customPlaceholderId: string, customPlaceholderContent: string }
+
 type PlaceholderKey = PlaceholderKeyEnum.PRODUCT_ID
     | PlaceholderKeyEnum.PRODUCT_TITLE
     | PlaceholderKeyEnum.PRODUCT_DESCRIPTION
@@ -52,10 +54,30 @@ function buildPlaceholderRegex(keys: PlaceholderKey[]): RegExp {
     return new RegExp(pattern, 'g');
 }
 
+const processText = (text: string, replacements: Record<string, string>) => {
+    return Object.keys(replacements).reduce((currentText, key: string) => {
+        const regex = new RegExp(key, 'g');
+        return currentText.replace(regex, replacements[key]);
+    }, text);
+};
 
-export function replacePlaceholders(text: string, product: any): string {
+export function replacePlaceholders(description: string, product: any, customPlaceholders: CustomPlaceholder[] | null): string {
+
+    let replacements: Record<string, string> = { ['']: "" }
+
+    if (customPlaceholders !== null) {
+        replacements = customPlaceholders.reduce(
+            (accumulator: Record<string, string>, customPlaceholders: CustomPlaceholder) => ({
+                ...accumulator,
+                [`${customPlaceholders.customPlaceholderId}`]: customPlaceholders.customPlaceholderContent
+            }),
+            {}
+        );
+    }
+
+
     const placeholderRegex = buildPlaceholderRegex(staticPlaceholders);
-    return text.replace(placeholderRegex, match => getProductPlaceholder(product, match as PlaceholderKey));
+    return processText(description, replacements).replace(placeholderRegex, match => getProductPlaceholder(product, match as PlaceholderKey));
 }
 
 

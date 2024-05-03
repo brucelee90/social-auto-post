@@ -7,8 +7,6 @@ import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
 import instagramApiService from '~/services/instagramApiService.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
-import { ProductInfo } from '../global_utils/types';
-import PostItem from '../app.schedule/components/PostItem';
 import ImagePicker from '~/components/PostRow/ImagePicker';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
 import TextArea from '~/components/PostRow/TextArea';
@@ -20,14 +18,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     try {
         const res = await admin.graphql(`${queries.getAllProducts}`);
         const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
+        let { customPlaceholder } = await prisma.settings.findFirstOrThrow({
+            where: { id: 'l4-dev-shop.myshopify.com' },
+            include: {
+                customPlaceholder: true
+            }
+        });
+
         return json({
             allAvailableProducts: await res.json(),
-            allAvailableDiscounts: await discountRes.json()
+            allAvailableDiscounts: await discountRes.json(),
+            customPlaceholder: customPlaceholder
         });
     } catch (error) {
         return {
             allAvailableProducts: null,
-            allAvailableDiscounts: null
+            allAvailableDiscounts: null,
+            customPlaceholder: null
         };
     }
 }
@@ -60,46 +67,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function PublishMedia() {
     const actionData = useActionData<typeof action>();
-    const { allAvailableProducts, allAvailableDiscounts } = useLoaderData<typeof loader>();
+    const { allAvailableProducts, allAvailableDiscounts, customPlaceholder } =
+        useLoaderData<typeof loader>();
     const productsArray = [...allAvailableProducts?.data?.products?.nodes];
     const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
-
-    const placeholders = [
-        {
-            customPlaceholderId: '{TEST}',
-            customPlaceholderContent: '#Moinsen!!asdf',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{TEST_2}',
-            customPlaceholderContent: 'hi',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{HASHTAG_1}',
-            customPlaceholderContent: '#supi',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: '{TEST_3}',
-            customPlaceholderContent: '{PRODUCT_TAGS}',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        },
-        {
-            customPlaceholderId: 'test',
-            customPlaceholderContent: 'testtest',
-            settingsId: 'l4-dev-shop.myshopify.com'
-        }
-    ];
 
     return (
         <div>
             {productsArray &&
-                productsArray.map((e: IShopifyProduct, key) => {
-                    let productId = e.id;
-                    let images = e.images?.nodes;
-                    let title = e.title;
-                    let description = e.description;
+                productsArray.map((product: IShopifyProduct, key) => {
+                    let productId = product.id;
+                    let images = product.images?.nodes;
+                    let title = product.title;
+                    let description = product.description;
 
                     return (
                         <>
@@ -113,12 +93,7 @@ export default function PublishMedia() {
 
                                     <ImagePicker images={images} />
                                     <DiscountsPicker discountsArray={discountsArray} />
-                                    <TextArea
-                                        description={description}
-                                        title={title}
-                                        placeholders={placeholders}
-                                        product={e}
-                                    />
+                                    <TextArea placeholders={customPlaceholder} product={product} />
 
                                     <div>
                                         {images ? (
