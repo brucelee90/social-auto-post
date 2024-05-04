@@ -6,3 +6,8 @@ export type ProductInfo = {
     description: string;
     images: { nodes: [{ url: string }] };
 };
+
+export interface IApiResponse {
+    success: boolean;
+    message: string;
+}

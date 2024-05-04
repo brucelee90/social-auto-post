@@ -1,18 +1,15 @@
-import { useState } from 'react';
 import settingsService, { getSettings } from '../../services/SettingsService.server';
-import { Form, json, useActionData, useFetcher, useLoaderData } from '@remix-run/react';
+import { Form, json, useFetcher, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { Text } from '@shopify/polaris';
 import { PostForm } from '../global_utils/enum';
-
-interface ApiResponse {
-    success: boolean;
-    message: string;
-}
+import { PlaceholderForm } from './components/PlaceholderForm';
+import { IApiResponse } from '../global_utils/types';
+import { DefaultCaption } from '@prisma/client';
 
 function createApiResponse(success: boolean, message: string) {
-    return { success, message } as ApiResponse;
+    return { success, message } as IApiResponse;
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -27,6 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     return json({
         customPlaceholder: shopSettings?.customPlaceholder,
+        defaultCaption: shopSettings?.defaultCaption,
         shopSettings: shopSettings
     });
 }
@@ -39,9 +37,14 @@ export async function action({ request }: ActionFunctionArgs) {
     let handlePlaceholder = formData.get('handle_placeholder') as string;
     let customPlaceholderName = formData.get(PostForm.placeholderName) as string;
     let customPlaceholderContent = formData.get(PostForm.placeholderContent) as string;
+    let defaultCaption = formData.get('default_caption') as string;
+    let handledefaultCaption = formData.get('handle_default_caption') as string;
 
     try {
-        if (handlePlaceholder === 'remove') {
+        if (handledefaultCaption !== null) {
+            settingsService.saveDefaultCaption(shop, defaultCaption);
+            return createApiResponse(true, 'Saved successfully');
+        } else if (handlePlaceholder === 'remove') {
             await settingsService.removeCustomPlaceholder(shop, customPlaceholderName);
         } else {
             await settingsService.upsertCustomPlaceholder(
@@ -61,7 +64,7 @@ interface Props {}
 
 export default function Settings(props: Props) {
     const {} = props;
-    const { customPlaceholder } = useLoaderData<typeof loader>();
+    const { customPlaceholder, defaultCaption } = useLoaderData<typeof loader>();
 
     return (
         <div>
@@ -69,11 +72,21 @@ export default function Settings(props: Props) {
                 Settings
             </Text>
 
+            <hr />
+
+            <Text as="h2" variant="headingLg">
+                Set Default Caption
+            </Text>
+
+            <DefaultCaptionForm defaultCaption={defaultCaption} />
+
+            <hr />
+
+            <Text as="h2" variant="headingLg">
+                Set Custom Placeholders
+            </Text>
             {customPlaceholder?.map((customPlaceholderElement, key) => (
-                <div
-                    key={key}
-                    style={{ display: 'flex', borderBottom: '1px solid black', paddingTop: '1rem' }}
-                >
+                <div key={key}>
                     <PlaceholderForm placeholder={customPlaceholderElement} />
                 </div>
             ))}
@@ -92,52 +105,46 @@ export default function Settings(props: Props) {
     );
 }
 
-interface Props {
-    placeholder: {
-        customPlaceholderName: string;
-        customPlaceholderContent: string;
-    };
+interface IDefaultCaptionProps {
+    defaultCaption: DefaultCaption[] | undefined;
 }
 
-function PlaceholderForm(props: Props) {
-    const { placeholder } = props;
-    const fetcher = useFetcher({ key: placeholder.customPlaceholderName });
+function DefaultCaptionForm(props: IDefaultCaptionProps) {
+    const fetcher = useFetcher({ key: 'default_caption' });
+    const { defaultCaption } = props;
+    let defaultCaptionContent = '';
+
+    console.log('defaultCaption', defaultCaption);
 
     let message;
+    if ((fetcher.data as IApiResponse)?.message) {
+        message = (fetcher.data as IApiResponse).message;
+    }
 
-    if ((fetcher.data as ApiResponse)?.message) {
-        message = (fetcher.data as ApiResponse).message;
+    console.log(fetcher.formData);
+    if (defaultCaption !== undefined) {
+        const defaultCaptionItem = defaultCaption.find((item) => item.defaultCaptionName === 'all');
+        defaultCaptionContent =
+            defaultCaptionItem?.defaultCaptionContent !== undefined
+                ? defaultCaptionItem?.defaultCaptionContent
+                : '';
     }
 
     return (
-        <div style={{ display: 'flex', borderBottom: '1px solid black', paddingTop: '1rem' }}>
-            <fetcher.Form method="post" key={placeholder.customPlaceholderName}>
-                <input
-                    type="hidden"
-                    name={PostForm.placeholderName}
-                    value={placeholder.customPlaceholderName}
+        <fetcher.Form method="post" key="default_caption">
+            <div>
+                <textarea
+                    rows={10}
+                    style={{ width: '50%' }}
+                    id="default_caption"
+                    name="default_caption"
+                    defaultValue={defaultCaptionContent}
                 />
-                <label
-                    htmlFor={`${PostForm.placeholderContent}_${placeholder.customPlaceholderName}`}
-                    style={{ width: '25%' }}
-                >
-                    {placeholder.customPlaceholderName}:
-                </label>
-                <div>
-                    <textarea
-                        id={`${PostForm.placeholderContent}_${placeholder.customPlaceholderName}`}
-                        name={PostForm.placeholderContent}
-                        defaultValue={placeholder.customPlaceholderContent}
-                    />
-                    <button type="submit" name="handle_placeholder" value="update">
-                        Update Text Block
-                    </button>
-                    <button type="submit" name="handle_placeholder" value="remove">
-                        Delete Text Block
-                    </button>
-                </div>
-                {message !== undefined && <div>{message}</div>}
-            </fetcher.Form>
-        </div>
+                <button name="handle_default_caption" value="save">
+                    save default caption
+                </button>
+            </div>
+            {message !== undefined && <div>{message}</div>}
+        </fetcher.Form>
     );
 }

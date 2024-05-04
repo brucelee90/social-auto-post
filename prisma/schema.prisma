@@ -25,6 +25,7 @@ model Settings {
   id                  String              @id
   isCustomDescription Boolean             @default(false)
   customPlaceholder   CustomPlaceholder[]
+  defaultCaption      DefaultCaption[]
 }
 
 model MediaQueue {
@@ -51,4 +52,13 @@ model CustomPlaceholder {
   settingsId               String
 
   @@id([customPlaceholderName, settingsId])
+}
+
+model DefaultCaption {
+  defaultCaptionName    String   @default("")
+  defaultCaptionContent String
+  Settings              Settings @relation(fields: [settingsId], references: [id])
+  settingsId            String
+
+  @@id([defaultCaptionName, settingsId])
 }
