@@ -4,25 +4,18 @@ import { CustomPlaceholder } from '@prisma/client';
 import { IShopifyProduct } from '~/types/types';
 import { replacePlaceholders } from '~/utils/textUtils';
 
-const initialText = `😍 {PRODUCT_TITLE} 😍
-
-{PRODUCT_DESCRIPTION}
-
-{PRODUCT_TAGS}
-
-👉 Find the link to our store in our bio`;
-
 interface Props {
     scheduledItemDesc?: string;
-    placeholders: CustomPlaceholder[] | null;
+    placeholders: CustomPlaceholder[] | null | undefined;
     product: IShopifyProduct;
+    defaultCaption: string;
 }
 
 function TextArea(props: Props) {
-    const { placeholders, scheduledItemDesc, product } = props;
+    const { placeholders, scheduledItemDesc, product, defaultCaption } = props;
 
     let initialDesc =
-        scheduledItemDesc && scheduledItemDesc.trim() !== '' ? scheduledItemDesc : initialText;
+        scheduledItemDesc && scheduledItemDesc.trim() !== '' ? scheduledItemDesc : defaultCaption;
 
     const [inputText, setInputText] = useState(initialDesc);
     const [displayText, setDisplayText] = useState('');
@@ -53,5 +46,15 @@ function TextArea(props: Props) {
         </div>
     );
 }
+
+TextArea.defaultProps = {
+    defaultCaption: `😍 {PRODUCT_TITLE} 😍
+
+{PRODUCT_DESCRIPTION}
+
+{PRODUCT_TAGS}
+
+👉 Find the link to our store in our bio`
+};
 
 export default TextArea;

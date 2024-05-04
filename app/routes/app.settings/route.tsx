@@ -7,6 +7,7 @@ import { PostForm } from '../global_utils/enum';
 import { PlaceholderForm } from './components/PlaceholderForm';
 import { IApiResponse } from '../global_utils/types';
 import { DefaultCaption } from '@prisma/client';
+import DefaultCaptionForm from './components/DefaultCaptionForm';
 
 function createApiResponse(success: boolean, message: string) {
     return { success, message } as IApiResponse;
@@ -102,49 +103,5 @@ export default function Settings(props: Props) {
                 <button>Add new Text block</button>
             </Form>
         </div>
-    );
-}
-
-interface IDefaultCaptionProps {
-    defaultCaption: DefaultCaption[] | undefined;
-}
-
-function DefaultCaptionForm(props: IDefaultCaptionProps) {
-    const fetcher = useFetcher({ key: 'default_caption' });
-    const { defaultCaption } = props;
-    let defaultCaptionContent = '';
-
-    console.log('defaultCaption', defaultCaption);
-
-    let message;
-    if ((fetcher.data as IApiResponse)?.message) {
-        message = (fetcher.data as IApiResponse).message;
-    }
-
-    console.log(fetcher.formData);
-    if (defaultCaption !== undefined) {
-        const defaultCaptionItem = defaultCaption.find((item) => item.defaultCaptionName === 'all');
-        defaultCaptionContent =
-            defaultCaptionItem?.defaultCaptionContent !== undefined
-                ? defaultCaptionItem?.defaultCaptionContent
-                : '';
-    }
-
-    return (
-        <fetcher.Form method="post" key="default_caption">
-            <div>
-                <textarea
-                    rows={10}
-                    style={{ width: '50%' }}
-                    id="default_caption"
-                    name="default_caption"
-                    defaultValue={defaultCaptionContent}
-                />
-                <button name="handle_default_caption" value="save">
-                    save default caption
-                </button>
-            </div>
-            {message !== undefined && <div>{message}</div>}
-        </fetcher.Form>
     );
 }

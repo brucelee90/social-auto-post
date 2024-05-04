@@ -10,36 +10,34 @@ import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
 import PostItem from './components/PostItem';
 import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
+import { getSettings } from '~/services/SettingsService.server';
+import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
     const { shop } = session;
-    const res = await admin.graphql(`${queries.queryAllProducts}`);
-    const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
-    const { customPlaceholder } = await prisma.settings.findFirstOrThrow({
-        where: { id: shop },
-        include: {
-            customPlaceholder: true
-        }
-    });
+
+    const [res, discountRes, shopSettings] = await Promise.all([
+        admin.graphql(`${queries.queryAllProducts}`).then((res) => res.json()),
+        admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
+        getSettings(shop)
+    ]);
 
     // Bigint is not serializable that's why we have to create a Map
     let allScheduledItems = new TSMap();
     let allScheduledItemsDescription = new TSMap();
     (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
         allScheduledItems.set(e.productId, e.dateScheduled);
-    });
-
-    (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
         allScheduledItemsDescription.set(e.productId, e.postDescription);
     });
 
     return json({
-        allAvailableProducts: await res.json(),
+        allAvailableProducts: res,
         allScheduledItems: allScheduledItems.toJSON(),
         allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
-        allAvailableDiscounts: await discountRes.json(),
-        customPlaceholder: customPlaceholder
+        allAvailableDiscounts: discountRes,
+        customPlaceholder: shopSettings?.customPlaceholder,
+        defaultCaption: shopSettings?.defaultCaption
     });
 }
 
@@ -83,7 +81,8 @@ export default function Schedule() {
         allScheduledItems,
         allAvailableDiscounts,
         allScheduledItemsDescription,
-        customPlaceholder
+        customPlaceholder,
+        defaultCaption
     } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
@@ -96,6 +95,7 @@ export default function Schedule() {
         const actionProductId = actionData?.productId as string;
         const action = actionData?.action as string;
         const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
+        const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
 
         return (
             <div>
@@ -113,6 +113,7 @@ export default function Schedule() {
                     allScheduledItemsDescriptionMap={allScheduledItemsDescriptionMap}
                     discountsArray={discountsArray}
                     placeholders={customPlaceholder}
+                    defaultCaption={defaultCaptionContent}
                 />
             </div>
         );

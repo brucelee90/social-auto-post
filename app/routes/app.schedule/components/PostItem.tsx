@@ -21,7 +21,9 @@ interface Props {
     discountsArray: { codeDiscount: { title: string } }[];
     placeholders:
         | { customPlaceholderName: string; customPlaceholderContent: string; settingsId: string }[]
-        | null;
+        | null
+        | undefined;
+    defaultCaption: string | undefined;
 }
 
 function PostItem(props: Props) {
@@ -34,7 +36,8 @@ function PostItem(props: Props) {
         allScheduledItemsMap,
         allScheduledItemsDescriptionMap,
         discountsArray,
-        placeholders
+        placeholders,
+        defaultCaption
     } = props;
 
     return (
@@ -69,6 +72,7 @@ function PostItem(props: Props) {
                                     placeholders={placeholders}
                                     scheduledItemDesc={scheduledItemDesc}
                                     product={e}
+                                    defaultCaption={defaultCaption}
                                 />
 
                                 {isEligibleForScheduling ? (

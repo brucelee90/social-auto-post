@@ -11,6 +11,8 @@ import ImagePicker from '~/components/PostRow/ImagePicker';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
 import TextArea from '~/components/PostRow/TextArea';
 import { IShopifyProduct } from '~/types/types';
+import { getSettings } from '~/services/SettingsService.server';
+import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
@@ -19,23 +21,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
     try {
         const res = await admin.graphql(`${queries.getAllProducts}`);
         const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
-        const { customPlaceholder } = await prisma.settings.findFirstOrThrow({
-            where: { id: shop },
-            include: {
-                customPlaceholder: true
-            }
-        });
+        let shopSettings = null;
+        try {
+            shopSettings = await getSettings(shop);
+        } catch (error) {
+            console.log('error while getting settings');
+        }
 
         return json({
             allAvailableProducts: await res.json(),
             allAvailableDiscounts: await discountRes.json(),
-            customPlaceholder: customPlaceholder
+            customPlaceholder: shopSettings?.customPlaceholder,
+            defaultCaption: shopSettings?.defaultCaption
         });
     } catch (error) {
         return {
             allAvailableProducts: null,
             allAvailableDiscounts: null,
-            customPlaceholder: null
+            customPlaceholder: null,
+            defaultCaption: null
         };
     }
 }
@@ -44,8 +48,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const { session } = await authenticate.admin(request);
     const { shop } = session;
-
-    console.log('formData', formData.getAll('description'));
 
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
@@ -70,10 +72,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function PublishMedia() {
     const actionData = useActionData<typeof action>();
-    const { allAvailableProducts, allAvailableDiscounts, customPlaceholder } =
+    const { allAvailableProducts, allAvailableDiscounts, customPlaceholder, defaultCaption } =
         useLoaderData<typeof loader>();
     const productsArray = [...allAvailableProducts?.data?.products?.nodes];
     const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
+    const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
 
     return (
         <div>
@@ -96,7 +99,11 @@ export default function PublishMedia() {
 
                                     <ImagePicker images={images} />
                                     <DiscountsPicker discountsArray={discountsArray} />
-                                    <TextArea placeholders={customPlaceholder} product={product} />
+                                    <TextArea
+                                        placeholders={customPlaceholder}
+                                        product={product}
+                                        defaultCaption={defaultCaptionContent}
+                                    />
 
                                     <div>
                                         {images ? (

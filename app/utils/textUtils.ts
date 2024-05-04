@@ -61,11 +61,11 @@ const processText = (text: string, replacements: Record<string, string>) => {
     }, text);
 };
 
-export function replacePlaceholders(description: string, product: any, customPlaceholders: CustomPlaceholder[] | null): string {
+export function replacePlaceholders(description: string, product: any, customPlaceholders: CustomPlaceholder[] | null | undefined): string {
 
     let replacements: Record<string, string> = { ['']: "" }
 
-    if (customPlaceholders !== null) {
+    if (customPlaceholders !== null && customPlaceholders !== undefined) {
         replacements = customPlaceholders.reduce(
             (accumulator: Record<string, string>, customPlaceholders: CustomPlaceholder) => ({
                 ...accumulator,
