@@ -4,7 +4,7 @@ import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import { TSMap } from 'typescript-map';
-import postScheduleQueueService from '~/services/postScheduleQueueService.server';
+import postScheduleQueueService from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';

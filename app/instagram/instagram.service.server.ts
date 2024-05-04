@@ -3,6 +3,7 @@ import { createAdminApiClient } from '@shopify/admin-api-client';
 import { queries } from '~/utils/queries';
 import { IShopifyProduct } from '~/types/types';
 import { replacePlaceholders } from '~/utils/textUtils';
+import { getSettings } from '../services/SettingsService.server';
 
 const apiVersion = "2024-01"
 
@@ -21,15 +22,9 @@ const instagramApiService = {} as InstagramApiService
 instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, shop: string) {
 
     const { product } = await fetchProductData(productId, shop);
+    let shopSettings = await getSettings(shop)
 
-    let { customPlaceholder } = await prisma.settings.findFirstOrThrow({
-        where: { id: shop },
-        include: {
-            customPlaceholder: true
-        }
-    });
-
-    caption = replacePlaceholders(caption, product, customPlaceholder);
+    caption = replacePlaceholders(caption, product, shopSettings.customPlaceholder);
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {

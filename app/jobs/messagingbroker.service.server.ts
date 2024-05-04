@@ -1,5 +1,5 @@
 
-import jobService from "./jobService.server";
+import jobService from "./job.service.server";
 
 const amqp = require('amqplib');
 const QUEUE = "post_queue"

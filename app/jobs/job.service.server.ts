@@ -1,6 +1,6 @@
 import moment from "moment";
-import instagramApiService from "~/services/instagramApiService.server";
-import postScheduleQueueService from "~/services/postScheduleQueueService.server";
+import instagramApiService from "~/instagram/instagram.service.server";
+import postScheduleQueueService from "~/jobs/schedulequeue.service.server";
 import { Agenda } from "@hokify/agenda";
 
 const scheduler = require('node-schedule');

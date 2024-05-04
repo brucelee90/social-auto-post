@@ -5,7 +5,7 @@ import { Form, json, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
-import instagramApiService from '~/services/instagramApiService.server';
+import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import ImagePicker from '~/components/PostRow/ImagePicker';
 import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
@@ -19,8 +19,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { shop } = session;
 
     try {
-        const res = await admin.graphql(`${queries.getAllProducts}`);
-        const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
+        const [allAvailableProducts, allAvailableDiscounts] = await Promise.all([
+            admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
+            admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json())
+        ]);
+
+        // const allAvailableProducts = await admin.graphql(`${queries.getAllProducts}`);
+        // const discountRes = await admin.graphql(`${queries.queryAllDiscounts}`);
         let shopSettings = null;
         try {
             shopSettings = await getSettings(shop);
@@ -29,8 +34,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
         }
 
         return json({
-            allAvailableProducts: await res.json(),
-            allAvailableDiscounts: await discountRes.json(),
+            allAvailableProducts: allAvailableProducts,
+            allAvailableDiscounts: allAvailableDiscounts,
             customPlaceholder: shopSettings?.customPlaceholder,
             defaultCaption: shopSettings?.defaultCaption
         });

@@ -21,13 +21,6 @@ model Session {
   userId      BigInt?
 }
 
-model Settings {
-  id                  String              @id
-  isCustomDescription Boolean             @default(false)
-  customPlaceholder   CustomPlaceholder[]
-  defaultCaption      DefaultCaption[]
-}
-
 model MediaQueue {
   productId BigInt @id
   shopId    String
@@ -43,6 +36,13 @@ model PostScheduleQueue {
 model Campaign {
   campaignId   Int    @id @default(autoincrement())
   campaignName String
+}
+
+model Settings {
+  id                  String              @id
+  isCustomDescription Boolean             @default(false)
+  customPlaceholder   CustomPlaceholder[]
+  defaultCaption      DefaultCaption[]
 }
 
 model CustomPlaceholder {

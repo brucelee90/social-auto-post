@@ -132,5 +132,11 @@ function getProductFields(): string {
           minVariantCompareAtPrice { amount, currencyCode }
           maxVariantCompareAtPrice { amount, currencyCode }
       }
+      collections(first: 250){
+        nodes{
+          id
+          title
+        }
+      }
   `;
 }

@@ -1,6 +1,6 @@
 import { LoaderFunction } from '@remix-run/node';
 import { ActionFunctionArgs } from '@remix-run/server-runtime';
-import jobService from '~/services/jobService.server';
+import jobService from '~/jobs/job.service.server';
 import { JobAction } from '../global_utils/enum';
 
 export const loader: LoaderFunction = async ({ request }) => {
