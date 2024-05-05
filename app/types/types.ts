@@ -9,6 +9,16 @@ export interface PostMediaAttributes {
     }
 }
 
+export interface ICollection {
+
+    id: string,
+    title: string
+
+}
+
+
+
+
 
 export interface IShopifyProduct {
     id: string;
@@ -37,4 +47,10 @@ export interface IShopifyProduct {
             currencyCode?: string;
         };
     };
+    collections?: {
+        nodes: [{
+            id: string
+            title: string
+        }]
+    }
 }

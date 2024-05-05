@@ -12,15 +12,17 @@ import PostItem from './components/PostItem';
 import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
 import { getSettings } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
+import { useState } from 'react';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
     const { shop } = session;
 
-    const [res, discountRes, shopSettings] = await Promise.all([
-        admin.graphql(`${queries.queryAllProducts}`).then((res) => res.json()),
+    const [res, discountRes, shopSettings, allCollections] = await Promise.all([
+        admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
         admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
-        getSettings(shop)
+        getSettings(shop),
+        admin.graphql(`${queries.getAllCollections}`).then((res) => res.json())
     ]);
 
     // Bigint is not serializable that's why we have to create a Map
@@ -37,7 +39,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
         allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
         allAvailableDiscounts: discountRes,
         customPlaceholder: shopSettings?.customPlaceholder,
-        defaultCaption: shopSettings?.defaultCaption
+        defaultCaption: shopSettings?.defaultCaption,
+        allCollections: allCollections
     });
 }
 
@@ -82,7 +85,8 @@ export default function Schedule() {
         allAvailableDiscounts,
         allScheduledItemsDescription,
         customPlaceholder,
-        defaultCaption
+        defaultCaption,
+        allCollections
     } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
@@ -96,6 +100,7 @@ export default function Schedule() {
         const action = actionData?.action as string;
         const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
         const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
+        const collections = [...allCollections?.data?.collections?.nodes];
 
         return (
             <div>
@@ -114,6 +119,7 @@ export default function Schedule() {
                     discountsArray={discountsArray}
                     placeholders={customPlaceholder}
                     defaultCaption={defaultCaptionContent}
+                    collections={collections}
                 />
             </div>
         );

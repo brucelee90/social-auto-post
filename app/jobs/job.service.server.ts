@@ -184,7 +184,7 @@ function publishCarouselOrSingleMedia(imgUrl: string, postDescription: string) {
     if (postCarousel) {
         instagramApiService.publishCarousel(postImgUrlArray, postDescription)
     } else {
-        instagramApiService.publishMedia(postImgUrlArray, postDescription)
+        instagramApiService.publishMedia(postImgUrlArray, postDescription, "", "")
     }
 }
 

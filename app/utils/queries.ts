@@ -5,6 +5,7 @@ interface Queries {
   queryAllDiscounts: string,
   getAllProducts: string
   getSingleProductById: string
+  getAllCollections: string
 }
 
 export const queries: Queries = {
@@ -108,6 +109,16 @@ export const queries: Queries = {
       }
     }
     `,
+  getAllCollections: `        
+  query getAllCollections {
+    collections(first: 250) {
+    nodes{
+      id
+      title
+    }
+    }
+  }
+`,
 }
 
 function getProductFields(): string {
