@@ -1,11 +1,8 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
-import { createAdminApiClient } from '@shopify/admin-api-client';
-import { queries } from '~/utils/queries';
-import { IShopifyProduct } from '~/types/types';
 import { replacePlaceholders } from '~/utils/textUtils';
 import { getSettings } from '../services/SettingsService.server';
+import { fetchProductData } from '~/utils/product.utils';
 
-const apiVersion = "2024-01"
 
 
 interface InstagramApiService {
@@ -21,10 +18,13 @@ const instagramApiService = {} as InstagramApiService
 
 instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, shop: string) {
 
-    const { product } = await fetchProductData(productId, shop);
-    let shopSettings = await getSettings(shop)
-
-    caption = replacePlaceholders(caption, product, shopSettings.customPlaceholder);
+    try {
+        const { product } = await fetchProductData(productId, shop);
+        let shopSettings = await getSettings(shop)
+        caption = replacePlaceholders(caption, product, shopSettings.customPlaceholder);
+    } catch (error) {
+        console.log("error while creating placeholders", productId, shop);
+    }
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {
@@ -44,12 +44,11 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
         } else {
             let accessTokenMessage = process.env.ACCESS_TOKEN === undefined ? "No Access Token available" : ""
             let pageIdMessage = process.env.PAGE_ID === undefined ? "No Page ID available" : ""
-            throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
+            // throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
         }
 
     } catch (error) {
-        console.log(error);
-        throw new Error(`An error occured while posting: ${featuredImageUrl}`)
+        console.log(`An error occured while posting featuredImageUrl: ${featuredImageUrl}`);
     }
 };
 
@@ -86,28 +85,6 @@ instagramApiService.publishStoryMedia = async function (imageUrl: string) {
         const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
         publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
     }
-}
-
-async function fetchProductData(productId: string, shop: string) {
-
-    const { accessToken } = await prisma.session.findFirstOrThrow({
-        where: {
-            shop: shop
-        },
-        select: {
-            accessToken: true
-        }
-    })
-
-    const client = createAdminApiClient({
-        storeDomain: shop,
-        apiVersion: apiVersion,
-        accessToken: accessToken,
-    });
-
-    const variables = { variables: { id: productId } };
-    const { data, errors, extensions } = await client.request(queries.getSingleProductById, variables);
-    return { product: data.product as IShopifyProduct, errors: errors, extensions: extensions };
 }
 
 export default instagramApiService

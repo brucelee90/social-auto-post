@@ -3,7 +3,7 @@ import messageBrokerService from "~/jobs/messagingbroker.service.server";
 import postScheduleQueueService from "~/jobs/schedulequeue.service.server";
 import { Action as MqAction } from '../global_utils/enum'
 
-type MqMessageKeys = "action" | "productId" | "scheduledTime";
+type MqMessageKeys = "action" | "productId" | "scheduledTime" | "shopName";
 
 interface ActionMessage { error: boolean, message: string, action: string, productId: string }
 
@@ -18,16 +18,19 @@ export interface ScheduleUtils {
     scheduleJobFunc: (productId: string,
         scheduledPostDateTime: string,
         postImageUrl: string[],
-        postDescription: string) => ScheduleAction,
+        postDescription: string,
+        shopName: string,
+    ) => ScheduleAction,
     cancelJobFunc: (productId: string) => ScheduleAction,
     errorMessage: (productId: string) => ScheduleAction
 }
 
-const createMqMessageJson = (action: string, productId: string, scheduledTime: string): string => {
+const createMqMessageJson = (action: string, productId: string, scheduledTime: string, shopName: string): string => {
     const obj: Record<MqMessageKeys, string> = {
         action: action,
         productId: productId,
-        scheduledTime: scheduledTime
+        scheduledTime: scheduledTime,
+        shopName: shopName
     }
     return JSON.stringify(obj)
 }
@@ -50,11 +53,11 @@ export const scheduleUtils: ScheduleUtils = {
         productId: string,
         scheduledPostDateTime: string,
         postImageUrl: string[],
-        postDescription: string
-
+        postDescription: string,
+        shopName: string
     ) => {
 
-        let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime)
+        let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, shopName)
         messageBrokerService.addItemToQueue(mqScheduleMessageJSON);
         postScheduleQueueService.addToPostScheduleQueue(
             productId,
@@ -74,7 +77,7 @@ export const scheduleUtils: ScheduleUtils = {
     cancelJobFunc: (productId: string) => {
 
         try {
-            let mqCancelMessageJSON = createMqMessageJson(MqAction.schedule, productId, "")
+            let mqCancelMessageJSON = createMqMessageJson(MqAction.schedule, productId, "", "")
             let message = "Scheduled product was cancelled successfully"
             let actionMessage = createActionMessage(false, message, MqAction.cancel, productId)
             messageBrokerService.addItemToQueue(JSON.stringify(mqCancelMessageJSON));

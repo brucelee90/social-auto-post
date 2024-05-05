@@ -7,6 +7,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const url = new URL(request.url);
     const jobAction = url.searchParams.get('job_action');
     let jobId = url.searchParams.get('job_id') as string;
+    let shopName = url.searchParams.get('shop_name') as string;
     let responseMessage: string;
 
     try {
@@ -33,7 +34,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
             case JobAction.schedule:
                 if (jobId) {
-                    jobService.scheduleJob(jobId);
+                    jobService.scheduleJob(jobId, shopName);
                 } else {
                     throw new Error('No job ID provided');
                 }

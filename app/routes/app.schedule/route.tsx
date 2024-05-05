@@ -45,6 +45,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+    const { shop } = (await authenticate.admin(request))?.session;
+
     const formData = await request.formData();
     const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
@@ -68,7 +70,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 productId,
                 scheduledPostDateTime,
                 postImageUrl,
-                postDescription
+                postDescription,
+                shop
             );
         } else if (cancelJob) {
             return scheduleUtils.cancelJobFunc(productId);

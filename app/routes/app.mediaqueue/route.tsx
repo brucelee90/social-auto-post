@@ -56,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
             deleteMediaQueueItem(parsedProductId);
             actionMessage = 'Item removed from Media queue successfully';
         } else if (isPosting === true && imgSrcUrl.length && description.length) {
-            instagramApiService.publishMedia(imgSrcUrl, description);
+            instagramApiService.publishMedia(imgSrcUrl, description, '', '');
             deleteMediaQueueItem(parsedProductId);
             actionMessage = 'Item was posted successfully';
         } else {

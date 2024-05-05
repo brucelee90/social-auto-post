@@ -5,9 +5,24 @@
     "version": "0.2.0",
   
     "configurations": [
+
       {
         "command": "npm run dev:x",
+        "name": "Run npm run dev:x",
+        "request": "launch",
+        "type": "node-terminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "command": "npm run dev",
         "name": "Run npm run dev",
+        "request": "launch",
+        "type": "node-terminal",
+        "cwd": "${workspaceFolder}"
+      },
+      {
+        "command": "npm run dev:remix",
+        "name": "Run npm run dev:remix",
         "request": "launch",
         "type": "node-terminal",
         "cwd": "${workspaceFolder}"

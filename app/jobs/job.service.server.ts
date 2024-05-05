@@ -2,6 +2,7 @@ import moment from "moment";
 import instagramApiService from "~/instagram/instagram.service.server";
 import postScheduleQueueService from "~/jobs/schedulequeue.service.server";
 import { Agenda } from "@hokify/agenda";
+import { PostScheduleQueue } from "@prisma/client";
 
 const scheduler = require('node-schedule');
 
@@ -10,7 +11,7 @@ interface JobService {
     start: () => void
     getAllJobs: () => void
     runScheduledJobsByDate: (date: Date) => Promise<void>,
-    scheduleJob: (jobId: string) => Promise<void>,
+    scheduleJob: (jobId: string, shopName: string) => Promise<void>,
     cancelScheduledJob: (jobId: string) => void
     jobs: [{}]
 }
@@ -30,31 +31,36 @@ jobService.start = async () => {
 
             // finish job now if job should have been done by now
             if ((job.attrs.nextRunAt as Date) > new Date()) {
-                console.log('hey', job.attrs.nextRunAt, new Date());
+                console.log('finish job now if job should have been done by now', job.attrs.nextRunAt, new Date());
 
                 agenda.define(
                     `${job.attrs.name}_rescheduled`,
                     async (job, done) => {
-                        publishCarouselOrSingleMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        publishMedia(job.attrs.data.imgUrl, job.attrs.data.description, job.attrs.name, job.attrs.data.shop)
                         console.log('Posted media at.', job.attrs.lastRunAt);
                         done()
                     });
                 (async function () {
+                    postScheduleQueueService.removeScheduledItemFromQueue(job.attrs.name)
                     await agenda.start();
-                    await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: 'https://cdn.shopify.com/s/files/1/0585/4239/1487/products/air-jordan-1-mid-paint-drip-gs-1-1000.png?v=1631324039', description: "Scheduled Element" });
+                    await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, description: job.attrs.data.description, shop: job.attrs.data.shop });
                 })();
             } else if ((job.attrs.nextRunAt as Date) <= new Date()) {
                 agenda.define(
                     `${job.attrs.name}_rescheduled`,
                     async (job, done) => {
-                        publishCarouselOrSingleMedia(job.attrs.data.imgUrl, job.attrs.data.description)
+                        publishMedia(job.attrs.data.imgUrl, job.attrs.data.description, job.attrs.name, job.attrs.data.shop)
                         console.log('Posted media at.', job.attrs.lastRunAt);
                         done()
                     });
 
+                agenda.cancel({ name: `${job.attrs.name}` });
+
                 (async function () {
+
+                    postScheduleQueueService.removeScheduledItemFromQueue(job.attrs.name)
                     await agenda.start();
-                    await agenda.schedule("10 second", `${job.attrs.name}_rescheduled`, { imgUrl: 'https://cdn.shopify.com/s/files/1/0585/4239/1487/products/air-jordan-1-mid-paint-drip-gs-1-1000.png?v=1631324039', description: "Scheduled Element" });
+                    await agenda.schedule("10 second", `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, description: job.attrs.data.description, shop: job.attrs.data.shop });
                 })();
             }
 
@@ -91,7 +97,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
 
         let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
 
-        postQueue.map((el: any) => {
+        postQueue.map((el: PostScheduleQueue) => {
             console.log(el.productId + ' will be posted at:', el.dateScheduled);
             const publishDate = moment(el.dateScheduled).toISOString();
 
@@ -99,8 +105,8 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
                 `${el.productId}`,
                 async (job, done) => {
 
-                    publishCarouselOrSingleMedia(el.postImgUrl, el.postDescription)
-                    postScheduleQueueService.removeScheduledItemFromQueue(el.productId)
+                    publishMedia(el.postImgUrl, el.postDescription, String(el.productId), "l4-dev-shop.myshopify.com")
+                    postScheduleQueueService.removeScheduledItemFromQueue(String(el.productId))
                     console.log('Posted media at.', publishDate);
                     done()
                 });
@@ -108,7 +114,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
 
             (async function () {
                 await agenda.start();
-                await agenda.schedule(publishDate, `${el.productId}`, { imgUrl: `${el.postImgUrl}`, description: `${el.postDescription}` });
+                await agenda.schedule(publishDate, `${el.productId}`, { imgUrl: `${el.postImgUrl}`, description: `${el.postDescription}`, shop: "l4-dev-shop.myshopify.com" });
             })();
         })
 
@@ -154,19 +160,19 @@ jobService.cancelScheduledJob = async (jobId) => {
         })
 
     } catch (error) {
-        console.log(error);
-        throw new Error(error as string)
+        console.log("error while canceling job:", jobId, error);
     }
 }
 
-jobService.scheduleJob = async (jobId) => {
+jobService.scheduleJob = async (jobId, shopName) => {
+
     let scheduleItem = await postScheduleQueueService.getScheduledItem(jobId)
 
     agenda.define(
         `${jobId}`,
         async (job, done) => {
 
-            publishCarouselOrSingleMedia(scheduleItem.postImgUrl, scheduleItem.postDescription)
+            publishMedia(scheduleItem.postImgUrl, scheduleItem.postDescription, jobId, shopName)
             postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
             console.log('Posted media at.', scheduleItem.dateScheduled);
             done()
@@ -174,18 +180,15 @@ jobService.scheduleJob = async (jobId) => {
 
     (async function () {
         await agenda.start();
-        await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItem.postImgUrl}`, description: `${scheduleItem.postDescription}` });
+        await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItem.postImgUrl}`, description: `${scheduleItem.postDescription}`, shop: shopName });
     })();
 }
 
-function publishCarouselOrSingleMedia(imgUrl: string, postDescription: string) {
+function publishMedia(imgUrl: string, postDescription: string, productId: string, shopName: string) {
     let postImgUrlArray = imgUrl.split(";")
-    let postCarousel = postImgUrlArray.length > 1 ? true : false
-    if (postCarousel) {
-        instagramApiService.publishCarousel(postImgUrlArray, postDescription)
-    } else {
-        instagramApiService.publishMedia(postImgUrlArray, postDescription, "", "")
-    }
+    let prodId = "gid://shopify/Product/" + productId
+
+    instagramApiService.publishMedia(postImgUrlArray, postDescription, prodId, shopName)
 }
 
 export default jobService;

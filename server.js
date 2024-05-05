@@ -28,11 +28,11 @@ app.all(
 let host = process.env.HOST || 'localhost';
 let port = process.env.PORT || 3000;
 
-const scheduleJob = (jobId) => {
+const scheduleJob = (jobId, shopName) => {
     // THIS NEEDS REFACTORING !!!
     // THERE SHOULD BE POST REQUEST, MAKING IT POSSIBLE TO SEND A DESCRIPTION AS WELL
     request(
-        `http://localhost:3000/api/v1/job?job_action=schedule_job?job_id=${jobId}`,
+        `http://localhost:3000/api/v1/job?job_action=schedule_job?job_id=${jobId}&shop_name=${shopName}`,
         function (error, response, body) {
             console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
         }
@@ -84,7 +84,7 @@ app.listen(port, () => {
                         if (messageJSON.action === 'cancel') {
                             cancelJob(messageJSON.productId);
                         } else if (messageJSON.action === 'schedule') {
-                            scheduleJob(messageJSON.productId);
+                            scheduleJob(messageJSON.productId, messageJSON.shopName);
                         }
                     } catch (error) {
                         console.log('ERROR while parsing message content');
