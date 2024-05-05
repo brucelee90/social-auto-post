@@ -1,5 +1,5 @@
 import { ActionFunctionArgs } from '@remix-run/node';
-import { json, useActionData, useLoaderData } from '@remix-run/react';
+import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
@@ -20,6 +20,13 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct } from '~/types/types';
+
+export interface IApiResponse {
+    action: string;
+    error: boolean;
+    message: string;
+    productId: string;
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
@@ -195,9 +202,11 @@ export default function Schedule() {
                                 isEligibleForScheduling = true;
                             }
 
+                            const fetcher = useFetcher({ key: `${productId}` });
+
                             return (
                                 <div key={key}>
-                                    <Form method="post">
+                                    <fetcher.Form method="post" key={`${productId}`}>
                                         <input type="hidden" name="product_id" value={productId} />
                                         <div>
                                             <Text variant="headingXl" as="h4">
@@ -215,12 +224,9 @@ export default function Schedule() {
 
                                             {isEligibleForScheduling ? (
                                                 <PostBtn
-                                                    actionProductId={actionProductId}
                                                     productId={productId}
-                                                    actionMessage={actionMessage}
                                                     isScheduleSuccessfull={isScheduleSuccessfull}
                                                     scheduledDate={scheduledDate}
-                                                    action={action}
                                                 />
                                             ) : (
                                                 <div>
@@ -230,7 +236,7 @@ export default function Schedule() {
                                             )}
                                             <hr />
                                         </div>
-                                    </Form>
+                                    </fetcher.Form>
                                 </div>
                             );
                         })}

@@ -3,46 +3,48 @@ import { useState } from 'react';
 import DatePicker from '~/routes/ui.components/mediaqueue/DatePicker';
 import { Action } from '../../global_utils/enum';
 import { JobAction as BtnAction } from '../../global_utils/enum';
+import { useFetcher } from '@remix-run/react';
+import { IApiResponse } from '../route';
 
+interface ButtonProps {
+    action: string;
+    text: string;
+}
 interface Props {
-    actionProductId: string | undefined;
     productId: string;
-    actionMessage: string | undefined;
     isScheduleSuccessfull: boolean;
     scheduledDate: string;
-    action: string;
 }
 
 export function PostBtn(props: Props) {
-    const {
-        actionProductId,
-        productId,
-        actionMessage,
-        isScheduleSuccessfull,
-        scheduledDate,
-        action
-    } = props;
+    const { productId, isScheduleSuccessfull, scheduledDate } = props;
 
-    const [scheduledDateStr] = useState(scheduledDate);
+    const fetcher = useFetcher({ key: `${productId}` });
+
+    let actionProductId;
+    let action;
+    let actionMessage = '';
+
+    if (fetcher.data as IApiResponse) {
+        action = (fetcher.data as IApiResponse).action;
+        actionMessage = (fetcher.data as IApiResponse).message;
+        actionProductId = (fetcher.data as IApiResponse).productId;
+    }
+
+    console.log(action, actionMessage);
 
     let btnText = 'Schedule Post';
     let btnAction = BtnAction.schedule;
 
     let isScheduled = action == Action.schedule;
     let isCancelled = action === Action.cancel;
-    let notification = actionMessage;
 
-    let isCurrentProductEdited = actionProductId === productId;
-    let hasScheduledDate = scheduledDateStr !== undefined;
-    let isProductScheduled = (isScheduled && isCurrentProductEdited) || hasScheduledDate;
+    let hasScheduledDate = scheduledDate !== undefined;
+    let isProductScheduled = (isScheduled && actionProductId) || hasScheduledDate;
 
     // A cancellation will override everything
-    if (isCurrentProductEdited && isCancelled) {
+    if (actionProductId && isCancelled) {
         isProductScheduled = false;
-    }
-
-    if (scheduledDate) {
-        notification = `Set to be scheduled on ${moment(scheduledDate).format('YYYY MM DD')} at ${moment(scheduledDate).format('hh:mm')}`;
     }
 
     if (isProductScheduled && isScheduleSuccessfull) {
@@ -54,7 +56,7 @@ export function PostBtn(props: Props) {
 
     return (
         <div>
-            <div>{notification}</div>
+            <div>{actionMessage}</div>
             {!isProductScheduled && (
                 <div>
                     <DatePicker name={`scheduled_date`} />
@@ -66,10 +68,6 @@ export function PostBtn(props: Props) {
     );
 }
 
-interface ButtonProps {
-    action: string;
-    text: string;
-}
 function Button(props: ButtonProps) {
     const { action, text } = props;
 
