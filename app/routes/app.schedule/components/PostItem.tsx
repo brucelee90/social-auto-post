@@ -2,9 +2,9 @@ import { Form } from '@remix-run/react';
 import { Text } from '@shopify/polaris';
 import { PostBtn } from './PostBtn';
 import { TSMap } from 'typescript-map';
-import ImagePicker from '~/components/PostRow/ImagePicker';
-import TextArea from '~/components/PostRow/TextArea';
-import DiscountsPicker from '~/components/PostRow/DiscountsPicker';
+import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
+import TextArea from '~/routes/ui.components/PostRow/TextArea';
+import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct } from '~/types/types';
 import { useState } from 'react';
 

@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
-import { MediaQueueItem } from '~/components/mediaqueue/MediaQueueItem';
+import { MediaQueueItem } from '~/routes/ui.components/mediaqueue/MediaQueueItem';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { deleteMediaQueueItem, getMediaQueue } from '~/controllers/mediaqueue.server';
 import { logger } from '~/utils/logger.server';
