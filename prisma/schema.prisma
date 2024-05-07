@@ -11,14 +11,17 @@ datasource db {
 }
 
 model Session {
-  id          String    @id
-  shop        String
-  state       String
-  isOnline    Boolean   @default(false)
-  scope       String?
-  expires     DateTime?
-  accessToken String
-  userId      BigInt?
+  id                String              @id
+  shop              String
+  state             String
+  isOnline          Boolean             @default(false)
+  scope             String?
+  expires           DateTime?
+  accessToken       String
+  userId            BigInt?
+  postScheduleQueue PostScheduleQueue[]
+  settingsId        String?             @unique // Fremdschlüssel zu Settings
+  settings          Settings?           @relation(fields: [settingsId], references: [id])
 }
 
 model MediaQueue {
@@ -31,6 +34,9 @@ model PostScheduleQueue {
   dateScheduled   DateTime @default(now())
   postImgUrl      String
   postDescription String
+  shopName        String
+  scheduleStatus  String
+  session         Session  @relation(fields: [shopName], references: [id])
 }
 
 model Campaign {
@@ -43,6 +49,7 @@ model Settings {
   isCustomDescription Boolean             @default(false)
   customPlaceholder   CustomPlaceholder[]
   defaultCaption      DefaultCaption[]
+  session             Session? // optionaler Rückverweis auf Session
 }
 
 model CustomPlaceholder {
