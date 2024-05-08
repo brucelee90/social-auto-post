@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { PostForm } from '~/routes/global_utils/enum';
 import { CustomPlaceholder } from '@prisma/client';
 import { IShopifyProduct } from '~/types/types';
-import { replacePlaceholders } from '~/utils/textUtils';
+import textUtils from '~/utils/textUtils';
+// import { replacePlaceholders } from '~/utils/textUtils';
 
 interface Props {
     scheduledItemDesc?: string;
@@ -21,7 +22,7 @@ function TextArea(props: Props) {
     const [displayText, setDisplayText] = useState('');
 
     useEffect(() => {
-        const displayText = replacePlaceholders(inputText, product, placeholders);
+        const displayText = textUtils.replacePlaceholders(inputText, product, placeholders);
         setDisplayText(displayText);
     }, [inputText, product]);
 

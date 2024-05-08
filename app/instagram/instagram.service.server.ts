@@ -1,7 +1,8 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
-import { replacePlaceholders } from '~/utils/textUtils';
+
 import { getSettings } from '../services/SettingsService.server';
 import { fetchProductData } from '~/utils/product.utils';
+import textUtils from '~/utils/textUtils';
 
 
 
@@ -21,7 +22,7 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
     try {
         const { product } = await fetchProductData(productId, shop);
         let shopSettings = await getSettings(shop)
-        caption = replacePlaceholders(caption, product, shopSettings.customPlaceholder);
+        caption = textUtils.replacePlaceholders(caption, product, shopSettings.customPlaceholder);
     } catch (error) {
         console.log("error while creating placeholders", productId, shop);
     }
