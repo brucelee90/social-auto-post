@@ -1,6 +1,6 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
 
-import { getSettings } from '../services/SettingsService.server';
+import { getSettings, shopSettingsService } from '../services/SettingsService.server';
 import { fetchProductData } from '~/utils/product.utils';
 import textUtils from '~/utils/textUtils';
 
@@ -17,14 +17,15 @@ const PAGE_ID = process.env.PAGE_ID as string
 
 const instagramApiService = {} as InstagramApiService
 
-instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, shop: string) {
+instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, sessionId: string) {
 
     try {
-        const { product } = await fetchProductData(productId, shop);
-        let shopSettings = await getSettings(shop)
-        caption = textUtils.replacePlaceholders(caption, product, shopSettings.customPlaceholder);
+        const { product } = await fetchProductData(productId, sessionId);
+        // let shopSettings = await getSettings(shop)
+        let shopSettings = await shopSettingsService.getShopSettings(sessionId)
+        caption = textUtils.replacePlaceholders(caption, product, shopSettings?.settings?.customPlaceholder);
     } catch (error) {
-        console.log("error while creating placeholders", productId, shop);
+        console.log("error while creating placeholders", productId, sessionId);
     }
 
     let featuredImageUrl = ""
@@ -36,7 +37,7 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
     }
 
     try {
-        if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
+        if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined && featuredImageUrl.length) {
             const pagePhotoMediaRequest: PostPagePhotoMediaRequest = new PostPagePhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, featuredImageUrl, caption)
             const containerId = await pagePhotoMediaRequest.execute();
             const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
@@ -45,7 +46,7 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
         } else {
             let accessTokenMessage = process.env.ACCESS_TOKEN === undefined ? "No Access Token available" : ""
             let pageIdMessage = process.env.PAGE_ID === undefined ? "No Page ID available" : ""
-            // throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
+            throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
         }
 
     } catch (error) {

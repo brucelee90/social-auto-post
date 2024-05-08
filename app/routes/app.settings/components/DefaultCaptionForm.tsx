@@ -8,9 +8,7 @@ interface IDefaultCaptionProps {
 export const getDefaultCaptionContent = (defaultCaption: DefaultCaption[] | null | undefined) => {
     if (defaultCaption !== undefined && defaultCaption !== null) {
         const defaultCaptionItem = defaultCaption.find((item) => item.defaultCaptionName === 'all');
-        return defaultCaptionItem?.defaultCaptionContent !== undefined
-            ? defaultCaptionItem?.defaultCaptionContent
-            : '';
+        return defaultCaptionItem?.defaultCaptionContent;
     }
     return undefined;
 };

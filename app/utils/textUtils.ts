@@ -65,6 +65,17 @@ namespace textUtils {
         }, text);
     };
 
+    /**
+         * Replaces placeholders in a given description string with the corresponding content from products or custom placeholders.
+         * This function processes a description text by substituting placeholders, defined by a list of static or custom placeholders,
+         * with their respective values derived from product data or explicitly provided custom placeholder values.
+         *
+         * @param {string} description - The text containing placeholders to be replaced.
+         * @param {any} product - The product object containing values that might be used to replace some of the placeholders.
+         * @param {CustomPlaceholder[] | null | undefined} customPlaceholders - An array of custom placeholders, or null/undefined if none are provided.
+         *        Each custom placeholder should have a `customPlaceholderName` and a `customPlaceholderContent`.
+         * @returns {string} The description text with all placeholders replaced by their respective values.
+     */
     export function replacePlaceholders(description: string, product: any, customPlaceholders: CustomPlaceholder[] | null | undefined): string {
 
         let replacements: Record<string, string> = { ['']: "" }

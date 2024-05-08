@@ -1,4 +1,7 @@
-import settingsService, { getSettings } from '../../services/SettingsService.server';
+import settingsService, {
+    getSettings,
+    shopSettingsService
+} from '../../services/SettingsService.server';
 import { Form, json, useFetcher, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
@@ -6,8 +9,10 @@ import { Text } from '@shopify/polaris';
 import { PostForm } from '../global_utils/enum';
 import { PlaceholderForm } from './components/PlaceholderForm';
 import { IApiResponse } from '../global_utils/types';
-import { DefaultCaption } from '@prisma/client';
+import { CustomPlaceholder, DefaultCaption } from '@prisma/client';
 import DefaultCaptionForm from './components/DefaultCaptionForm';
+import textUtils from '~/utils/textUtils';
+import { error } from 'console';
 
 function createApiResponse(success: boolean, message: string) {
     return { success, message } as IApiResponse;
@@ -15,24 +20,32 @@ function createApiResponse(success: boolean, message: string) {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { session } = await authenticate.admin(request);
-    const { shop } = session;
+    const { shop, id: sessionId } = session;
+
     let shopSettings = null;
     try {
-        shopSettings = await getSettings(shop);
+        // throw new Error();
+        // shopSettings = await getSettings(shop);
+
+        shopSettings = await shopSettingsService.getShopSettings(sessionId);
+
+        // console.log(shopSettings, 'shopSettings');
+
+        // Explicitly specify the type of shopSettings
     } catch (error) {
         console.log('error while getting settings');
     }
 
     return json({
-        customPlaceholder: shopSettings?.customPlaceholder,
-        defaultCaption: shopSettings?.defaultCaption,
+        customPlaceholder: shopSettings?.settings?.customPlaceholder,
+        defaultCaption: shopSettings?.settings?.defaultCaption,
         shopSettings: shopSettings
     });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
     const { session } = await authenticate.admin(request);
-    const { shop } = session;
+    const { id: sessionId } = session;
 
     const formData = await request.formData();
     let handlePlaceholder = formData.get('handle_placeholder') as string;
@@ -43,14 +56,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
     try {
         if (handledefaultCaption !== null) {
-            settingsService.saveDefaultCaption(shop, defaultCaption);
+            settingsService.saveDefaultCaption(sessionId, defaultCaption);
             return createApiResponse(true, 'Saved successfully');
         } else if (handlePlaceholder === 'remove') {
-            await settingsService.removeCustomPlaceholder(shop, customPlaceholderName);
+            await settingsService.removeCustomPlaceholder(sessionId, customPlaceholderName);
         } else {
             await settingsService.upsertCustomPlaceholder(
-                shop,
-                customPlaceholderName,
+                sessionId,
+                textUtils.placeholderSanitizer(customPlaceholderName),
                 customPlaceholderContent
             );
         }
@@ -66,6 +79,38 @@ interface Props {}
 export default function Settings(props: Props) {
     const {} = props;
     const { customPlaceholder, defaultCaption } = useLoaderData<typeof loader>();
+
+    const handleKeyDown = (event: any) => {
+        const { keyCode, key } = event;
+        const allowedKeys = [8, 9, 13, 37, 38, 39, 40]; // Control keys like backspace, tab, enter, arrows
+
+        if (allowedKeys.includes(keyCode)) {
+            return; // Allow these keys for navigation/control purposes
+        }
+
+        if (key === ' ') {
+            event.preventDefault();
+            const input = event.currentTarget;
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.slice(0, start) + '_' + input.value.slice(end);
+            input.setSelectionRange(start + 1, start + 1);
+            return;
+        }
+
+        const regex = /^[a-zA-Z_]+$/;
+        if (!regex.test(key)) {
+            event.preventDefault();
+            return false;
+        }
+    };
+
+    const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+        event.preventDefault(); // Stop data actually being pasted
+        let paste = event.clipboardData.getData('text');
+        const uppercasePaste = paste.replace(/[^A-Z_]/g, ''); // Remove non-uppercase characters
+        event.currentTarget.value += uppercasePaste; // Append filtered text
+    };
 
     return (
         <div>
@@ -94,7 +139,14 @@ export default function Settings(props: Props) {
             <Form method="post" style={{ paddingTop: '1rem' }}>
                 <div>
                     <label htmlFor={PostForm.placeholderName}>Placeholder name</label>
-                    <input type="text" name={PostForm.placeholderName} defaultValue="" />
+                    <input
+                        type="text"
+                        name={PostForm.placeholderName}
+                        defaultValue=""
+                        onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
+                        style={{ textTransform: 'uppercase' }}
+                    />
                 </div>
                 <div>
                     <label htmlFor={PostForm.placeholderContent}>Placeholder value</label>
