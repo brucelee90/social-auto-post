@@ -1,5 +1,6 @@
 import { PromiseType } from "@prisma/client/extension";
 import { post } from "axios";
+import { connect } from "http2";
 
 interface PostScheduleQueue {
 
@@ -10,8 +11,8 @@ interface PostScheduleQueue {
 }
 
 interface postScheduleQueueService {
-    addToPostScheduleQueue: (productId: string, dateScheduled: string, postImgUrl: string[], postDescriptiop: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
-    getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }[]>,
+    addToPostScheduleQueue: (productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: string) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; }>,
+    getScheduledItemsByDate: (date: Date) => Promise<{ productId: bigint; dateScheduled: Date; postImgUrl: string; postDescription: string; shopName: string }[]>,
     removeScheduledItemFromQueue: (productId: string) => Promise<void>,
     getUnremovedItems: () => Promise<PostScheduleQueue[]>,
     getScheduledItem: (productId: string) => Promise<PostScheduleQueue>,
@@ -20,23 +21,36 @@ interface postScheduleQueueService {
 
 const postScheduleQueueService = {} as postScheduleQueueService
 
-postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescriptiop: string) {
+postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: string) {
 
     let postImgUrlStr = postImgUrl.join(";")
 
-    return prisma.postScheduleQueue.upsert({
+    return await prisma.postScheduleQueue.upsert({
         where: { productId: BigInt(productId) },
         update: {
+            postImgUrl: postImgUrlStr,
             productId: BigInt(productId),
-            dateScheduled: dateScheduled
+            dateScheduled: dateScheduled,
+            postDescription: postDescription
         },
         create: {
             productId: BigInt(productId),
             dateScheduled: dateScheduled,
             postImgUrl: postImgUrlStr,
-            postDescription: postDescriptiop
+            postDescription: postDescription,
+            shopName: sessionId,
+            Session: {
+                connect: {
+                    id: sessionId,
+                }
+            },
+            scheduleStatus: scheduleStatus
         }
-    })
+    });
+
+
+
+
 }
 
 postScheduleQueueService.getScheduledItemsByDate = async function getScheduledItemsByDate(date: Date) {

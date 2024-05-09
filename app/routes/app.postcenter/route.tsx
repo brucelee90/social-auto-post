@@ -11,12 +11,12 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import { ICollection, IShopifyProduct } from '~/types/types';
-import { getSettings } from '~/services/SettingsService.server';
+import { getSettings, shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
-    const { shop } = session;
+    const { shop, id: sessionId } = session;
 
     try {
         const [allAvailableProducts, allAvailableDiscounts, allCollections] = await Promise.all([
@@ -27,17 +27,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
         let shopSettings = null;
         try {
-            shopSettings = await getSettings(shop);
+            shopSettings = await shopSettingsService.getShopSettings(sessionId);
+
+            console.log('shopSettings', shopSettings?.settings?.customPlaceholder);
+
+            // shopSettings = await getSettings('l4-dev-shop.myshopify.com');
         } catch (error) {
-            console.log('error while getting settings');
+            console.log('error while getting settings in postcenter');
         }
 
         return json({
             allAvailableProducts: allAvailableProducts,
             allAvailableDiscounts: allAvailableDiscounts,
             allCollections: allCollections,
-            customPlaceholder: shopSettings?.customPlaceholder,
-            defaultCaption: shopSettings?.defaultCaption
+            customPlaceholder: shopSettings?.settings?.customPlaceholder,
+            defaultCaption: shopSettings?.settings?.defaultCaption
         });
     } catch (error) {
         return {
@@ -53,7 +57,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const { session } = await authenticate.admin(request);
-    const { shop } = session;
+    const { id: sessionId } = session;
 
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
@@ -67,7 +71,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         if (publishAction.includes(PublishType.publishStory)) {
             await instagramApiService.publishStoryMedia(imageUrl[0]);
         } else if (publishAction.includes(PublishType.publishMedia)) {
-            await instagramApiService.publishMedia(imageUrl, description, productId, shop);
+            await instagramApiService.publishMedia(imageUrl, description, productId, sessionId);
         }
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
@@ -146,7 +150,7 @@ export default function PublishMedia() {
                         let description = product.description;
 
                         return (
-                            <>
+                            <div key={key}>
                                 <Form method="post">
                                     <input type="hidden" name="product_id" value={productId} />
 
@@ -160,7 +164,7 @@ export default function PublishMedia() {
                                         <TextArea
                                             placeholders={customPlaceholder}
                                             product={product}
-                                            defaultCaption={defaultCaptionContent}
+                                            defaultCaption={undefined}
                                         />
 
                                         <div>
@@ -194,7 +198,7 @@ export default function PublishMedia() {
                                     </div>
                                 </Form>
                                 <hr />
-                            </>
+                            </div>
                         );
                     })}
         </div>

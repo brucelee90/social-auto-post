@@ -8,12 +8,13 @@ import postScheduleQueueService from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
-import PostItem from './components/PostItem';
 import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
-import { getSettings } from '~/services/SettingsService.server';
+import settingsService, {
+    getSettings,
+    shopSettingsService
+} from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 import { useState } from 'react';
-import { Form } from '@remix-run/react';
 import { PostBtn } from './components/PostBtn';
 
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
@@ -30,11 +31,12 @@ export interface IApiResponse {
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
-    const { shop } = session;
+    const { id: sessionId } = session;
+
     const [res, discountRes, shopSettings, allCollections] = await Promise.all([
         admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
         admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
-        getSettings(shop),
+        shopSettingsService.getShopSettings(sessionId),
         admin.graphql(`${queries.getAllCollections}`).then((res) => res.json())
     ]);
 
@@ -51,14 +53,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
         allScheduledItems: allScheduledItems.toJSON(),
         allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
         allAvailableDiscounts: discountRes,
-        customPlaceholder: shopSettings?.customPlaceholder,
-        defaultCaption: shopSettings?.defaultCaption,
+        customPlaceholder: shopSettings?.settings?.customPlaceholder,
+        defaultCaption: shopSettings?.settings?.defaultCaption,
         allCollections: allCollections
     });
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-    const { shop } = (await authenticate.admin(request))?.session;
+    const { id: sessionId } = (await authenticate.admin(request))?.session;
 
     const formData = await request.formData();
     const productId = formData.get('product_id') as string;
@@ -78,13 +80,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     postDescription = postDescription?.replace(PlaceholderVariable.codeDiscount, codeDiscount);
 
     try {
-        if (scheduleJob) {
+        if (postImageUrl.length === 0) {
+            throw new Error();
+        } else if (scheduleJob) {
             return scheduleUtils.scheduleJobFunc(
                 productId,
                 scheduledPostDateTime,
                 postImageUrl,
                 postDescription,
-                shop
+                sessionId,
+                'Schedule'
             );
         } else if (cancelJob) {
             return scheduleUtils.cancelJobFunc(productId);
@@ -131,9 +136,6 @@ export default function Schedule() {
         const allScheduledItemsDescriptionMap = new TSMap().fromJSON(allScheduledItemsDescription);
         const productsArray = [...allAvailableProducts?.data?.products?.nodes];
         const isScheduleSuccessfull = !actionData?.error as boolean;
-        const actionMessage = actionData?.message as string;
-        const actionProductId = actionData?.productId as string;
-        const action = actionData?.action as string;
         const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
         const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
         const collections = [...allCollections?.data?.collections?.nodes];

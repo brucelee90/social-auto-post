@@ -50,7 +50,7 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
         }
 
     } catch (error) {
-        console.log(`An error occured while posting featuredImageUrl: ${featuredImageUrl}`);
+        console.log(`An error occured while posting featuredImageUrl: ${featuredImageUrl} featuredImageUrl.length: ${featuredImageUrl.length} `);
     }
 };
 

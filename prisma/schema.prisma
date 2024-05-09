@@ -33,11 +33,12 @@ model Session {
 model PostScheduleQueue {
   productId       BigInt   @id
   dateScheduled   DateTime @default(now())
-  postImgUrl      String
+  postImgUrl      String   @db.Text
   postDescription String
   shopName        String
   scheduleStatus  String
-  session         Session  @relation(fields: [shopName], references: [id])
+  Session         Session? @relation(fields: [sessionId], references: [id])
+  sessionId       String?
 }
 
 model Settings {

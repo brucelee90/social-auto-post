@@ -4,14 +4,15 @@ import { queries } from "./queries";
 
 const apiVersion = "2024-01"
 
-export async function fetchProductData(productId: string, shop: string) {
+export async function fetchProductData(productId: string, sessionId: string) {
 
-    const { accessToken } = await prisma.session.findFirstOrThrow({
+    const { accessToken, shop } = await prisma.session.findFirstOrThrow({
         where: {
-            shop: shop
+            id: sessionId
         },
         select: {
-            accessToken: true
+            accessToken: true,
+            shop: true
         }
     })
 

@@ -1,8 +1,8 @@
 
 import invariant from "tiny-invariant";
 import prisma from "../db.server";
-import { CustomPlaceholder, DefaultCaption, Settings } from '@prisma/client';
 import { connect } from "http2";
+import { CustomPlaceholder, Settings } from "@prisma/client";
 
 
 export async function getSettings(id: string) {
@@ -15,6 +15,33 @@ export async function getSettings(id: string) {
     });
 }
 
+
+export namespace shopSettingsService {
+
+    /**
+     * Retrieves the shop settings associated with a given session ID.
+     * @param {string} sessionId - The ID of the session for which to retrieve settings.
+     * @returns {Promise<SessionSettings | null>} A promise that resolves to the shop settings object or null if not found.
+     */
+    export async function getShopSettings(sessionId: string) {
+        const sessionSettings = await prisma.session.findUnique({
+            where: { id: sessionId },
+            select: {
+                settings: {
+                    include: {
+                        customPlaceholder: true,
+                        defaultCaption: true
+                    }
+                }
+            }
+        });
+
+        return sessionSettings
+    }
+}
+
+
+
 interface SettingsService {
     getSettings: (id: string) => Promise<Settings>,
     getCustomPlaceholder: (shop: string) => Promise<{ customPlaceholder: CustomPlaceholder[] }>,
@@ -26,6 +53,7 @@ interface SettingsService {
 const settingsService = {} as SettingsService
 
 settingsService.getSettings = async (id: string) => {
+
     return await prisma.settings.findFirstOrThrow({
         where: { id: id },
         include: {
@@ -56,17 +84,33 @@ settingsService.upsertCustomPlaceholder = async (shop: string, name: string, val
             customPlaceholderName: name,
             customPlaceholderContent: value,
             Settings: {
+                // connectOrCreate: {
+
                 connectOrCreate: {
                     create: {
-                        id: shop
+                        id: shop,
+                        session: {
+                            connect: {
+                                id: shop // Assumes `sessionId` is passed to this function
+                            }
+                        }
                     },
                     where: {
                         id: shop
                     }
                 }
+
+
+                // create: {
+                //     id: shop
+                // },
+                // where: {
+                //     id: shop
+                // }
             }
-        },
-    });
+        }
+    },
+    );
 }
 
 settingsService.removeCustomPlaceholder = async (shop: string, name: string) => {

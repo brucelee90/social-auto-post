@@ -3,7 +3,7 @@ import messageBrokerService from "~/jobs/messagingbroker.service.server";
 import postScheduleQueueService from "~/jobs/schedulequeue.service.server";
 import { Action as MqAction } from '../global_utils/enum'
 
-type MqMessageKeys = "action" | "productId" | "scheduledTime" | "shopName";
+type MqMessageKeys = "action" | "productId" | "scheduledTime" | "sessionId";
 
 interface ActionMessage { error: boolean, message: string, action: string, productId: string }
 
@@ -19,18 +19,19 @@ export interface ScheduleUtils {
         scheduledPostDateTime: string,
         postImageUrl: string[],
         postDescription: string,
-        shopName: string,
+        sessionId: string,
+        scheduleStatus: string,
     ) => ScheduleAction,
     cancelJobFunc: (productId: string) => ScheduleAction,
     errorMessage: (productId: string) => ScheduleAction
 }
 
-const createMqMessageJson = (action: string, productId: string, scheduledTime: string, shopName: string): string => {
+const createMqMessageJson = (action: string, productId: string, scheduledTime: string, sessionId: string): string => {
     const obj: Record<MqMessageKeys, string> = {
         action: action,
         productId: productId,
         scheduledTime: scheduledTime,
-        shopName: shopName
+        sessionId: sessionId
     }
     return JSON.stringify(obj)
 }
@@ -54,16 +55,19 @@ export const scheduleUtils: ScheduleUtils = {
         scheduledPostDateTime: string,
         postImageUrl: string[],
         postDescription: string,
-        shopName: string
+        sessionId: string,
+        scheduleStatus: string,
     ) => {
 
-        let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, shopName)
+        let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, sessionId)
         messageBrokerService.addItemToQueue(mqScheduleMessageJSON);
         postScheduleQueueService.addToPostScheduleQueue(
             productId,
             scheduledPostDateTime,
             postImageUrl,
             postDescription,
+            sessionId,
+            scheduleStatus
         );
 
         console.log('post Product', productId, 'on', scheduledPostDateTime);

@@ -10,7 +10,7 @@ import { queries } from '~/utils/queries';
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { session, admin } = await authenticate.admin(request);
-    const { shop } = session;
+    const { shop, id } = session;
 
     try {
         const mediaQueueIds: string[] = [];

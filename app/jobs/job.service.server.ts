@@ -97,7 +97,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
 
         let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
 
-        postQueue.map((el: PostScheduleQueue) => {
+        postQueue.map(el => {
             console.log(el.productId + ' will be posted at:', el.dateScheduled);
             const publishDate = moment(el.dateScheduled).toISOString();
 
@@ -105,7 +105,7 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
                 `${el.productId}`,
                 async (job, done) => {
 
-                    publishMedia(el.postImgUrl, el.postDescription, String(el.productId), "l4-dev-shop.myshopify.com")
+                    publishMedia(el.postImgUrl, el.postDescription, String(el.productId), el.shopName)
                     postScheduleQueueService.removeScheduledItemFromQueue(String(el.productId))
                     console.log('Posted media at.', publishDate);
                     done()
