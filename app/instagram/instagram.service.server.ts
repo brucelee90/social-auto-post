@@ -1,6 +1,6 @@
 import { PostPageCarouselMediaRequest, PostPagePhotoMediaRequest, PostPublishMediaRequest, PostPageStoriesPhotoMediaRequest } from 'instagram-graph-api'
 
-import { getSettings, shopSettingsService } from '../services/SettingsService.server';
+import { shopSettingsService } from '../services/SettingsService.server';
 import { fetchProductData } from '~/utils/product.utils';
 import textUtils from '~/utils/textUtils';
 
@@ -21,7 +21,6 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
 
     try {
         const { product } = await fetchProductData(productId, sessionId);
-        // let shopSettings = await getSettings(shop)
         let shopSettings = await shopSettingsService.getShopSettings(sessionId)
         caption = textUtils.replacePlaceholders(caption, product, shopSettings?.settings?.customPlaceholder);
     } catch (error) {

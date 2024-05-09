@@ -11,7 +11,7 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import { ICollection, IShopifyProduct } from '~/types/types';
-import { getSettings, shopSettingsService } from '~/services/SettingsService.server';
+import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -28,10 +28,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         let shopSettings = null;
         try {
             shopSettings = await shopSettingsService.getShopSettings(sessionId);
-
-            console.log('shopSettings', shopSettings?.settings?.customPlaceholder);
-
-            // shopSettings = await getSettings('l4-dev-shop.myshopify.com');
         } catch (error) {
             console.log('error while getting settings in postcenter');
         }

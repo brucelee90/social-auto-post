@@ -9,10 +9,7 @@ import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
 import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
-import settingsService, {
-    getSettings,
-    shopSettingsService
-} from '~/services/SettingsService.server';
+import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 import { useState } from 'react';
 import { PostBtn } from './components/PostBtn';

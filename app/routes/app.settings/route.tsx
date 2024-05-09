@@ -1,7 +1,4 @@
-import settingsService, {
-    getSettings,
-    shopSettingsService
-} from '../../services/SettingsService.server';
+import { shopSettingsService } from '../../services/SettingsService.server';
 import { Form, json, useFetcher, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
@@ -52,9 +49,9 @@ export async function action({ request }: ActionFunctionArgs) {
             shopSettingsService.upsertDefaultCaption(sessionId, defaultCaption);
             return createApiResponse(true, 'Saved successfully');
         } else if (handlePlaceholder === 'remove') {
-            await settingsService.removeCustomPlaceholder(sessionId, customPlaceholderName);
+            await shopSettingsService.removeCustomPlaceholder(sessionId, customPlaceholderName);
         } else {
-            await settingsService.upsertCustomPlaceholder(
+            await shopSettingsService.upsertCustomPlaceholder(
                 sessionId,
                 textUtils.placeholderSanitizer(customPlaceholderName),
                 customPlaceholderContent
