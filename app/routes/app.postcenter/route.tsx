@@ -85,18 +85,12 @@ export default function PublishMedia() {
     const [searchString, setSearchString] = useState('');
     const actionData = useActionData<typeof action>();
 
-    const {
-        allAvailableProducts,
-        allAvailableDiscounts,
-        customPlaceholder,
-        defaultCaption,
-        allCollections
-    } = useLoaderData<typeof loader>();
+    const { allAvailableProducts, allAvailableDiscounts, customPlaceholder, allCollections } =
+        useLoaderData<typeof loader>();
 
     const productsArray = [...allAvailableProducts?.data?.products?.nodes];
     const collections = [...allCollections?.data?.collections?.nodes];
     const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
-    const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
 
     const handleCollectionFilter = (collection: string) => {
         setCollectionFilter(collection);

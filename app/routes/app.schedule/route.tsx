@@ -148,6 +148,8 @@ export default function Schedule() {
             setSearchString(searchString);
         };
 
+        const fetcher = useFetcher();
+
         return (
             <div>
                 <Text variant="heading2xl" as="h3">
@@ -203,8 +205,6 @@ export default function Schedule() {
                             if (productId !== undefined && imageUrl !== undefined) {
                                 isEligibleForScheduling = true;
                             }
-
-                            const fetcher = useFetcher({ key: `${productId}` });
 
                             return (
                                 <div key={key}>
