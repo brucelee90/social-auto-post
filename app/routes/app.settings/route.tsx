@@ -24,14 +24,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     let shopSettings = null;
     try {
-        // throw new Error();
-        // shopSettings = await getSettings(shop);
-
         shopSettings = await shopSettingsService.getShopSettings(sessionId);
-
-        // console.log(shopSettings, 'shopSettings');
-
-        // Explicitly specify the type of shopSettings
     } catch (error) {
         console.log('error while getting settings');
     }
@@ -56,7 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     try {
         if (handledefaultCaption !== null) {
-            settingsService.saveDefaultCaption(sessionId, defaultCaption);
+            shopSettingsService.upsertDefaultCaption(sessionId, defaultCaption);
             return createApiResponse(true, 'Saved successfully');
         } else if (handlePlaceholder === 'remove') {
             await settingsService.removeCustomPlaceholder(sessionId, customPlaceholderName);
@@ -139,6 +132,7 @@ export default function Settings(props: Props) {
             <Form method="post" style={{ paddingTop: '1rem' }}>
                 <div>
                     <label htmlFor={PostForm.placeholderName}>Placeholder name</label>
+                    {`{`}
                     <input
                         type="text"
                         name={PostForm.placeholderName}
@@ -147,6 +141,7 @@ export default function Settings(props: Props) {
                         onPaste={handlePaste}
                         style={{ textTransform: 'uppercase' }}
                     />
+                    {`}`}
                 </div>
                 <div>
                     <label htmlFor={PostForm.placeholderContent}>Placeholder value</label>

@@ -41,3 +41,19 @@ export default function DefaultCaptionForm(props: IDefaultCaptionProps) {
         </fetcher.Form>
     );
 }
+
+DefaultCaptionForm.defaultProps = {
+    defaultCaption: [
+        {
+            defaultCaptionName: 'all',
+            defaultCaptionContent: `😍 {PRODUCT_TITLE} 😍
+
+{PRODUCT_DESCRIPTION}
+        
+{PRODUCT_TAGS}
+        
+👉 Find the link to our store in our bio`,
+            settingsId: ''
+        }
+    ]
+};

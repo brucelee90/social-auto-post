@@ -35,11 +35,47 @@ export namespace shopSettingsService {
                 }
             }
         });
-
         return sessionSettings
     }
-}
 
+    /**
+     * Upserts the default caption for a given shop.
+     * @param {string} sessionId - The ID of the shop for which the default caption is being upserted.
+     * @param {string} defaultCaption - The new content of the default caption.
+     * @returns {Promise<void>} - A Promise that resolves when the upsert operation is complete.
+     * @throws {Error} - Throws an error if the upsert operation fails.
+     */
+    export async function upsertDefaultCaption(sessionId: string, defaultCaption: string): Promise<void> {
+        await prisma.defaultCaption.upsert({
+            where: {
+                defaultCaptionName_settingsId: {
+                    defaultCaptionName: "all",
+                    settingsId: sessionId
+                }
+            },
+            update: { defaultCaptionContent: defaultCaption },
+            create: {
+                defaultCaptionName: "all",
+                defaultCaptionContent: defaultCaption,
+                Settings: {
+                    connectOrCreate: {
+                        create: {
+                            id: sessionId,
+                            session: {
+                                connect: {
+                                    id: sessionId
+                                }
+                            }
+                        },
+                        where: {
+                            id: sessionId
+                        }
+                    }
+                }
+            }
+        })
+    }
+}
 
 
 interface SettingsService {
@@ -84,14 +120,12 @@ settingsService.upsertCustomPlaceholder = async (shop: string, name: string, val
             customPlaceholderName: name,
             customPlaceholderContent: value,
             Settings: {
-                // connectOrCreate: {
-
                 connectOrCreate: {
                     create: {
                         id: shop,
                         session: {
                             connect: {
-                                id: shop // Assumes `sessionId` is passed to this function
+                                id: shop
                             }
                         }
                     },
@@ -99,14 +133,6 @@ settingsService.upsertCustomPlaceholder = async (shop: string, name: string, val
                         id: shop
                     }
                 }
-
-
-                // create: {
-                //     id: shop
-                // },
-                // where: {
-                //     id: shop
-                // }
             }
         }
     },
@@ -145,8 +171,6 @@ settingsService.saveDefaultCaption = async (shop: string, defaultCaption: string
                 }
             }
         },
-
-
     })
 }
 
