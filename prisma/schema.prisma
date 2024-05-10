@@ -2,9 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 enum PostStatus {
-  Draft
-  Scheduled
-  Posted
+  draft
+  scheduled
+  posted
 }
 
 generator client {
@@ -31,13 +31,13 @@ model Session {
 }
 
 model PostScheduleQueue {
-  productId       BigInt   @id
-  dateScheduled   DateTime @default(now())
-  postImgUrl      String   @db.Text
+  productId       BigInt     @id
+  dateScheduled   DateTime   @default(now())
+  postImgUrl      String     @db.Text
   postDescription String
   shopName        String
-  scheduleStatus  String
-  Session         Session? @relation(fields: [sessionId], references: [id])
+  scheduleStatus  PostStatus
+  Session         Session?   @relation(fields: [sessionId], references: [id])
   sessionId       String?
 }
 

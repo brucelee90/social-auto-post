@@ -31,3 +31,9 @@ export enum PublishType {
 export enum PlaceholderVariable {
     codeDiscount = "#DISCOUNT#"
 }
+
+export enum PostStatus {
+    draft = "draft",
+    scheduled = "scheduled",
+    posted = "posted"
+}

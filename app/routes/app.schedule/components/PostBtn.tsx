@@ -1,7 +1,7 @@
 import moment from 'moment';
 import { useState } from 'react';
 import DatePicker from '~/routes/ui.components/mediaqueue/DatePicker';
-import { Action } from '../../global_utils/enum';
+import { Action, PostStatus } from '../../global_utils/enum';
 import { JobAction as BtnAction } from '../../global_utils/enum';
 import { useFetcher } from '@remix-run/react';
 import { IApiResponse } from '../route';
@@ -14,12 +14,15 @@ interface Props {
     productId: string;
     isScheduleSuccessfull: boolean;
     scheduledDate: string;
+    scheduleStatus: 'draft' | 'scheduled' | 'posted';
 }
 
 export function PostBtn(props: Props) {
-    const { productId, isScheduleSuccessfull, scheduledDate } = props;
+    const { productId, isScheduleSuccessfull, scheduledDate, scheduleStatus } = props;
 
     const fetcher = useFetcher({ key: `${productId}` });
+
+    console.log('scheduledDate', scheduledDate);
 
     let actionProductId;
     let action;
@@ -31,15 +34,13 @@ export function PostBtn(props: Props) {
         actionProductId = (fetcher.data as IApiResponse).productId;
     }
 
-    console.log(action, actionMessage);
-
     let btnText = 'Schedule Post';
     let btnAction = BtnAction.schedule;
 
     let isScheduled = action == Action.schedule;
     let isCancelled = action === Action.cancel;
 
-    let hasScheduledDate = scheduledDate !== undefined;
+    let hasScheduledDate = scheduleStatus === PostStatus.scheduled;
     let isProductScheduled = (isScheduled && actionProductId) || hasScheduledDate;
 
     // A cancellation will override everything
@@ -60,7 +61,7 @@ export function PostBtn(props: Props) {
             {!isProductScheduled && (
                 <div>
                     <DatePicker name={`scheduled_date`} />
-                    <input type="time" id="scheduled_time" name={`scheduled_time`} />
+                    <input type="time" id="scheduled_time" required name={`scheduled_time`} />
                 </div>
             )}
             <Button action={btnAction} text={btnText} />

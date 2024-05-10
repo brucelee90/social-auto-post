@@ -67,7 +67,7 @@ export const scheduleUtils: ScheduleUtils = {
             postImageUrl,
             postDescription,
             sessionId,
-            scheduleStatus
+            "schedule"
         );
 
         console.log('post Product', productId, 'on', scheduledPostDateTime);

@@ -3,12 +3,11 @@ import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
-import { TSMap } from 'typescript-map';
 import postScheduleQueueService from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
-import { JobAction, PlaceholderVariable, PostForm } from '../global_utils/enum';
+import { JobAction, PlaceholderVariable, PostForm, PostStatus } from '../global_utils/enum';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 import { useState } from 'react';
@@ -18,6 +17,7 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct } from '~/types/types';
+import { PostScheduleQueue } from '@prisma/client';
 
 export interface IApiResponse {
     action: string;
@@ -30,29 +30,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
     const { id: sessionId } = session;
 
-    const [res, discountRes, shopSettings, allCollections] = await Promise.all([
+    const [res, discountRes, shopSettings, allCollections, allScheduledItems] = await Promise.all([
         admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
         admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
         shopSettingsService.getShopSettings(sessionId),
-        admin.graphql(`${queries.getAllCollections}`).then((res) => res.json())
+        admin.graphql(`${queries.getAllCollections}`).then((res) => res.json()),
+        postScheduleQueueService.getAllScheduledItems()
     ]);
 
-    // Bigint is not serializable that's why we have to create a Map
-    let allScheduledItems = new TSMap();
-    let allScheduledItemsDescription = new TSMap();
-    (await postScheduleQueueService.getAllScheduledItems()).map((e) => {
-        allScheduledItems.set(e.productId, e.dateScheduled);
-        allScheduledItemsDescription.set(e.productId, e.postDescription);
-    });
+    const serializedScheduledItems = allScheduledItems.map((item) => ({
+        ...item,
+        productId: Number(item.productId)
+    }));
 
     return json({
         allAvailableProducts: res,
-        allScheduledItems: allScheduledItems.toJSON(),
-        allScheduledItemsDescription: allScheduledItemsDescription.toJSON(),
         allAvailableDiscounts: discountRes,
         customPlaceholder: shopSettings?.settings?.customPlaceholder,
         defaultCaption: shopSettings?.settings?.defaultCaption,
-        allCollections: allCollections
+        allCollections: allCollections,
+        allScheduledItems: serializedScheduledItems
     });
 }
 
@@ -86,7 +83,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 postImageUrl,
                 postDescription,
                 sessionId,
-                'Schedule'
+                'schedule'
             );
         } else if (cancelJob) {
             return scheduleUtils.cancelJobFunc(productId);
@@ -102,8 +99,6 @@ interface Props {
     isScheduleSuccessfull: boolean;
     action: string;
     productsArray: any[];
-    allScheduledItemsMap: TSMap<unknown, unknown>;
-    allScheduledItemsDescriptionMap: TSMap<unknown, unknown>;
     discountsArray: { codeDiscount: { title: string } }[];
     placeholders:
         | { customPlaceholderName: string; customPlaceholderContent: string; settingsId: string }[]
@@ -111,17 +106,19 @@ interface Props {
         | undefined;
     defaultCaption: string | undefined;
     collections: ICollection[];
+    allScheduledItems: PostScheduleQueue[];
 }
 
 export default function Schedule() {
     const {
         allAvailableProducts,
-        allScheduledItems,
+        // allScheduledItemsDate,
         allAvailableDiscounts,
-        allScheduledItemsDescription,
+        // allScheduledItemsDescription,
         customPlaceholder,
         defaultCaption,
-        allCollections
+        allCollections,
+        allScheduledItems
     } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
@@ -129,13 +126,18 @@ export default function Schedule() {
         const [collectionFilter, setCollectionFilter] = useState('');
         const [searchString, setSearchString] = useState('');
 
-        const allScheduledItemsMap = new TSMap().fromJSON(allScheduledItems);
-        const allScheduledItemsDescriptionMap = new TSMap().fromJSON(allScheduledItemsDescription);
         const productsArray = [...allAvailableProducts?.data?.products?.nodes];
         const isScheduleSuccessfull = !actionData?.error as boolean;
         const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
         const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
         const collections = [...allCollections?.data?.collections?.nodes];
+
+        let allScheduledItemsArr: PostScheduleQueue[];
+        if (allScheduledItems != undefined) {
+            allScheduledItemsArr = JSON.parse(
+                JSON.stringify(allScheduledItems)
+            ) as PostScheduleQueue[];
+        }
 
         const handleCollectionFilter = (collection: string) => {
             setCollectionFilter(collection);
@@ -193,15 +195,37 @@ export default function Schedule() {
                             let productId = productIdArr[productIdArr.length - 1];
                             let imageUrl = e.featuredImage?.url;
                             let images = e.images?.nodes;
-                            let scheduledDate = allScheduledItemsMap.get(`${productId}`) as string;
-                            let scheduledItemDesc = allScheduledItemsDescriptionMap.get(
-                                `${productId}`
-                            ) as string;
 
                             let isEligibleForScheduling = false;
                             if (productId !== undefined && imageUrl !== undefined) {
                                 isEligibleForScheduling = true;
                             }
+
+                            let currentScheduledItem = allScheduledItemsArr.find(
+                                (item: PostScheduleQueue) =>
+                                    Number(item.productId) === Number(productId)
+                            );
+
+                            let hasItemInScheduleQueue = true;
+                            if (currentScheduledItem === undefined) {
+                                hasItemInScheduleQueue = false;
+                                currentScheduledItem = {
+                                    productId: BigInt(0),
+                                    dateScheduled: new Date(0),
+                                    postImgUrl: '',
+                                    postDescription: '',
+                                    shopName: '',
+                                    scheduleStatus: PostStatus.draft,
+                                    sessionId: null
+                                };
+                            }
+
+                            let scheduledItemDesc = currentScheduledItem.postDescription;
+                            let scheduledDate = moment(
+                                currentScheduledItem.dateScheduled
+                            ).toISOString();
+                            let scheduleStatus = currentScheduledItem.scheduleStatus;
+                            let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
 
                             return (
                                 <div key={key}>
@@ -212,7 +236,10 @@ export default function Schedule() {
                                                 {e.title}
                                             </Text>
 
-                                            <ImagePicker images={images} />
+                                            <ImagePicker
+                                                images={images}
+                                                scheduledItemImgUrls={scheduledItemImgUrls}
+                                            />
                                             <DiscountsPicker discountsArray={discountsArray} />
                                             <TextArea
                                                 placeholders={customPlaceholder}
@@ -226,6 +253,7 @@ export default function Schedule() {
                                                     productId={productId}
                                                     isScheduleSuccessfull={isScheduleSuccessfull}
                                                     scheduledDate={scheduledDate}
+                                                    scheduleStatus={scheduleStatus}
                                                 />
                                             ) : (
                                                 <div>

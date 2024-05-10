@@ -1,9 +1,10 @@
+// import { PostStatus } from "@prisma/client";
 import { PromiseType } from "@prisma/client/extension";
 import { post } from "axios";
 import { connect } from "http2";
+import { PostStatus } from "~/routes/global_utils/enum";
 
 interface PostScheduleQueue {
-
     productId: bigint;
     dateScheduled: Date;
     postImgUrl: string;
@@ -25,13 +26,24 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
 
     let postImgUrlStr = postImgUrl.join(";")
 
+    scheduleStatus = "scheduled"
+    let postStatus
+    if (scheduleStatus === PostStatus.draft) {
+        postStatus = PostStatus.draft
+    } else if (scheduleStatus === PostStatus.scheduled) {
+        postStatus = PostStatus.scheduled
+    } else if (scheduleStatus === PostStatus.posted) {
+        postStatus = PostStatus.posted
+    }
+
     return await prisma.postScheduleQueue.upsert({
         where: { productId: BigInt(productId) },
         update: {
             postImgUrl: postImgUrlStr,
             productId: BigInt(productId),
             dateScheduled: dateScheduled,
-            postDescription: postDescription
+            postDescription: postDescription,
+            scheduleStatus: postStatus
         },
         create: {
             productId: BigInt(productId),
@@ -44,13 +56,9 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
                     id: sessionId,
                 }
             },
-            scheduleStatus: scheduleStatus
+            scheduleStatus: postStatus as PostStatus
         }
     });
-
-
-
-
 }
 
 postScheduleQueueService.getScheduledItemsByDate = async function getScheduledItemsByDate(date: Date) {
@@ -89,7 +97,8 @@ postScheduleQueueService.removeScheduledItemFromQueue = async function removeSch
 postScheduleQueueService.getScheduledItem = async function (productId: string) {
     return await prisma.postScheduleQueue.findFirstOrThrow({
         where: {
-            productId: BigInt(productId)
+            productId: BigInt(productId),
+            scheduleStatus: PostStatus.scheduled
         }
     })
 }
