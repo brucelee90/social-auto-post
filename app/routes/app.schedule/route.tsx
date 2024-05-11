@@ -3,7 +3,9 @@ import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
-import postScheduleQueueService from '~/jobs/schedulequeue.service.server';
+import postScheduleQueueService, {
+    scheduledQueueService
+} from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
@@ -12,7 +14,6 @@ import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 import { useState } from 'react';
 import { PostBtn } from './components/PostBtn';
-
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
@@ -30,15 +31,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
     const { id: sessionId } = session;
 
-    const [res, discountRes, shopSettings, allCollections, allScheduledItems] = await Promise.all([
+    const [res, discountRes, shopSettings, allCollections, sessionData] = await Promise.all([
         admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
         admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
         shopSettingsService.getShopSettings(sessionId),
         admin.graphql(`${queries.getAllCollections}`).then((res) => res.json()),
-        postScheduleQueueService.getAllScheduledItems()
+        scheduledQueueService.getAllScheduledItems(sessionId)
     ]);
 
-    const serializedScheduledItems = allScheduledItems.map((item) => ({
+    const serializedScheduledItems = sessionData.postScheduleQueue.map((item) => ({
         ...item,
         productId: Number(item.productId)
     }));
@@ -112,9 +113,7 @@ interface Props {
 export default function Schedule() {
     const {
         allAvailableProducts,
-        // allScheduledItemsDate,
         allAvailableDiscounts,
-        // allScheduledItemsDescription,
         customPlaceholder,
         defaultCaption,
         allCollections,

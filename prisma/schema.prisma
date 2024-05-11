@@ -7,6 +7,11 @@ enum PostStatus {
   posted
 }
 
+enum Platform {
+  instagram
+  pinterest
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -39,6 +44,7 @@ model PostScheduleQueue {
   scheduleStatus  PostStatus
   Session         Session?   @relation(fields: [sessionId], references: [id])
   sessionId       String?
+  platform        Platform
 }
 
 model Settings {

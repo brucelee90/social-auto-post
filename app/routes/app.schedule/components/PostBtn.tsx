@@ -22,8 +22,6 @@ export function PostBtn(props: Props) {
 
     const fetcher = useFetcher({ key: `${productId}` });
 
-    console.log('scheduledDate', scheduledDate);
-
     let actionProductId;
     let action;
     let actionMessage = '';

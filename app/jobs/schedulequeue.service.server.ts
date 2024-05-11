@@ -84,7 +84,6 @@ postScheduleQueueService.getUnremovedItems = async () => {
 
 postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: string) {
     try {
-
         await prisma.postScheduleQueue.delete({
             where: { productId: BigInt(productId) }
         })
@@ -108,3 +107,17 @@ postScheduleQueueService.getAllScheduledItems = async () => {
 }
 
 export default postScheduleQueueService
+
+
+export namespace scheduledQueueService {
+    export const getAllScheduledItems = async (sessionId: string) => {
+        return await prisma.session.findUniqueOrThrow({
+            where: {
+                id: sessionId
+            },
+            include: {
+                postScheduleQueue: true
+            }
+        })
+    }
+}
