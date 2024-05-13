@@ -5,7 +5,7 @@ import instagramApiService from '~/instagram/instagram.service.server';
 import { deleteMediaQueueItem, getMediaQueue } from '~/controllers/mediaqueue.server';
 import { logger } from '~/utils/logger.server';
 import { authenticate } from '~/shopify.server';
-import { PostMediaAttributes } from '~/types/types';
+import { PostMediaAttributes } from '~/routes/global_utils/types';
 import { queries } from '~/utils/queries';
 
 export async function loader({ request }: LoaderFunctionArgs) {

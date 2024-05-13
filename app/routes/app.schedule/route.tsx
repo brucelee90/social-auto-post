@@ -19,13 +19,8 @@ import { PostBtn } from './components/PostBtn';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
-import { ICollection, IShopifyProduct } from '~/types/types';
+import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
 import { PostScheduleQueue, Prisma } from '@prisma/client';
-
-interface InstagramPostDetails {
-    imgUrl: string;
-    postDescription: string;
-}
 
 export interface IApiResponse {
     action: string;

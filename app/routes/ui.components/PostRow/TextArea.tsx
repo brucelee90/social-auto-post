@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PostForm } from '~/routes/global_utils/enum';
 import { CustomPlaceholder } from '@prisma/client';
-import { IShopifyProduct } from '~/types/types';
+import { IShopifyProduct } from '~/routes/global_utils/types';
 import textUtils from '~/utils/textUtils';
 // import { replacePlaceholders } from '~/utils/textUtils';
 

@@ -1,5 +1,5 @@
 import { text } from "stream/consumers";
-import { IShopifyProduct } from "~/types/types";
+import { IShopifyProduct } from "~/routes/global_utils/types";
 
 namespace textUtils {
 

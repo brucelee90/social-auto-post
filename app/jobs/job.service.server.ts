@@ -1,8 +1,9 @@
 import moment from "moment";
 import instagramApiService from "~/instagram/instagram.service.server";
-import postScheduleQueueService from "~/jobs/schedulequeue.service.server";
+import postScheduleQueueService, { ScheduledQueueService } from "~/jobs/schedulequeue.service.server";
 import { Agenda } from "@hokify/agenda";
 import { PostScheduleQueue } from "@prisma/client";
+import { InstagramPostDetails } from "~/routes/global_utils/types";
 
 const scheduler = require('node-schedule');
 
@@ -140,13 +141,19 @@ jobService.cancelScheduledJob = async (jobId) => {
 
 jobService.scheduleJob = async (jobId, shopName) => {
 
-    let scheduleItem = await postScheduleQueueService.getScheduledItem(jobId)
+    let scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
 
     agenda.define(
         `${jobId}`,
         async (job, done) => {
 
-            publishMedia(scheduleItem.postImgUrl, scheduleItem.postDescription, jobId, shopName)
+            let scheduleItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+                JSON.stringify(
+                    scheduleItem.postDetails
+                )
+            )
+
+            publishMedia(scheduleItemPostDetailsJSON.imgUrl, scheduleItemPostDetailsJSON.postDescription, jobId, shopName)
             postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
             console.log('Posted media at.', scheduleItem.dateScheduled);
             done()

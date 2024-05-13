@@ -6,6 +6,7 @@
   
     "configurations": [
 
+
       {
         "command": "npm run dev:x",
         "name": "Run npm run dev:x",
@@ -21,8 +22,8 @@
         "cwd": "${workspaceFolder}"
       },
       {
-        "command": "npm run dev:remix",
-        "name": "Run npm run dev:remix",
+        "command": "npm run dev:express",
+        "name": "Run npm run dev:express",
         "request": "launch",
         "type": "node-terminal",
         "cwd": "${workspaceFolder}"

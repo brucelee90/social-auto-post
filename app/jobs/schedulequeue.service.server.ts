@@ -1,5 +1,6 @@
 import { PostStatus } from "~/routes/global_utils/enum";
 import { object, string, AnyObjectSchema } from 'yup';
+import { JsonValue } from "@prisma/client/runtime/library";
 
 
 
@@ -33,6 +34,7 @@ interface PostScheduleQueue {
     dateScheduled: Date;
     postImgUrl: string;
     postDescription: string;
+    postDetails: JsonValue
 }
 
 interface postScheduleQueueService {
@@ -213,7 +215,6 @@ export class ScheduledQueueService {
             postImgUrl: postImgUrlStr
         }
 
-        // await postDetailsSchema.validate(postDetails)
         await this.validationSchema.validate(postDetails)
 
         return await prisma.postScheduleQueue.upsert({
@@ -264,6 +265,23 @@ export class ScheduledQueueService {
         })
 
         return scheduluedItems
+    }
+
+    public async getScheduledItem(productId: string) {
+        const scheduledItem = await prisma.postScheduleQueue.findFirstOrThrow({
+            where: {
+                productId: BigInt(productId),
+                scheduleStatus: PostStatus.scheduled
+            }
+        })
+
+        try {
+            this.validationSchema.validate(scheduledItem.postDetails)
+        } catch (error) {
+            console.log("Post Details JSON is not validated", scheduledItem.postDetails);
+        }
+
+        return scheduledItem
     }
 
 }

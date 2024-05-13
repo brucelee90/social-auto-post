@@ -10,7 +10,7 @@ import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_ut
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
-import { ICollection, IShopifyProduct } from '~/types/types';
+import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 
