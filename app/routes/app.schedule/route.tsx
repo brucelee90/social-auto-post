@@ -4,6 +4,8 @@ import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
 import postScheduleQueueService, {
+    ScheduledQueueService,
+    postDetailsSchema,
     scheduledQueueService
 } from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
@@ -18,7 +20,12 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct } from '~/types/types';
-import { PostScheduleQueue } from '@prisma/client';
+import { PostScheduleQueue, Prisma } from '@prisma/client';
+
+interface InstagramPostDetails {
+    imgUrl: string;
+    postDescription: string;
+}
 
 export interface IApiResponse {
     action: string;
@@ -30,16 +37,24 @@ export interface IApiResponse {
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
     const { id: sessionId } = session;
+    let res = null,
+        discountRes = null,
+        shopSettings = null,
+        allCollections = null,
+        sessionData = null;
 
-    const [res, discountRes, shopSettings, allCollections, sessionData] = await Promise.all([
-        admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
-        admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
-        shopSettingsService.getShopSettings(sessionId),
-        admin.graphql(`${queries.getAllCollections}`).then((res) => res.json()),
-        scheduledQueueService.getAllScheduledItems(sessionId)
-    ]);
+    try {
+        [res, discountRes, shopSettings, allCollections, sessionData] = await Promise.all([
+            admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
+            admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
+            shopSettingsService.getShopSettings(sessionId),
+            admin.graphql(`${queries.getAllCollections}`).then((res) => res.json()),
+            // scheduledQueueService.getAllScheduledItems(sessionId)
+            new ScheduledQueueService('instagram').getAllScheduledItems(sessionId)
+        ]);
+    } catch (error) {}
 
-    const serializedScheduledItems = sessionData.postScheduleQueue.map((item) => ({
+    const serializedScheduledItems = sessionData?.postScheduleQueue.map((item) => ({
         ...item,
         productId: Number(item.productId)
     }));
@@ -84,7 +99,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 postImageUrl,
                 postDescription,
                 sessionId,
-                'schedule'
+                'schedule',
+                'instagram'
             );
         } else if (cancelJob) {
             return scheduleUtils.cancelJobFunc(productId);
@@ -215,16 +231,27 @@ export default function Schedule() {
                                     postDescription: '',
                                     shopName: '',
                                     scheduleStatus: PostStatus.draft,
-                                    sessionId: null
+                                    sessionId: null,
+                                    postDetails: '',
+                                    platform: ''
                                 };
                             }
 
+                            let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
+                                JSON.stringify(currentScheduledItem.postDetails)
+                            );
+
                             let scheduledItemDesc = currentScheduledItem.postDescription;
+                            let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
+
                             let scheduledDate = moment(
                                 currentScheduledItem.dateScheduled
                             ).toISOString();
                             let scheduleStatus = currentScheduledItem.scheduleStatus;
-                            let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
+
+                            scheduledItemDesc = scheduledItemPostDetails.postDescription;
+
+                            console.log(scheduledItemPostDetails.postDescription);
 
                             return (
                                 <div key={key}>

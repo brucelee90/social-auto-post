@@ -1,8 +1,32 @@
-// import { PostStatus } from "@prisma/client";
-import { PromiseType } from "@prisma/client/extension";
-import { post } from "axios";
-import { connect } from "http2";
 import { PostStatus } from "~/routes/global_utils/enum";
+import { object, string, AnyObjectSchema } from 'yup';
+
+
+
+export const postDetailsSchema = object({
+    postDescription: string().required(),
+    postImgUrl: string().required()
+});
+
+export type PlatformType = 'instagram' | 'facebook' | 'twitter';
+
+const schemas: Record<PlatformType, AnyObjectSchema> = {
+    instagram: object({
+        postDescription: string().required(),
+        postImgUrl: string().required()
+    }),
+    facebook: object({
+        postDescription: string().required(),
+        postImgUrl: string().required()
+    }),
+    twitter: object({
+        postDescription: string().required(),
+        postImgUrl: string().required()
+    })
+};
+
+
+
 
 interface PostScheduleQueue {
     productId: bigint;
@@ -36,6 +60,13 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
         postStatus = PostStatus.posted
     }
 
+    const postDetails = {
+        postDescription: postDescription,
+        postImgUrl: postImgUrlStr
+    }
+
+    await postDetailsSchema.validate(postDetails)
+
     return await prisma.postScheduleQueue.upsert({
         where: { productId: BigInt(productId) },
         update: {
@@ -43,7 +74,8 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
             productId: BigInt(productId),
             dateScheduled: dateScheduled,
             postDescription: postDescription,
-            scheduleStatus: postStatus
+            scheduleStatus: postStatus,
+            postDetails: postDetails
         },
         create: {
             productId: BigInt(productId),
@@ -51,6 +83,7 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
             postImgUrl: postImgUrlStr,
             postDescription: postDescription,
             shopName: sessionId,
+            postDetails: postDetails,
             Session: {
                 connect: {
                     id: sessionId,
@@ -94,12 +127,20 @@ postScheduleQueueService.removeScheduledItemFromQueue = async function removeSch
 }
 
 postScheduleQueueService.getScheduledItem = async function (productId: string) {
-    return await prisma.postScheduleQueue.findFirstOrThrow({
+    const scheduledItem = await prisma.postScheduleQueue.findFirstOrThrow({
         where: {
             productId: BigInt(productId),
             scheduleStatus: PostStatus.scheduled
         }
     })
+
+    try {
+        postDetailsSchema.validate(scheduledItem.postDetails)
+    } catch (error) {
+        console.log("Post Details JSON is not validated", scheduledItem.postDetails);
+    }
+
+    return scheduledItem
 }
 
 postScheduleQueueService.getAllScheduledItems = async () => {
@@ -110,8 +151,11 @@ export default postScheduleQueueService
 
 
 export namespace scheduledQueueService {
+
+
+
     export const getAllScheduledItems = async (sessionId: string) => {
-        return await prisma.session.findUniqueOrThrow({
+        const scheduluedItems = await prisma.session.findUniqueOrThrow({
             where: {
                 id: sessionId
             },
@@ -119,5 +163,107 @@ export namespace scheduledQueueService {
                 postScheduleQueue: true
             }
         })
+
+        scheduluedItems.postScheduleQueue.map(async e => {
+            try {
+                await postDetailsSchema.validate(e.postDetails)
+            } catch (error) {
+
+                console.log("JSON NOT VALID");
+
+            }
+        })
+
+        return scheduluedItems
     }
+}
+
+export class ScheduledQueueService {
+
+    platform: PlatformType;
+    validationSchema: AnyObjectSchema
+
+    constructor(platform: PlatformType) {
+        this.platform = platform;
+
+        if (!schemas[platform]) {
+            console.log(`Unbekannte Plattform: ${this.platform}`);
+        }
+
+        this.validationSchema = schemas[this.platform];
+    }
+
+
+    public async addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: string) {
+
+        let postImgUrlStr = postImgUrl.join(";")
+
+        scheduleStatus = "scheduled"
+        let postStatus
+        if (scheduleStatus === PostStatus.draft) {
+            postStatus = PostStatus.draft
+        } else if (scheduleStatus === PostStatus.scheduled) {
+            postStatus = PostStatus.scheduled
+        } else if (scheduleStatus === PostStatus.posted) {
+            postStatus = PostStatus.posted
+        }
+
+        const postDetails = {
+            postDescription: postDescription,
+            postImgUrl: postImgUrlStr
+        }
+
+        // await postDetailsSchema.validate(postDetails)
+        await this.validationSchema.validate(postDetails)
+
+        return await prisma.postScheduleQueue.upsert({
+            where: { productId: BigInt(productId) },
+            update: {
+                postImgUrl: postImgUrlStr,
+                productId: BigInt(productId),
+                dateScheduled: dateScheduled,
+                postDescription: postDescription,
+                scheduleStatus: postStatus,
+                postDetails: postDetails,
+                platform: this.platform
+            },
+            create: {
+                productId: BigInt(productId),
+                dateScheduled: dateScheduled,
+                postImgUrl: postImgUrlStr,
+                postDescription: postDescription,
+                shopName: sessionId,
+                postDetails: postDetails,
+                Session: {
+                    connect: {
+                        id: sessionId,
+                    }
+                },
+                scheduleStatus: postStatus as PostStatus,
+                platform: this.platform
+            }
+        });
+    }
+
+    public async getAllScheduledItems(sessionId: string) {
+        const scheduluedItems = await prisma.session.findUniqueOrThrow({
+            where: {
+                id: sessionId
+            },
+            include: {
+                postScheduleQueue: true
+            }
+        })
+
+        scheduluedItems.postScheduleQueue.map(async e => {
+            try {
+                await this.validationSchema.validate(e.postDetails)
+            } catch (error) {
+                console.log("JSON NOT VALID");
+            }
+        })
+
+        return scheduluedItems
+    }
+
 }

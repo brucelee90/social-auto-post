@@ -3,7 +3,7 @@ import { PostForm } from '~/routes/global_utils/enum';
 
 interface Props {
     images: { url: string }[];
-    scheduledItemImgUrls: string;
+    scheduledItemImgUrls?: string;
 }
 
 function ImagePicker(props: Props) {
@@ -18,7 +18,7 @@ function ImagePicker(props: Props) {
         <ul>
             <fieldset style={{ display: 'flex' }}>
                 {images.map((e, key) => {
-                    let isCurrentImageSelected = scheduledItemImgUrls.includes(e.url);
+                    let isCurrentImageSelected = scheduledItemImgUrls?.includes(e.url);
 
                     return (
                         <li key={key}>

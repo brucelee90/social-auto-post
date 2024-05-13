@@ -123,32 +123,6 @@ jobService.runScheduledJobsByDate = async function (date: Date) {
         throw new Error()
     }
 
-    /*
-        let postQueue = await postScheduleQueueService.getScheduledItemsByDate(date)
-    
-        postQueue.map((el: any) => {
-            console.log(el.productId + ' will be posted at:', el.dateScheduled);
-            const publishDate = moment(el.dateScheduled).toISOString();
-    
-    
-            let s = scheduler.scheduleJob('job_name', publishDate, function () {
-                instagramApiService.publishMedia(el.postImgUrl, el.postDescription)
-                postScheduleQueueService.removeScheduledItemFromQueue(el.productId)
-                console.log('Posted media at.', publishDate);
-    
-                // When scheduled Function is run, it will only call this callback function.
-                // So job has to be removed from jobService.jobs right here in order to keep track of all jobs
-    
-            });
-    
-        });
-    
-        console.log('----------- scheduler.scheduledJobs ---------', scheduler.scheduledJobs);
-        jobService.jobs.push(scheduler.scheduledJobs)
-    
-        console.log('jobService.jobs from function', jobService.jobs);
-    */
-
 }
 
 jobService.cancelScheduledJob = async (jobId) => {

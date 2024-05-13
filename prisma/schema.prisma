@@ -1,15 +1,10 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-enum PostStatus {
+enum ScheduleStatus {
   draft
   scheduled
   posted
-}
-
-enum Platform {
-  instagram
-  pinterest
 }
 
 generator client {
@@ -36,15 +31,25 @@ model Session {
 }
 
 model PostScheduleQueue {
-  productId       BigInt     @id
-  dateScheduled   DateTime   @default(now())
-  postImgUrl      String     @db.Text
+  productId       BigInt           @id
+  dateScheduled   DateTime         @default(now())
+  postImgUrl      String           @db.Text
   postDescription String
   shopName        String
-  scheduleStatus  PostStatus
-  Session         Session?   @relation(fields: [sessionId], references: [id])
+  postDetails     Json             @default("{}")
+  platform        String           @default("")
+  scheduleStatus  ScheduleStatus
+  Session         Session?         @relation(fields: [sessionId], references: [id])
   sessionId       String?
-  platform        Platform
+  instagramQueue  InstagramQueue[]
+}
+
+model InstagramQueue {
+  id                         Int                @id
+  postImgUrl                 String
+  postDescription            String
+  PostScheduleQueue          PostScheduleQueue? @relation(fields: [postScheduleQueueProductId], references: [productId])
+  postScheduleQueueProductId BigInt?
 }
 
 model Settings {
