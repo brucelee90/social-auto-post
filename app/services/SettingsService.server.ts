@@ -68,6 +68,9 @@ export namespace shopSettingsService {
      * @param {string} value - The new content of the custom placeholder.
      */
     export async function upsertCustomPlaceholder(shop: string, name: string, value: string) {
+
+        console.log("shop", shop);
+
         return await prisma.customPlaceholder.upsert({
             where: {
                 customPlaceholderName_settingsId: {
@@ -90,7 +93,7 @@ export namespace shopSettingsService {
                             }
                         },
                         where: {
-                            id: shop
+                            id: shop,
                         }
                     }
                 }

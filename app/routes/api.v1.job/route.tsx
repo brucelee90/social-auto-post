@@ -28,8 +28,9 @@ export const loader: LoaderFunction = async ({ request }) => {
                 break;
 
             case JobAction.get:
-                jobService.getAllJobs();
-                responseMessage = 'All job done';
+                let allJobs = await jobService.getAllfinishedJobs();
+                return allJobs;
+
                 break;
 
             case JobAction.schedule:

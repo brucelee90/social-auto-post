@@ -8,6 +8,9 @@ import postScheduleQueueService, {
     scheduledQueueService
 } from '~/jobs/schedulequeue.service.server';
 import { PostScheduleQueue } from '@prisma/client';
+import { Agenda, Job } from '@hokify/agenda';
+import jobService from '~/jobs/job.service.server';
+import moment from 'moment';
 
 interface IgRes {
     error: boolean;
@@ -18,10 +21,19 @@ interface IgRes {
     media_count: string;
 }
 
-function createApiResponse(error: boolean, message: string) {
+function createApiResponse(
+    error: boolean,
+    message: string,
+    igRes: any = null,
+    allScheduledItems: any = null,
+    allFinishedJobs: any = null
+) {
     return {
         error: error,
-        message: message
+        message: message,
+        igRes: igRes,
+        allScheduledItems: allScheduledItems,
+        allFinishedJobs: allFinishedJobs
     };
 }
 
@@ -29,15 +41,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { session } = await authenticate.admin(request);
     const { id: sessionId } = session;
     let igRes;
-    let apiResponse;
-    let serializedScheduledItems;
 
     try {
-        const [sessionData] = await Promise.all([
-            scheduledQueueService.getAllScheduledItems(sessionId)
+        const [sessionData, allFinishedJobs] = await Promise.all([
+            scheduledQueueService.getAllScheduledItems(sessionId),
+            jobService.getAllfinishedJobs(sessionId)
         ]);
 
-        serializedScheduledItems = sessionData.postScheduleQueue.map((item) => ({
+        let serializedScheduledItems = sessionData.postScheduleQueue.map((item) => ({
             ...item,
             productId: Number(item.productId)
         }));
@@ -56,23 +67,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
             );
 
             igRes = (await request.execute()).getData();
+        } else {
+            throw new Error('ACCESS TOKEN UND PAGE ID ÜBRERPRÜFEN!');
         }
-        apiResponse = createApiResponse(false, 'Connected Successfully');
-        throw new Error('ACCESS TOKEN UND PAGE ID ÜBRERPRÜFEN!');
+        return createApiResponse(false, '', igRes, serializedScheduledItems, allFinishedJobs);
     } catch (error) {
-        console.log('Something went wrong');
-        apiResponse = createApiResponse(true, 'An error Occured:' + error);
+        console.log('Something went wrong on dashboard', error);
+        return createApiResponse(true, 'An error Occured:' + error);
     }
-
-    return {
-        igRes: igRes,
-        apiResponse: apiResponse,
-        allScheduledItems: serializedScheduledItems
-    };
 }
 
 function Dashboard() {
-    const { igRes, allScheduledItems } = useLoaderData<typeof loader>();
+    const { igRes, allScheduledItems, allFinishedJobs } = useLoaderData<typeof loader>();
 
     let allScheduledItemsArr = [{}] as PostScheduleQueue[];
     if (allScheduledItems != undefined) {
@@ -90,9 +96,9 @@ function Dashboard() {
 
             <hr />
 
-            {allScheduledItemsArr.length ? (
+            <div>Your Schedule Queue</div>
+            {allScheduledItemsArr.length && (
                 <>
-                    <div>Your Schedule Queue</div>
                     <ul>
                         {allScheduledItemsArr?.map((scheduledItem: PostScheduleQueue) => {
                             return (
@@ -104,14 +110,44 @@ function Dashboard() {
                         })}
                     </ul>
                 </>
-            ) : (
-                <div>
-                    It looks empty in here. Go ahead and{' '}
-                    <Link to="/app/schedule">schedule some of your Products</Link>
-                    And create some custom placeholder under your settings sections
-                    <Link to="/app/settings">Settings</Link>{' '}
-                </div>
             )}
+
+            <hr />
+
+            <div>ALL FINISHED JOBS:</div>
+            <table>
+                <thead>
+                    <tr>
+                        <td>image</td>
+                        <td>posted at:</td>
+                        <td>description:</td>
+                    </tr>
+                </thead>
+                {allFinishedJobs.map(
+                    (job: {
+                        id: string | undefined;
+                        name: string;
+                        imgUrl: string;
+                        postDescription: string;
+                        nextRunAt: Date | null;
+                        lastFinishedAt: Date | undefined;
+                        failedAt: Date | undefined;
+                    }) => {
+                        let lastFinishedAt = moment(job.lastFinishedAt);
+                        return (
+                            <tr>
+                                <td>
+                                    <img src={job.imgUrl} height="100" width="150" />
+                                </td>
+
+                                <td>{lastFinishedAt.toString()}</td>
+                                <td>{job.postDescription}</td>
+                            </tr>
+                        );
+                    }
+                )}
+            </table>
+            <hr />
         </>
     );
 }
