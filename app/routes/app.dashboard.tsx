@@ -11,6 +11,7 @@ import { PostScheduleQueue } from '@prisma/client';
 import { Agenda, Job } from '@hokify/agenda';
 import jobService from '~/jobs/job.service.server';
 import moment from 'moment';
+import { InstagramPostDetails } from './global_utils/types';
 
 interface IgRes {
     error: boolean;
@@ -97,21 +98,54 @@ function Dashboard() {
             <hr />
 
             <div>Your Schedule Queue</div>
-            {allScheduledItemsArr.length && (
-                <>
-                    <ul>
-                        {allScheduledItemsArr?.map((scheduledItem: PostScheduleQueue) => {
+            <table>
+                <thead>
+                    <tr>
+                        <td>image</td>
+                        <td>description:</td>
+                        <td>posted at:</td>
+                        <td>Post Status:</td>
+                    </tr>
+                </thead>
+                {allScheduledItemsArr.length && (
+                    <>
+                        {allScheduledItemsArr?.map((scheduledItem: PostScheduleQueue, key) => {
+                            let scheduledItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+                                JSON.stringify(scheduledItem.postDetails)
+                            );
+                            let scheduleDate = moment(scheduledItem.dateScheduled).format(
+                                'dddd, YYYY-MM-DD [at] hh:mma'
+                            );
+
+                            console.log(
+                                'scheduledItemPostDetailsJSON',
+                                scheduledItemPostDetailsJSON.postImgUrl.split(';')[0]
+                            );
+
                             return (
-                                <li>
-                                    {Number(scheduledItem.productId)}:{' '}
-                                    {scheduledItem.scheduleStatus}
-                                </li>
+                                <tr key={key}>
+                                    <td>
+                                        <img
+                                            src={
+                                                scheduledItemPostDetailsJSON.postImgUrl.split(
+                                                    ';'
+                                                )[0]
+                                            }
+                                            height="100"
+                                            width="150"
+                                        />
+                                    </td>
+                                    <td style={{ width: '10rem' }}>
+                                        {scheduledItemPostDetailsJSON.postDescription}
+                                    </td>
+                                    <td style={{ width: '20rem' }}>{scheduleDate}</td>
+                                    <td>{scheduledItem.scheduleStatus}</td>
+                                </tr>
                             );
                         })}
-                    </ul>
-                </>
-            )}
-
+                    </>
+                )}
+            </table>
             <hr />
 
             <div>ALL FINISHED JOBS:</div>
@@ -119,8 +153,8 @@ function Dashboard() {
                 <thead>
                     <tr>
                         <td>image</td>
-                        <td>posted at:</td>
                         <td>description:</td>
+                        <td>posted at:</td>
                     </tr>
                 </thead>
                 {allFinishedJobs.map(
@@ -145,8 +179,8 @@ function Dashboard() {
                                     <img src={job.imgUrl} height="100" width="150" />
                                 </td>
 
-                                <td>{lastFinishedAt.toString()}</td>
-                                <td>{job.postDescription}</td>
+                                <td style={{ width: '10rem' }}>{job.postDescription}</td>
+                                <td style={{ width: '20rem' }}>{lastFinishedAt.toString()}</td>
                             </tr>
                         );
                     }

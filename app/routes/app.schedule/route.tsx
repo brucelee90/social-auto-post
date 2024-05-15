@@ -74,6 +74,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const productId = formData.get('product_id') as string;
     const scheduledDate = formData.get('scheduled_date');
     const scheduledTime = formData.get('scheduled_time');
+    const productTitle = formData.get('product_title') as string;
     let postDescription = formData.get(PostForm.description) as string;
     const postImageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const codeDiscount = formData.get(PostForm.codeDiscount) as string;
@@ -95,6 +96,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             return scheduleUtils.scheduleJobFunc(
                 productId,
                 scheduledPostDateTime,
+                productTitle,
                 postImageUrl,
                 postDescription,
                 sessionId,
@@ -258,6 +260,7 @@ export default function Schedule() {
                                 <div key={key}>
                                     <fetcher.Form method="post" key={`${productId}`}>
                                         <input type="hidden" name="product_id" value={productId} />
+                                        <input type="hidden" name="product_title" value={e.title} />
                                         <div>
                                             <Text variant="headingXl" as="h4">
                                                 {e.title}

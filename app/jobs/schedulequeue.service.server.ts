@@ -1,6 +1,8 @@
 import { PostStatus } from "~/routes/global_utils/enum";
+import * as yup from 'yup'
 import { object, string, AnyObjectSchema } from 'yup';
 import { JsonValue } from "@prisma/client/runtime/library";
+import { InstagramPostDetails } from "~/routes/global_utils/types";
 
 
 
@@ -11,11 +13,15 @@ export const postDetailsSchema = object({
 
 export type PlatformType = 'instagram' | 'facebook' | 'twitter';
 
+const instagramSchema: yup.ObjectSchema<InstagramPostDetails> = yup.object({
+    postImgUrl: yup.string().required('Image URL is required'),
+    postDescription: yup.string().required('Post description is required'),
+    postTitle: yup.string().required('Post title is required'),
+});
+
+
 const schemas: Record<PlatformType, AnyObjectSchema> = {
-    instagram: object({
-        postDescription: string().required(),
-        postImgUrl: string().required()
-    }),
+    instagram: instagramSchema,
     facebook: object({
         postDescription: string().required(),
         postImgUrl: string().required()
@@ -194,7 +200,7 @@ export class ScheduledQueueService {
     }
 
 
-    public async addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: PostStatus) {
+    public async addToPostScheduleQueue(productId: string, dateScheduled: string, productTitle: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: PostStatus) {
 
         let postImgUrlStr = postImgUrl.join(";")
 
@@ -206,8 +212,9 @@ export class ScheduledQueueService {
         }
 
         const postDetails = {
+            postTitle: productTitle,
             postDescription: postDescription,
-            postImgUrl: postImgUrlStr
+            postImgUrl: postImgUrlStr,
         }
 
         await this.validationSchema.validate(postDetails)

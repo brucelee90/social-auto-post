@@ -17,6 +17,7 @@ export interface ScheduleAction {
 export interface ScheduleUtils {
     scheduleJobFunc: (productId: string,
         scheduledPostDateTime: string,
+        productTitle: string,
         postImageUrl: string[],
         postDescription: string,
         sessionId: string,
@@ -54,6 +55,7 @@ export const scheduleUtils = {
     scheduleJobFunc: (
         productId: string,
         scheduledPostDateTime: string,
+        productTitle: string,
         postImageUrl: string[],
         postDescription: string,
         sessionId: string,
@@ -69,6 +71,7 @@ export const scheduleUtils = {
         new ScheduledQueueService(platform).addToPostScheduleQueue(
             productId,
             scheduledPostDateTime,
+            productTitle,
             postImageUrl,
             postDescription,
             sessionId,

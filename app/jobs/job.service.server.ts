@@ -45,7 +45,7 @@ const jobService = {
                     (async function () {
                         postScheduleQueueService.removeScheduledItemFromQueue(job.attrs.name)
                         await agenda.start();
-                        await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, postDescription: job.attrs.data.postDescription, shop: job.attrs.data.shop });
+                        await agenda.schedule(moment(job.attrs?.nextRunAt).toISOString(), `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, postDescription: job.attrs.data.postDescription, postTitle: job.attrs.data.postTitle, shop: job.attrs.data.shop });
                     })();
                 } else if ((job.attrs.nextRunAt as Date) <= new Date()) {
                     agenda.define(
@@ -62,7 +62,7 @@ const jobService = {
 
                         postScheduleQueueService.removeScheduledItemFromQueue(job.attrs.name)
                         await agenda.start();
-                        await agenda.schedule("10 second", `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, postDescription: job.attrs.data.postDescription, shop: job.attrs.data.shop });
+                        await agenda.schedule("10 second", `${job.attrs.name}_rescheduled`, { imgUrl: job.attrs.data.imgUrl, postDescription: job.attrs.data.postDescription, postTitle: job.attrs.data.postTitle, shop: job.attrs.data.shop });
                     })();
                 }
 
@@ -90,8 +90,9 @@ const jobService = {
 
         const simplifiedJobs = finishedJobs.map(job => ({
             id: job.attrs._id,
+            title: (job.attrs.data as InstagramPostDetails).postTitle,
             name: job.attrs.name,
-            imgUrl: (job.attrs.data as InstagramPostDetails).imgUrl,
+            postImgUrl: (job.attrs.data as InstagramPostDetails).postImgUrl,
             postDescription: (job.attrs.data as InstagramPostDetails).postDescription,
             nextRunAt: job.attrs.nextRunAt,
             lastFinishedAt: job.attrs.lastFinishedAt,
@@ -151,19 +152,22 @@ const jobService = {
 
     scheduleJob: async (jobId: string, shopName: string) => {
 
+
         let scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
+
+        let scheduleItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+            JSON.stringify(
+                scheduleItem.postDetails
+            )
+        )
 
         agenda.define(
             `${jobId}`,
             async (job, done) => {
 
-                let scheduleItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
-                    JSON.stringify(
-                        scheduleItem.postDetails
-                    )
-                )
 
-                publishMedia(scheduleItemPostDetailsJSON.imgUrl, scheduleItemPostDetailsJSON.postDescription, jobId, shopName)
+
+                publishMedia(scheduleItemPostDetailsJSON.postImgUrl, scheduleItemPostDetailsJSON.postDescription, jobId, shopName)
                 postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
                 console.log('Posted media at.', scheduleItem.dateScheduled);
                 done()
@@ -171,7 +175,7 @@ const jobService = {
 
         (async function () {
             await agenda.start();
-            await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItem.postImgUrl}`, postDescription: `${scheduleItem.postDescription}`, shop: shopName });
+            await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItemPostDetailsJSON.postImgUrl}`, postDescription: `${scheduleItemPostDetailsJSON.postDescription}`, postTitle: `${scheduleItemPostDetailsJSON.postTitle}`, shop: shopName });
         })();
     }
 }

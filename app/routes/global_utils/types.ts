@@ -66,7 +66,7 @@ export interface IShopifyProduct {
 }
 
 export interface InstagramPostDetails {
-    imgUrl: string;
+    postImgUrl: string;
     postDescription: string;
-    shop: string
+    postTitle: string;
 }
