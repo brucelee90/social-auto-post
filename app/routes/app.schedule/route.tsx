@@ -3,11 +3,7 @@ import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { Text } from '@shopify/polaris';
 import moment from 'moment';
-import postScheduleQueueService, {
-    ScheduledQueueService,
-    postDetailsSchema,
-    scheduledQueueService
-} from '~/jobs/schedulequeue.service.server';
+import { ScheduledQueueService } from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
 import { scheduleUtils } from './scheduleUtils';
@@ -20,7 +16,7 @@ import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
-import { PostScheduleQueue, Prisma } from '@prisma/client';
+import { PostScheduleQueue } from '@prisma/client';
 
 export interface IApiResponse {
     action: string;
@@ -28,6 +24,13 @@ export interface IApiResponse {
     message: string;
     productId: string;
 }
+
+const getPostAction = (saveAsDraft: string) => {
+    if (saveAsDraft) {
+        return PostStatus.draft;
+    }
+    return PostStatus.scheduled;
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
@@ -73,9 +76,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const scheduledTime = formData.get('scheduled_time');
     let postDescription = formData.get(PostForm.description) as string;
     const postImageUrl = formData.getAll(PostForm.imgUrl) as string[];
+    const codeDiscount = formData.get(PostForm.codeDiscount) as string;
     const cancelJob = formData.get(JobAction.cancel) as string;
     const scheduleJob = formData.get(JobAction.schedule) as string;
-    const codeDiscount = formData.get(PostForm.codeDiscount) as string;
+    const saveAsDraft = formData.get(JobAction.draft) as string;
 
     const scheduledPostDateTime = moment(
         `${scheduledDate} ${scheduledTime}`,
@@ -87,14 +91,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
         if (postImageUrl.length === 0) {
             throw new Error();
-        } else if (scheduleJob) {
+        } else if (scheduleJob || saveAsDraft) {
             return scheduleUtils.scheduleJobFunc(
                 productId,
                 scheduledPostDateTime,
                 postImageUrl,
                 postDescription,
                 sessionId,
-                'schedule',
+                getPostAction(saveAsDraft),
                 'instagram'
             );
         } else if (cancelJob) {
@@ -138,7 +142,6 @@ export default function Schedule() {
 
         const productsArray = [...allAvailableProducts?.data?.products?.nodes];
         const isScheduleSuccessfull = !actionData?.error as boolean;
-        const discountsArray = [...allAvailableDiscounts?.data?.codeDiscountNodes?.nodes];
         const defaultCaptionContent = getDefaultCaptionContent(defaultCaption);
         const collections = [...allCollections?.data?.collections?.nodes];
 
@@ -225,7 +228,7 @@ export default function Schedule() {
                                     postImgUrl: '',
                                     postDescription: '',
                                     shopName: '',
-                                    scheduleStatus: PostStatus.draft,
+                                    scheduleStatus: 'draft',
                                     sessionId: null,
                                     postDetails: '',
                                     platform: ''
@@ -245,8 +248,11 @@ export default function Schedule() {
                             let scheduleStatus = currentScheduledItem.scheduleStatus;
 
                             scheduledItemDesc = scheduledItemPostDetails.postDescription;
+                            let isDraft =
+                                currentScheduledItem.scheduleStatus === PostStatus.draft &&
+                                currentScheduledItem.productId > 0;
 
-                            console.log(scheduledItemPostDetails.postDescription);
+                            console.log('isDraft', isDraft);
 
                             return (
                                 <div key={key}>
@@ -261,7 +267,7 @@ export default function Schedule() {
                                                 images={images}
                                                 scheduledItemImgUrls={scheduledItemImgUrls}
                                             />
-                                            <DiscountsPicker discountsArray={discountsArray} />
+                                            {/* <DiscountsPicker discountsArray={discountsArray} /> */}
                                             <TextArea
                                                 placeholders={customPlaceholder}
                                                 scheduledItemDesc={scheduledItemDesc}
@@ -282,6 +288,7 @@ export default function Schedule() {
                                                     a description for this product
                                                 </div>
                                             )}
+                                            {isDraft && <div>Successfully saved as draft</div>}
                                             <hr />
                                         </div>
                                     </fetcher.Form>

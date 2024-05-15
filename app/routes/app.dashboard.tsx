@@ -124,18 +124,23 @@ function Dashboard() {
                     </tr>
                 </thead>
                 {allFinishedJobs.map(
-                    (job: {
-                        id: string | undefined;
-                        name: string;
-                        imgUrl: string;
-                        postDescription: string;
-                        nextRunAt: Date | null;
-                        lastFinishedAt: Date | undefined;
-                        failedAt: Date | undefined;
-                    }) => {
-                        let lastFinishedAt = moment(job.lastFinishedAt);
+                    (
+                        job: {
+                            id: string | undefined;
+                            name: string;
+                            imgUrl: string;
+                            postDescription: string;
+                            nextRunAt: Date | null;
+                            lastFinishedAt: Date | undefined;
+                            failedAt: Date | undefined;
+                        },
+                        key: any
+                    ) => {
+                        let lastFinishedAt = moment(job.lastFinishedAt).format(
+                            'dddd, YYYY-MM-DD [at] hh:mma'
+                        );
                         return (
-                            <tr>
+                            <tr key={key}>
                                 <td>
                                     <img src={job.imgUrl} height="100" width="150" />
                                 </td>

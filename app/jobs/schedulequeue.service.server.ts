@@ -58,8 +58,6 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
         postStatus = PostStatus.draft
     } else if (scheduleStatus === PostStatus.scheduled) {
         postStatus = PostStatus.scheduled
-    } else if (scheduleStatus === PostStatus.posted) {
-        postStatus = PostStatus.posted
     }
 
     const postDetails = {
@@ -196,18 +194,15 @@ export class ScheduledQueueService {
     }
 
 
-    public async addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: string) {
+    public async addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: PostStatus) {
 
         let postImgUrlStr = postImgUrl.join(";")
 
-        scheduleStatus = "scheduled"
         let postStatus
         if (scheduleStatus === PostStatus.draft) {
             postStatus = PostStatus.draft
         } else if (scheduleStatus === PostStatus.scheduled) {
             postStatus = PostStatus.scheduled
-        } else if (scheduleStatus === PostStatus.posted) {
-            postStatus = PostStatus.posted
         }
 
         const postDetails = {

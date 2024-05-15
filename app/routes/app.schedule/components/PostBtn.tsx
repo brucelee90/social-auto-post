@@ -1,5 +1,3 @@
-import moment from 'moment';
-import { useState } from 'react';
 import DatePicker from '~/routes/ui.components/mediaqueue/DatePicker';
 import { Action, PostStatus } from '../../global_utils/enum';
 import { JobAction as BtnAction } from '../../global_utils/enum';
@@ -60,6 +58,7 @@ export function PostBtn(props: Props) {
                 <div>
                     <DatePicker name={`scheduled_date`} />
                     <input type="time" id="scheduled_time" required name={`scheduled_time`} />
+                    <Button action={BtnAction.draft} text="Save as draft" />
                 </div>
             )}
             <Button action={btnAction} text={btnText} />

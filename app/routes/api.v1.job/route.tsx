@@ -8,6 +8,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const jobAction = url.searchParams.get('job_action');
     let jobId = url.searchParams.get('job_id') as string;
     let shopName = url.searchParams.get('shop_name') as string;
+    let sessionId = url.searchParams.get('session_id') as string;
     let responseMessage: string;
 
     try {
@@ -28,7 +29,7 @@ export const loader: LoaderFunction = async ({ request }) => {
                 break;
 
             case JobAction.get:
-                let allJobs = await jobService.getAllfinishedJobs();
+                let allJobs = await jobService.getAllfinishedJobs(sessionId);
                 return allJobs;
 
                 break;
@@ -44,8 +45,8 @@ export const loader: LoaderFunction = async ({ request }) => {
                 break;
 
             default:
-                jobService.runScheduledJobsByDate(new Date());
-                responseMessage = 'scheduled Jobs run successfully';
+                // jobService.runScheduledJobsByDate(new Date());
+                responseMessage = 'No action';
                 break;
         }
 

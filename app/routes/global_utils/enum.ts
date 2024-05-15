@@ -8,6 +8,7 @@ export enum Action {
 export enum JobAction {
     schedule = 'schedule_job',
     cancel = 'cancel_job',
+    draft = 'save_draft',
     get = 'get_jobs',
     start = 'start_job_service'
 }
@@ -34,6 +35,5 @@ export enum PlaceholderVariable {
 
 export enum PostStatus {
     draft = "draft",
-    scheduled = "scheduled",
-    posted = "posted"
+    scheduled = "scheduled"
 }

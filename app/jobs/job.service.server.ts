@@ -100,9 +100,6 @@ const jobService = {
         }));
 
         return simplifiedJobs;
-
-
-        // return finishedJobs
     },
 
 

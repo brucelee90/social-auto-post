@@ -1,7 +1,7 @@
 import moment from "moment";
 import messageBrokerService from "~/jobs/messagingbroker.service.server";
 import postScheduleQueueService, { PlatformType, ScheduledQueueService, scheduledQueueService } from "~/jobs/schedulequeue.service.server";
-import { Action as MqAction } from '../global_utils/enum'
+import { Action as MqAction, PostStatus } from '../global_utils/enum'
 
 type MqMessageKeys = "action" | "productId" | "scheduledTime" | "sessionId";
 
@@ -49,7 +49,7 @@ const createActionMessage = (error: boolean, message: string, action: string, pr
     return obj
 }
 
-export const scheduleUtils: ScheduleUtils = {
+export const scheduleUtils = {
 
     scheduleJobFunc: (
         productId: string,
@@ -57,13 +57,14 @@ export const scheduleUtils: ScheduleUtils = {
         postImageUrl: string[],
         postDescription: string,
         sessionId: string,
-        scheduleStatus: string,
+        scheduleStatus: PostStatus,
         platform: PlatformType
     ) => {
 
-        let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, sessionId)
-        messageBrokerService.addItemToQueue(mqScheduleMessageJSON);
-
+        if (scheduleStatus === PostStatus.scheduled) {
+            let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, sessionId)
+            messageBrokerService.addItemToQueue(mqScheduleMessageJSON);
+        }
 
         new ScheduledQueueService(platform).addToPostScheduleQueue(
             productId,
@@ -73,15 +74,6 @@ export const scheduleUtils: ScheduleUtils = {
             sessionId,
             scheduleStatus
         );
-
-        // postScheduleQueueService.addToPostScheduleQueue(
-        //     productId,
-        //     scheduledPostDateTime,
-        //     postImageUrl,
-        //     postDescription,
-        //     sessionId,
-        //     "schedule"
-        // );
 
         console.log('post Product', productId, 'on', scheduledPostDateTime);
 
