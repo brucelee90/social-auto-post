@@ -109,4 +109,29 @@ export namespace shopSettingsService {
             },
         });
     }
+
+    export async function upsertFacebookAccessToken(shop: string, fbAccessToken: string) {
+
+        try {
+            await prisma.settings.upsert({
+                where: { id: shop },
+                update: { facebookAccessToken: fbAccessToken },
+                create: {
+                    id: shop,
+                    facebookAccessToken: fbAccessToken,
+                    session: {
+                        connect: {
+                            id: shop
+                        }
+                    }
+                },
+            });
+        } catch (error) {
+            console.log(error);
+            throw new Error("Could not create facebook Access Token")
+        }
+
+
+    }
+
 }

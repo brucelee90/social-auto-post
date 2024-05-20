@@ -12,6 +12,8 @@ import { Agenda, Job } from '@hokify/agenda';
 import jobService from '~/jobs/job.service.server';
 import moment from 'moment';
 import { InstagramPostDetails } from './global_utils/types';
+import checkLoginStatus, { handleFBLogin } from '../components/FacebookSDK';
+import { useEffect, useState } from 'react';
 
 interface IgRes {
     error: boolean;
@@ -34,7 +36,9 @@ function createApiResponse(
         message: message,
         igRes: igRes,
         allScheduledItems: allScheduledItems,
-        allFinishedJobs: allFinishedJobs
+        allFinishedJobs: allFinishedJobs,
+        FB_APP_ID: process.env.FB_APP_ID,
+        FB_APP_SECRET: process.env.FB_APP_SECRET
     };
 }
 
@@ -44,9 +48,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     let igRes;
 
     try {
-        const [sessionData, allFinishedJobs] = await Promise.all([
+        const [sessionData, allFinishedJobs, shopSettings] = await Promise.all([
             scheduledQueueService.getAllScheduledItems(sessionId),
-            jobService.getAllfinishedJobs(sessionId)
+            jobService.getAllfinishedJobs(sessionId),
+            shopSettingsService.getShopSettings(sessionId)
         ]);
 
         let serializedScheduledItems = sessionData.postScheduleQueue.map((item) => ({
@@ -79,24 +84,90 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 function Dashboard() {
-    const { igRes, allScheduledItems, allFinishedJobs } = useLoaderData<typeof loader>();
+    const { igRes, allScheduledItems, allFinishedJobs, FB_APP_ID, FB_APP_SECRET } =
+        useLoaderData<typeof loader>();
 
     let allScheduledItemsArr = [{}] as PostScheduleQueue[];
     if (allScheduledItems != undefined) {
         allScheduledItemsArr = JSON.parse(JSON.stringify(allScheduledItems)) as PostScheduleQueue[];
     }
 
+    const [status, setStatus] = useState<string | null>(null);
+    const [userData, setUserData] = useState<any>(null);
+    const [accessToken, setAccessToken] = useState<any>(null);
+
+    useEffect(() => {
+        let accessToken = localStorage.getItem('fbAccessToken');
+        setAccessToken(accessToken);
+        console.log(accessToken);
+    }, []);
+
+    const handleLogin = () => {
+        handleFBLogin(async (response) => {
+            console.log('----RESPONSE----:', response);
+
+            const shortLivedToken = response.authResponse.accessToken;
+            const longLivedToken = await exchangeForLongLivedToken(shortLivedToken);
+
+            // localStorage.setItem('fbAccessToken', longLivedToken);
+
+            const result = await fetch('/api/v1/accesstoken', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: {
+                        fbAccessToken: longLivedToken,
+                        sessionId: 'offline_l4-dev-shop.myshopify.com'
+                    }
+                })
+            });
+
+            const resultJson = await result.json();
+            console.log('Result:', resultJson);
+
+            if (response.status === 'connected') {
+                setStatus('Logged in');
+                fetchUserData();
+            } else {
+                setStatus('Not logged in');
+            }
+        });
+    };
+
+    const exchangeForLongLivedToken = async (shortLivedToken: string) => {
+        // const YOUR_APP_ID = '7494338054013588';
+        // const YOUR_APP_SECRET = 'c4e3594d348454f9fa3bc03319cd113b';
+
+        // console.log('FB APP ID', `${process.env.FB_APP_ID}`);
+
+        const response = await fetch(
+            `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${FB_APP_ID}&client_secret=${FB_APP_SECRET}&fb_exchange_token=${shortLivedToken}`
+        );
+        const data = await response.json();
+        return data.access_token;
+    };
+
+    const fetchUserData = () => {
+        window.FB.api('/me', { fields: 'name,email' }, function (response: any) {
+            setUserData(response);
+        });
+    };
+
     return (
         <>
+            status:
+            {accessToken}
+            {/* <button onClick={handleCheckStatus}>Check Facebook Login Status</button> */}
+            <button onClick={handleLogin}>Login with Facebook</button>
             <div>You are connected with: {igRes?.username} </div>
             <ul>
                 <li>{igRes?.followers_count} Follower</li>
                 <li>{igRes?.follows_count} Follows</li>
                 <li>{igRes?.media_count} Bilder hochgeladen</li>
             </ul>
-
             <hr />
-
             <div>Your Schedule Queue</div>
             <table>
                 <thead>
@@ -147,7 +218,6 @@ function Dashboard() {
                 )}
             </table>
             <hr />
-
             <div>ALL FINISHED JOBS:</div>
             <table>
                 <thead>

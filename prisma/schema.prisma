@@ -53,10 +53,11 @@ model InstagramQueue {
 }
 
 model Settings {
-  id                String              @id
-  customPlaceholder CustomPlaceholder[]
-  defaultCaption    DefaultCaption[]
-  session           Session? // optionaler Rückverweis auf Session
+  id                  String              @id
+  customPlaceholder   CustomPlaceholder[]
+  defaultCaption      DefaultCaption[]
+  session             Session?
+  facebookAccessToken String?             @db.Text
 }
 
 model CustomPlaceholder {

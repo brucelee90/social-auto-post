@@ -1,4 +1,5 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
+import FacebookSDK from './components/FacebookSDK';
 
 export default function App() {
     return (
@@ -18,6 +19,7 @@ export default function App() {
                 <Outlet />
                 <ScrollRestoration />
                 <LiveReload />
+                <FacebookSDK />
                 <Scripts />
             </body>
         </html>

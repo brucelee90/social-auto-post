@@ -23,6 +23,7 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
         const { product } = await fetchProductData(productId, sessionId);
         let shopSettings = await shopSettingsService.getShopSettings(sessionId)
         caption = textUtils.replacePlaceholders(caption, product, shopSettings?.settings?.customPlaceholder);
+        let accessToken = shopSettings?.settings?.facebookAccessToken
     } catch (error) {
         console.log("error while creating placeholders", productId, sessionId);
     }
