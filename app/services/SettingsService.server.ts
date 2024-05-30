@@ -110,15 +110,16 @@ export namespace shopSettingsService {
         });
     }
 
-    export async function upsertFacebookAccessToken(shop: string, fbAccessToken: string) {
+    export async function upsertFacebookAccessToken(shop: string, fbAccessToken: string, fbPageId: string) {
 
         try {
             await prisma.settings.upsert({
                 where: { id: shop },
-                update: { facebookAccessToken: fbAccessToken },
+                update: { facebookAccessToken: fbAccessToken, facebookPageId: fbPageId },
                 create: {
                     id: shop,
                     facebookAccessToken: fbAccessToken,
+                    facebookPageId: fbPageId,
                     session: {
                         connect: {
                             id: shop

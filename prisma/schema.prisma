@@ -58,6 +58,7 @@ model Settings {
   defaultCaption      DefaultCaption[]
   session             Session?
   facebookAccessToken String?             @db.Text
+  facebookPageId      String?             @default("")
 }
 
 model CustomPlaceholder {
