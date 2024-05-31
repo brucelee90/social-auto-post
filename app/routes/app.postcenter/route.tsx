@@ -1,10 +1,10 @@
 import { useState } from 'react';
 
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { Form, json, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, useActionData, useLoaderData, useNavigate } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
-import { Text } from '@shopify/polaris';
+import { Link, Text } from '@shopify/polaris';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
@@ -12,41 +12,53 @@ import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
-import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
+
+function createApiResponse(
+    error: boolean,
+    message: string,
+    allAvailableProducts: any = null,
+    allAvailableDiscounts: any = null,
+    allCollections: any = null,
+    shopSettings: any = null
+) {
+    return {
+        error: error,
+        message: message,
+        allAvailableProducts: allAvailableProducts,
+        allAvailableDiscounts: allAvailableDiscounts,
+        allCollections: allCollections,
+        customPlaceholder: shopSettings?.settings?.customPlaceholder,
+        defaultCaption: shopSettings?.settings?.defaultCaption,
+        fbAccessToken: shopSettings?.settings.facebookAccessToken,
+        fbPageId: shopSettings?.settings.facebookPageId
+    };
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
-    const { shop, id: sessionId } = session;
+    const { id: sessionId } = session;
 
     try {
-        const [allAvailableProducts, allAvailableDiscounts, allCollections] = await Promise.all([
-            admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
-            admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
-            admin.graphql(`${queries.getAllCollections}`).then((res) => res.json())
-        ]);
+        const [allAvailableProducts, allAvailableDiscounts, allCollections, shopSettings] =
+            await Promise.all([
+                admin.graphql(`${queries.getAllProducts}`).then((res) => res.json()),
+                admin.graphql(`${queries.queryAllDiscounts}`).then((res) => res.json()),
+                admin.graphql(`${queries.getAllCollections}`).then((res) => res.json()),
+                shopSettingsService.getShopSettings(sessionId)
+            ]);
 
-        let shopSettings = null;
-        try {
-            shopSettings = await shopSettingsService.getShopSettings(sessionId);
-        } catch (error) {
-            console.log('error while getting settings in postcenter');
-        }
+        console.log('SHOP SETTINGS', shopSettings);
 
-        return json({
-            allAvailableProducts: allAvailableProducts,
-            allAvailableDiscounts: allAvailableDiscounts,
-            allCollections: allCollections,
-            customPlaceholder: shopSettings?.settings?.customPlaceholder,
-            defaultCaption: shopSettings?.settings?.defaultCaption
-        });
+        return createApiResponse(
+            false,
+            '',
+            allAvailableProducts,
+            allAvailableDiscounts,
+            allCollections,
+            shopSettings
+        );
     } catch (error) {
-        return {
-            allAvailableProducts: null,
-            allAvailableDiscounts: null,
-            allCollections: null,
-            customPlaceholder: null,
-            defaultCaption: null
-        };
+        return createApiResponse(true, 'an error occured:' + error);
     }
 }
 
@@ -58,14 +70,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
     const productId = formData.get('product_id') as string;
+    const fbAccessToken = formData.get('fb_access_token') as string;
+    const fbPageId = formData.get('fb_page_id') as string;
     const publishAction = formData.getAll(Action.post) as string[];
     const codeDiscount = formData.get(PostForm.codeDiscount) as string;
 
     let description = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
 
+    console.log('WASSAM', fbAccessToken, fbPageId);
+
     try {
         if (publishAction.includes(PublishType.publishStory)) {
-            await instagramApiService.publishStoryMedia(imageUrl[0]);
+            await instagramApiService.publishStoryMedia(imageUrl[0], sessionId);
         } else if (publishAction.includes(PublishType.publishMedia)) {
             await instagramApiService.publishMedia(imageUrl, description, productId, sessionId);
         }
@@ -81,8 +97,14 @@ export default function PublishMedia() {
     const [searchString, setSearchString] = useState('');
     const actionData = useActionData<typeof action>();
 
-    const { allAvailableProducts, allAvailableDiscounts, customPlaceholder, allCollections } =
-        useLoaderData<typeof loader>();
+    const {
+        allAvailableProducts,
+        allAvailableDiscounts,
+        customPlaceholder,
+        allCollections,
+        fbAccessToken,
+        fbPageId
+    } = useLoaderData<typeof loader>();
 
     const productsArray = [...allAvailableProducts?.data?.products?.nodes];
     const collections = [...allCollections?.data?.collections?.nodes];
@@ -96,101 +118,136 @@ export default function PublishMedia() {
         setSearchString(searchString);
     };
 
+    const navigate = useNavigate();
+
     return (
         <div>
-            <div style={{ paddingBottom: '2rem' }}>
-                <select
-                    id="product_filter"
-                    onChange={(e) => handleCollectionFilter(e.target.value)}
-                >
-                    <option value="">Alle</option>
-                    {collections.map((collection: ICollection, index) => (
-                        <option key={index} value={collection.id}>
-                            {collection.title}
-                        </option>
-                    ))}
-                </select>
-                <input
-                    type="text"
-                    placeholder="Suche"
-                    value={searchString}
-                    onChange={(e) => handleSearchString(e.target.value)}
-                />
-            </div>
+            {!fbAccessToken || !fbPageId ? (
+                <>
+                    <p>Bitte verknüpfen Sie Ihren Facebook-Account. Gehen</p>
+                    <ui-nav-menu>
+                        <Link
+                            onClick={() => {
+                                navigate('/app/dashboard');
+                            }}
+                        >
+                            dashboard
+                        </Link>
+                    </ui-nav-menu>
+                </>
+            ) : (
+                <>
+                    <div style={{ paddingBottom: '2rem' }}>
+                        <select
+                            id="product_filter"
+                            onChange={(e) => handleCollectionFilter(e.target.value)}
+                        >
+                            <option value="">Alle</option>
+                            {collections.map((collection: ICollection, index) => (
+                                <option key={index} value={collection.id}>
+                                    {collection.title}
+                                </option>
+                            ))}
+                        </select>
+                        <input
+                            type="text"
+                            placeholder="Suche"
+                            value={searchString}
+                            onChange={(e) => handleSearchString(e.target.value)}
+                        />
+                    </div>
 
-            {productsArray &&
-                productsArray
-                    .filter((product: IShopifyProduct) => {
-                        const title = product.title.toLowerCase();
-                        const search = searchString.toLowerCase();
-                        return title.includes(search);
-                    })
-                    .filter((product: IShopifyProduct) => {
-                        if (collectionFilter === '') {
-                            return true;
-                        }
-                        return product.collections?.nodes?.find((collection) => {
-                            return collection?.id === collectionFilter;
-                        });
-                    })
-                    .map((product: IShopifyProduct, key) => {
-                        let productId = product.id;
-                        let images = product.images?.nodes;
-                        let title = product.title;
-                        let description = product.description;
+                    {productsArray &&
+                        productsArray
+                            .filter((product: IShopifyProduct) => {
+                                const title = product.title.toLowerCase();
+                                const search = searchString.toLowerCase();
+                                return title.includes(search);
+                            })
+                            .filter((product: IShopifyProduct) => {
+                                if (collectionFilter === '') {
+                                    return true;
+                                }
+                                return product.collections?.nodes?.find((collection) => {
+                                    return collection?.id === collectionFilter;
+                                });
+                            })
+                            .map((product: IShopifyProduct, key) => {
+                                let productId = product.id;
+                                let images = product.images?.nodes;
+                                let title = product.title;
+                                let description = product.description;
 
-                        return (
-                            <div key={key}>
-                                <Form method="post">
-                                    <input type="hidden" name="product_id" value={productId} />
+                                return (
+                                    <div key={key}>
+                                        <Form method="post">
+                                            <input
+                                                type="hidden"
+                                                name="product_id"
+                                                value={productId}
+                                            />
+                                            <input
+                                                type="hidden"
+                                                name="fb_access_token"
+                                                value={fbAccessToken != null ? fbAccessToken : ''}
+                                            />
 
-                                    <div key={key} id={productId}>
-                                        <Text variant="headingLg" as="h3">
-                                            {title}
-                                        </Text>
+                                            <input
+                                                type="hidden"
+                                                name="fb_page_id"
+                                                value={fbPageId != null ? fbPageId : ''}
+                                            />
 
-                                        <ImagePicker images={images} />
-                                        <DiscountsPicker discountsArray={discountsArray} />
-                                        <TextArea
-                                            placeholders={customPlaceholder}
-                                            product={product}
-                                            defaultCaption={undefined}
-                                        />
+                                            <div key={key} id={productId}>
+                                                <Text variant="headingLg" as="h3">
+                                                    {title}
+                                                </Text>
 
-                                        <div>
-                                            {images ? (
+                                                <ImagePicker images={images} />
+                                                <DiscountsPicker discountsArray={discountsArray} />
+                                                <TextArea
+                                                    placeholders={customPlaceholder}
+                                                    product={product}
+                                                    defaultCaption={undefined}
+                                                />
+
                                                 <div>
-                                                    <button
-                                                        type="submit"
-                                                        name={Action.post}
-                                                        value={PublishType.publishMedia}
-                                                    >
-                                                        PUBLISH MEDIA
-                                                    </button>
-                                                    <button
-                                                        type="submit"
-                                                        name={Action.post}
-                                                        value={PublishType.publishStory}
-                                                    >
-                                                        PUBLISH STORY
-                                                    </button>
-                                                    {actionData?.productId === productId && (
-                                                        <div>{actionData.message}</div>
+                                                    {images ? (
+                                                        <div>
+                                                            <button
+                                                                type="submit"
+                                                                name={Action.post}
+                                                                value={PublishType.publishMedia}
+                                                            >
+                                                                PUBLISH MEDIA
+                                                            </button>
+                                                            <button
+                                                                type="submit"
+                                                                name={Action.post}
+                                                                value={PublishType.publishStory}
+                                                            >
+                                                                PUBLISH STORY
+                                                            </button>
+                                                            {actionData?.productId ===
+                                                                productId && (
+                                                                <div>{actionData.message}</div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            This product can not be posted. Please
+                                                            make sure your product has an image
+                                                        </div>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <div>
-                                                    This product can not be posted. Please make sure
-                                                    your product has an image
-                                                </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        </Form>
+                                        <hr />
                                     </div>
-                                </Form>
-                                <hr />
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
+                </>
+            )}
         </div>
     );
 }

@@ -4,48 +4,53 @@ import { shopSettingsService } from '../services/SettingsService.server';
 import { fetchProductData } from '~/utils/product.utils';
 import textUtils from '~/utils/textUtils';
 
-
-
 interface InstagramApiService {
     publishMedia: (featuredImageUrl: string[], caption: string, prodId: string, shop: string) => Promise<void>
-    publishCarousel: (featuredImageUrl: string[], caption: string) => Promise<void>
-    publishStoryMedia: (image: string) => Promise<void>
+    publishCarousel: (featuredImageUrl: string[], caption: string, accessToken: string, pageId: string) => Promise<void>
+    publishStoryMedia: (image: string, sessionId: string) => Promise<void>
 }
 
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string
-const PAGE_ID = process.env.PAGE_ID as string
+// const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string
+// const PAGE_ID = process.env.PAGE_ID as string
 
 const instagramApiService = {} as InstagramApiService
 
 instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, sessionId: string) {
 
+    let accessToken = ""
+    let pageId = ""
+
     try {
         const { product } = await fetchProductData(productId, sessionId);
         let shopSettings = await shopSettingsService.getShopSettings(sessionId)
         caption = textUtils.replacePlaceholders(caption, product, shopSettings?.settings?.customPlaceholder);
-        let accessToken = shopSettings?.settings?.facebookAccessToken
+        accessToken = shopSettings?.settings?.facebookAccessToken as string
+        pageId = shopSettings?.settings?.facebookPageId as string
+        if (accessToken == null || pageId == null) {
+            throw new Error("accessToken or pageId is null or undefined");
+        }
     } catch (error) {
-        console.log("error while creating placeholders", productId, sessionId);
+        console.log("error while creating placeholders", productId, sessionId, "accessToken:", accessToken, "pageId:", pageId);
     }
 
     let featuredImageUrl = ""
     if (featuredImageUrlArray.length > 1) {
-        instagramApiService.publishCarousel(featuredImageUrlArray, caption)
+        instagramApiService.publishCarousel(featuredImageUrlArray, caption, accessToken, pageId)
         return
     } else {
         featuredImageUrl = featuredImageUrlArray[0]
     }
 
     try {
-        if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined && featuredImageUrl.length) {
-            const pagePhotoMediaRequest: PostPagePhotoMediaRequest = new PostPagePhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, featuredImageUrl, caption)
+        if (accessToken && pageId != undefined && featuredImageUrl.length) {
+            const pagePhotoMediaRequest: PostPagePhotoMediaRequest = new PostPagePhotoMediaRequest(accessToken, pageId, featuredImageUrl, caption)
             const containerId = await pagePhotoMediaRequest.execute();
-            const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
+            const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(accessToken, pageId, containerId.getData().id);
             publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e)
             )
         } else {
-            let accessTokenMessage = process.env.ACCESS_TOKEN === undefined ? "No Access Token available" : ""
-            let pageIdMessage = process.env.PAGE_ID === undefined ? "No Page ID available" : ""
+            let accessTokenMessage = accessToken === undefined ? "No Access Token available" : ""
+            let pageIdMessage = pageId === undefined ? "No Page ID available" : ""
             throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
         }
 
@@ -54,25 +59,25 @@ instagramApiService.publishMedia = async function (featuredImageUrlArray: string
     }
 };
 
-instagramApiService.publishCarousel = async function (images: string[], caption: string) {
+instagramApiService.publishCarousel = async function (images: string[], caption: string, accessToken: string, pageId: string) {
     let childContainerId: string[] = []
     try {
-        if ((ACCESS_TOKEN && PAGE_ID) != undefined) {
+        if ((accessToken && pageId) != undefined) {
             async function asyncCreateCarouselReq(imageUrl: string) {
-                let pagePhotoMediaRequest = new PostPagePhotoMediaRequest(ACCESS_TOKEN, PAGE_ID, imageUrl);
+                let pagePhotoMediaRequest = new PostPagePhotoMediaRequest(accessToken, pageId, imageUrl);
                 return await pagePhotoMediaRequest.execute()
             }
             let arr = images.map(async imageUrl => asyncCreateCarouselReq(imageUrl));
             Promise.all(arr).then(async (containerIds) => {
                 containerIds.map(e => childContainerId.push(e.getData().id))
-                const carouselRequest: PostPageCarouselMediaRequest = new PostPageCarouselMediaRequest(ACCESS_TOKEN, PAGE_ID, childContainerId, caption)
+                const carouselRequest: PostPageCarouselMediaRequest = new PostPageCarouselMediaRequest(accessToken, pageId, childContainerId, caption)
                 const containerId = await carouselRequest.execute()
-                const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(ACCESS_TOKEN, PAGE_ID, containerId.getData().id);
+                const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(accessToken, pageId, containerId.getData().id);
                 publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
             });
         } else {
-            let accessTokenMessage = process.env.ACCESS_TOKEN === undefined ? "No Access Token available" : ""
-            let pageIdMessage = process.env.PAGE_ID === undefined ? "No Page ID available" : ""
+            let accessTokenMessage = accessToken === undefined ? "No Access Token available" : ""
+            let pageIdMessage = pageId === undefined ? "No Page ID available" : ""
             throw new Error(`An error occured while posting: ${accessTokenMessage} ${pageIdMessage}`)
         }
     } catch (error) {
@@ -80,11 +85,26 @@ instagramApiService.publishCarousel = async function (images: string[], caption:
     }
 }
 
-instagramApiService.publishStoryMedia = async function (imageUrl: string) {
-    if (process.env.ACCESS_TOKEN && process.env.PAGE_ID != undefined) {
-        const storiesPhotoMediaReq: PostPageStoriesPhotoMediaRequest = new PostPageStoriesPhotoMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, imageUrl)
+instagramApiService.publishStoryMedia = async function (imageUrl: string, sessionId: string) {
+
+    let accessToken
+    let pageId
+    try {
+
+        let shopSettings = await shopSettingsService.getShopSettings(sessionId)
+        accessToken = shopSettings?.settings?.facebookAccessToken as string
+        pageId = shopSettings?.settings?.facebookPageId as string
+        if (accessToken == null || pageId == null) {
+            throw new Error("accessToken or pageId is null or undefined");
+        }
+    } catch (error) {
+        console.log("error while creating story", sessionId, "accessToken:", accessToken, "pageId:", pageId);
+    }
+
+    if (accessToken && pageId != undefined) {
+        const storiesPhotoMediaReq: PostPageStoriesPhotoMediaRequest = new PostPageStoriesPhotoMediaRequest(accessToken, pageId, imageUrl)
         const containerId = await storiesPhotoMediaReq.execute();
-        const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(process.env.ACCESS_TOKEN, process.env.PAGE_ID, containerId.getData().id);
+        const publishMediaRequest: PostPublishMediaRequest = new PostPublishMediaRequest(accessToken, pageId, containerId.getData().id);
         publishMediaRequest.execute().then(res => console.log('res:', res)).catch(e => console.log("Could not post", e))
     }
 }

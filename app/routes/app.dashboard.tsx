@@ -68,7 +68,7 @@ async function getFirstFacebookPage(fbAccessToken: string) {
         const facebookPage = await pagesResponse.getAuthorizedFacebookPages()[0].id;
         return facebookPage;
     } catch (error) {
-        console.log('DAMN, error in loader!!', error);
+        console.log('DAMN, error in getFirstFacebookPage', error);
     }
 }
 
