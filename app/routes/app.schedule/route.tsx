@@ -14,9 +14,9 @@ import { useState } from 'react';
 import { PostBtn } from './components/PostBtn';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
-import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
-import { PostScheduleQueue } from '@prisma/client';
+import { PostScheduleQueue, Settings } from '@prisma/client';
+import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
 
 export interface IApiResponse {
     action: string;
@@ -31,6 +31,29 @@ const getPostAction = (saveAsDraft: string) => {
     }
     return PostStatus.scheduled;
 };
+
+function createApiResponse(
+    error: boolean,
+    message: string,
+    res: any = null,
+    discountRes: any = null,
+    allCollections: any = null,
+    serializedScheduledItems: any = null,
+    shopSettings: any = null
+) {
+    return {
+        error: error,
+        message: message,
+        allAvailableProducts: res,
+        allAvailableDiscounts: discountRes,
+        allCollections: allCollections,
+        allScheduledItems: serializedScheduledItems,
+        customPlaceholder: shopSettings?.settings?.customPlaceholder,
+        defaultCaption: shopSettings?.settings?.defaultCaption,
+        fbAccessToken: (shopSettings?.settings as Settings)?.facebookAccessToken,
+        fbPageId: (shopSettings?.settings as Settings)?.facebookPageId
+    };
+}
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const { admin, session } = await authenticate.admin(request);
@@ -50,21 +73,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
             // scheduledQueueService.getAllScheduledItems(sessionId)
             new ScheduledQueueService('instagram').getAllScheduledItems(sessionId)
         ]);
-    } catch (error) {}
 
-    const serializedScheduledItems = sessionData?.postScheduleQueue.map((item) => ({
-        ...item,
-        productId: Number(item.productId)
-    }));
+        const serializedScheduledItems = sessionData?.postScheduleQueue.map((item) => ({
+            ...item,
+            productId: Number(item.productId)
+        }));
 
-    return json({
-        allAvailableProducts: res,
-        allAvailableDiscounts: discountRes,
-        customPlaceholder: shopSettings?.settings?.customPlaceholder,
-        defaultCaption: shopSettings?.settings?.defaultCaption,
-        allCollections: allCollections,
-        allScheduledItems: serializedScheduledItems
-    });
+        return createApiResponse(
+            false,
+            '',
+            res,
+            discountRes,
+            allCollections,
+            serializedScheduledItems,
+            shopSettings
+        );
+    } catch (error) {
+        console.log('an error occured while getting data' + error);
+        return createApiResponse(true, 'an error occured while getting data' + error);
+    }
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -134,7 +161,9 @@ export default function Schedule() {
         customPlaceholder,
         defaultCaption,
         allCollections,
-        allScheduledItems
+        allScheduledItems,
+        fbAccessToken,
+        fbPageId
     } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
 
@@ -169,136 +198,153 @@ export default function Schedule() {
                 <Text variant="heading2xl" as="h3">
                     Schedule
                 </Text>
+                {!fbAccessToken || !fbPageId ? (
+                    <AccountNotConnected />
+                ) : (
+                    <>
+                        <div>
+                            <div style={{ paddingBottom: '2rem' }}>
+                                <select
+                                    id="product_filter"
+                                    onChange={(e) => handleCollectionFilter(e.target.value)}
+                                >
+                                    <option value="">Alle</option>
+                                    {collections.map((collection: ICollection, index) => (
+                                        <option key={index} value={collection.id}>
+                                            {collection.title}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="text"
+                                    placeholder="Suche"
+                                    value={searchString}
+                                    onChange={(e) => handleSearchString(e.target.value)}
+                                />
+                            </div>
 
-                <div>
-                    <div style={{ paddingBottom: '2rem' }}>
-                        <select
-                            id="product_filter"
-                            onChange={(e) => handleCollectionFilter(e.target.value)}
-                        >
-                            <option value="">Alle</option>
-                            {collections.map((collection: ICollection, index) => (
-                                <option key={index} value={collection.id}>
-                                    {collection.title}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Suche"
-                            value={searchString}
-                            onChange={(e) => handleSearchString(e.target.value)}
-                        />
-                    </div>
+                            {productsArray
+                                .filter((product: IShopifyProduct) => {
+                                    const title = product.title.toLowerCase();
+                                    const search = searchString.toLowerCase();
+                                    return title.includes(search);
+                                })
+                                .filter((product: IShopifyProduct) => {
+                                    if (collectionFilter === '') {
+                                        return true;
+                                    }
+                                    return product.collections?.nodes?.find((collection) => {
+                                        return collection?.id === collectionFilter;
+                                    });
+                                })
+                                .map((e: IShopifyProduct, key) => {
+                                    let productIdArr = e.id.split('/');
+                                    let productId = productIdArr[productIdArr.length - 1];
+                                    let imageUrl = e.featuredImage?.url;
+                                    let images = e.images?.nodes;
 
-                    {productsArray
-                        .filter((product: IShopifyProduct) => {
-                            const title = product.title.toLowerCase();
-                            const search = searchString.toLowerCase();
-                            return title.includes(search);
-                        })
-                        .filter((product: IShopifyProduct) => {
-                            if (collectionFilter === '') {
-                                return true;
-                            }
-                            return product.collections?.nodes?.find((collection) => {
-                                return collection?.id === collectionFilter;
-                            });
-                        })
-                        .map((e: IShopifyProduct, key) => {
-                            let productIdArr = e.id.split('/');
-                            let productId = productIdArr[productIdArr.length - 1];
-                            let imageUrl = e.featuredImage?.url;
-                            let images = e.images?.nodes;
+                                    let isEligibleForScheduling = false;
+                                    if (productId !== undefined && imageUrl !== undefined) {
+                                        isEligibleForScheduling = true;
+                                    }
 
-                            let isEligibleForScheduling = false;
-                            if (productId !== undefined && imageUrl !== undefined) {
-                                isEligibleForScheduling = true;
-                            }
+                                    let currentScheduledItem = allScheduledItemsArr.find(
+                                        (item: PostScheduleQueue) =>
+                                            Number(item.productId) === Number(productId)
+                                    );
 
-                            let currentScheduledItem = allScheduledItemsArr.find(
-                                (item: PostScheduleQueue) =>
-                                    Number(item.productId) === Number(productId)
-                            );
+                                    let hasItemInScheduleQueue = true;
+                                    if (currentScheduledItem === undefined) {
+                                        hasItemInScheduleQueue = false;
+                                        currentScheduledItem = {
+                                            productId: BigInt(0),
+                                            dateScheduled: new Date(0),
+                                            postImgUrl: '',
+                                            postDescription: '',
+                                            shopName: '',
+                                            scheduleStatus: 'draft',
+                                            sessionId: null,
+                                            postDetails: '',
+                                            platform: ''
+                                        };
+                                    }
 
-                            let hasItemInScheduleQueue = true;
-                            if (currentScheduledItem === undefined) {
-                                hasItemInScheduleQueue = false;
-                                currentScheduledItem = {
-                                    productId: BigInt(0),
-                                    dateScheduled: new Date(0),
-                                    postImgUrl: '',
-                                    postDescription: '',
-                                    shopName: '',
-                                    scheduleStatus: 'draft',
-                                    sessionId: null,
-                                    postDetails: '',
-                                    platform: ''
-                                };
-                            }
+                                    let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
+                                        JSON.stringify(currentScheduledItem.postDetails)
+                                    );
 
-                            let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
-                                JSON.stringify(currentScheduledItem.postDetails)
-                            );
+                                    let scheduledItemDesc = currentScheduledItem.postDescription;
+                                    let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
 
-                            let scheduledItemDesc = currentScheduledItem.postDescription;
-                            let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
+                                    let scheduledDate = moment(
+                                        currentScheduledItem.dateScheduled
+                                    ).toISOString();
+                                    let scheduleStatus = currentScheduledItem.scheduleStatus;
 
-                            let scheduledDate = moment(
-                                currentScheduledItem.dateScheduled
-                            ).toISOString();
-                            let scheduleStatus = currentScheduledItem.scheduleStatus;
+                                    scheduledItemDesc = scheduledItemPostDetails.postDescription;
+                                    let isDraft =
+                                        currentScheduledItem.scheduleStatus === PostStatus.draft &&
+                                        currentScheduledItem.productId > 0;
 
-                            scheduledItemDesc = scheduledItemPostDetails.postDescription;
-                            let isDraft =
-                                currentScheduledItem.scheduleStatus === PostStatus.draft &&
-                                currentScheduledItem.productId > 0;
+                                    console.log('isDraft', isDraft);
 
-                            console.log('isDraft', isDraft);
-
-                            return (
-                                <div key={key}>
-                                    <fetcher.Form method="post" key={`${productId}`}>
-                                        <input type="hidden" name="product_id" value={productId} />
-                                        <input type="hidden" name="product_title" value={e.title} />
-                                        <div>
-                                            <Text variant="headingXl" as="h4">
-                                                {e.title}
-                                            </Text>
-
-                                            <ImagePicker
-                                                images={images}
-                                                scheduledItemImgUrls={scheduledItemImgUrls}
-                                            />
-                                            {/* <DiscountsPicker discountsArray={discountsArray} /> */}
-                                            <TextArea
-                                                placeholders={customPlaceholder}
-                                                scheduledItemDesc={scheduledItemDesc}
-                                                product={e}
-                                                defaultCaption={defaultCaptionContent}
-                                            />
-
-                                            {isEligibleForScheduling ? (
-                                                <PostBtn
-                                                    productId={productId}
-                                                    isScheduleSuccessfull={isScheduleSuccessfull}
-                                                    scheduledDate={scheduledDate}
-                                                    scheduleStatus={scheduleStatus}
+                                    return (
+                                        <div key={key}>
+                                            <fetcher.Form method="post" key={`${productId}`}>
+                                                <input
+                                                    type="hidden"
+                                                    name="product_id"
+                                                    value={productId}
                                                 />
-                                            ) : (
+                                                <input
+                                                    type="hidden"
+                                                    name="product_title"
+                                                    value={e.title}
+                                                />
                                                 <div>
-                                                    Please make sure that you have set an image and
-                                                    a description for this product
+                                                    <Text variant="headingXl" as="h4">
+                                                        {e.title}
+                                                    </Text>
+
+                                                    <ImagePicker
+                                                        images={images}
+                                                        scheduledItemImgUrls={scheduledItemImgUrls}
+                                                    />
+                                                    {/* <DiscountsPicker discountsArray={discountsArray} /> */}
+                                                    <TextArea
+                                                        placeholders={customPlaceholder}
+                                                        scheduledItemDesc={scheduledItemDesc}
+                                                        product={e}
+                                                        defaultCaption={defaultCaptionContent}
+                                                    />
+
+                                                    {isEligibleForScheduling ? (
+                                                        <PostBtn
+                                                            productId={productId}
+                                                            isScheduleSuccessfull={
+                                                                isScheduleSuccessfull
+                                                            }
+                                                            scheduledDate={scheduledDate}
+                                                            scheduleStatus={scheduleStatus}
+                                                        />
+                                                    ) : (
+                                                        <div>
+                                                            Please make sure that you have set an
+                                                            image and a description for this product
+                                                        </div>
+                                                    )}
+                                                    {isDraft && (
+                                                        <div>Successfully saved as draft</div>
+                                                    )}
+                                                    <hr />
                                                 </div>
-                                            )}
-                                            {isDraft && <div>Successfully saved as draft</div>}
-                                            <hr />
+                                            </fetcher.Form>
                                         </div>
-                                    </fetcher.Form>
-                                </div>
-                            );
-                        })}
-                </div>
+                                    );
+                                })}
+                        </div>
+                    </>
+                )}
             </div>
         );
     } catch (error) {

@@ -4,7 +4,7 @@ import {
     GetPageInfoRequest,
     PageField
 } from 'instagram-graph-api';
-import { Link, useLoaderData } from '@remix-run/react';
+import { Form, Link, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
@@ -20,6 +20,7 @@ import { InstagramPostDetails } from './global_utils/types';
 import checkLoginStatus, { handleFBLogin } from '../components/FacebookSDK';
 import { useEffect, useRef, useState } from 'react';
 import { ActionFunctionArgs } from '@remix-run/node';
+import { useSubmit } from '@remix-run/react';
 
 enum FormNames {
     fbAccessToken = 'fb_access_token',
@@ -139,16 +140,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+    const { sessionToken } = await authenticate.admin(request);
     const { id: sessionId } = (await authenticate.admin(request))?.session;
 
     const formData = await request.formData();
     const fbAccessToken = formData.get(FormNames.fbAccessToken) as string;
     const fbPageId = formData.get(FormNames.fbPageId) as string;
 
-    console.log('fbAccessToken', fbAccessToken, 'fbPageId', fbPageId);
+    console.log('fbAccessToken', fbAccessToken, 'fbPageId', fbPageId, 'sessionToken', sessionToken);
 
     try {
-        shopSettingsService.upsertFacebookAccessToken(sessionId, fbAccessToken, fbPageId);
+        await shopSettingsService.upsertFacebookAccessToken(sessionId, fbAccessToken, fbPageId);
     } catch (error) {
         console.log('DAS HAT NICHT FUNKTIONIERT', error);
     }
@@ -174,7 +176,7 @@ function Dashboard() {
     }
 
     const isUserFbAccountConnected = fbAccessToken !== '' && fbAccessToken !== null ? true : false;
-    const formRef = useRef<HTMLFormElement>(null);
+    const submit = useSubmit();
 
     const handleLogin = () => {
         handleFBLogin(async (response) => {
@@ -182,9 +184,6 @@ function Dashboard() {
 
             const shortLivedToken = response.authResponse.accessToken;
             const longLivedToken = await exchangeForLongLivedToken(shortLivedToken);
-
-            // Abrufen der Seiteninformationen
-            // const pages = await fetchUserPages(longLivedToken);
 
             let firstFacebookPage = (await getFirstFacebookPage(longLivedToken)) as string;
 
@@ -199,37 +198,24 @@ function Dashboard() {
 
             const fbPageId = await getInstagramAccountForPage(firstFacebookPage, longLivedToken);
 
-            if (formRef.current !== null) {
-                const fbAccessTokenInput = formRef.current.elements.namedItem(
-                    FormNames.fbAccessToken
-                ) as HTMLInputElement;
-                const fbPageIdInput = formRef.current.elements.namedItem(
-                    FormNames.fbPageId
-                ) as HTMLInputElement;
-                const sessionIdInput = formRef.current.elements.namedItem(
-                    'sessionId'
-                ) as HTMLInputElement;
+            console.log({
+                fbAccessTokenInput: longLivedToken,
+                sessionIdInput: sessionId,
+                fbPageId: fbPageId
+            });
 
-                console.log({
-                    fbAccessTokenInput: longLivedToken,
-                    sessionIdInput: sessionId,
-                    fbPageId: fbPageId
-                });
+            console.log('POST FORM', {
+                longLivedToken: longLivedToken,
+                sessionId: sessionId,
+                fbPageId: fbPageId
+            });
 
-                console.log('POST FORM', {
-                    longLivedToken: longLivedToken,
-                    sessionId: sessionId,
-                    fbPageId: fbPageId
-                });
-
-                if (longLivedToken && sessionId && fbPageId) {
-                    fbAccessTokenInput.value = longLivedToken;
-                    fbPageIdInput.value = fbPageId;
-                    sessionIdInput.value = sessionId;
-                    console.log('SUBMITTING!!!');
-
-                    formRef.current.submit();
-                }
+            if (longLivedToken && sessionId && fbPageId) {
+                const formData = new FormData();
+                formData.append('fb_access_token', longLivedToken);
+                formData.append('fb_page_id', fbPageId);
+                formData.append('sessionId', sessionId);
+                submit(formData, { method: 'post' });
             }
         });
     };
@@ -253,7 +239,7 @@ function Dashboard() {
             `https://graph.facebook.com/v19.0/me/accounts?access_token=${accessToken}`
         );
         const data = await response.json();
-        return data.data; // Rückgabe der Seiteninformationen
+        return data.data;
     };
 
     return (
@@ -262,11 +248,6 @@ function Dashboard() {
                 <div>
                     status: not connected
                     <button onClick={handleLogin}>Login with Facebook</button>
-                    <form ref={formRef} method="post" style={{ display: 'none' }}>
-                        <input type="hidden" name={FormNames.fbAccessToken} />
-                        <input type="hidden" name={FormNames.fbPageId} />
-                        <input type="hidden" name="sessionId" />
-                    </form>
                     <hr />
                 </div>
             )}
@@ -274,11 +255,6 @@ function Dashboard() {
                 <div>
                     status: connected
                     <button onClick={handleLogin}>Reconfigure Facebook Connection</button>
-                    <form ref={formRef} method="post" style={{ display: 'none' }}>
-                        <input type="hidden" name={FormNames.fbAccessToken} />
-                        <input type="hidden" name={FormNames.fbPageId} />
-                        <input type="hidden" name="sessionId" />
-                    </form>
                     <hr />
                     <div>You are connected with: {igRes?.username} </div>
                     <ul>

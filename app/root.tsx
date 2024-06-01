@@ -1,5 +1,11 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/react';
 import FacebookSDK from './components/FacebookSDK';
+import type { LinksFunction } from '@remix-run/node';
+import { cssBundleHref } from '@remix-run/css-bundle';
+
+export const links: LinksFunction = () => {
+    return [...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : [])];
+};
 
 export default function App() {
     return (

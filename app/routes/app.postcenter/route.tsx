@@ -1,10 +1,9 @@
 import { useState } from 'react';
-
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { Form, useActionData, useLoaderData, useNavigate } from '@remix-run/react';
+import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
-import { Link, Text } from '@shopify/polaris';
+import { Text } from '@shopify/polaris';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
@@ -12,6 +11,7 @@ import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
 import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
+import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
 
 function createApiResponse(
     error: boolean,
@@ -47,8 +47,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
                 shopSettingsService.getShopSettings(sessionId)
             ]);
 
-        console.log('SHOP SETTINGS', shopSettings);
-
         return createApiResponse(
             false,
             '',
@@ -64,22 +62,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const { session } = await authenticate.admin(request);
+    const { session, redirect } = await authenticate.admin(request);
     const { id: sessionId } = session;
 
     const imageUrl = formData.getAll(PostForm.imgUrl) as string[];
     const postDescription = formData.get(PostForm.description) as string;
     const productId = formData.get('product_id') as string;
-    const fbAccessToken = formData.get('fb_access_token') as string;
-    const fbPageId = formData.get('fb_page_id') as string;
+    // const fbAccessToken = formData.get('fb_access_token') as string;
+    // const fbPageId = formData.get('fb_page_id') as string;
     const publishAction = formData.getAll(Action.post) as string[];
     const codeDiscount = formData.get(PostForm.codeDiscount) as string;
 
-    let description = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
-
-    console.log('WASSAM', fbAccessToken, fbPageId);
-
     try {
+        let description = postDescription.replace(PlaceholderVariable.codeDiscount, codeDiscount);
         if (publishAction.includes(PublishType.publishStory)) {
             await instagramApiService.publishStoryMedia(imageUrl[0], sessionId);
         } else if (publishAction.includes(PublishType.publishMedia)) {
@@ -88,7 +83,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
         return { message: 'PUBLISHED SUCCESFULLY !', error: false, productId: productId };
     } catch (error) {
-        return { message: `${error}`, error: true, productId: productId };
+        return { message: `error`, error: true, productId: productId };
     }
 };
 
@@ -118,23 +113,15 @@ export default function PublishMedia() {
         setSearchString(searchString);
     };
 
-    const navigate = useNavigate();
-
     return (
         <div>
+            <Text variant="heading2xl" as="h3">
+                Postcenter
+            </Text>
             {!fbAccessToken || !fbPageId ? (
-                <>
-                    <p>Bitte verknüpfen Sie Ihren Facebook-Account. Gehen</p>
-                    <ui-nav-menu>
-                        <Link
-                            onClick={() => {
-                                navigate('/app/dashboard');
-                            }}
-                        >
-                            dashboard
-                        </Link>
-                    </ui-nav-menu>
-                </>
+                <div>
+                    <AccountNotConnected />
+                </div>
             ) : (
                 <>
                     <div style={{ paddingBottom: '2rem' }}>
