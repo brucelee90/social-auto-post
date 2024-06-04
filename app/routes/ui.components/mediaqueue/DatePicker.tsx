@@ -2,20 +2,22 @@ import moment from 'moment';
 import React, { useState } from 'react';
 
 interface Props {
-    // selectedDate: string;
-    // minDate: string;
-    // maxDate: string;
-    // handleDateSelect: (e: any) => void;
     name: string;
+    defaultValue: string;
 }
 
 function DatePicker(props: Props) {
-    const { name } = props;
+    let { name, defaultValue } = props;
 
     const minDate = moment().format('YYYY-MM-DD');
     const maxDate = moment().add(3, 'months').format('YYYY-MM-DD');
 
-    const [selectedDate, setselectedDate] = useState(minDate);
+    if (defaultValue === '' || defaultValue === undefined) {
+        // set defaultValue to min date if nothing else is defined
+        defaultValue = minDate;
+    }
+
+    const [selectedDate, setselectedDate] = useState(defaultValue);
 
     const handleDateSelect = (e: any) => {
         setselectedDate(e.target.value);

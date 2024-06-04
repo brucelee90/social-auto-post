@@ -3,6 +3,7 @@ import { Action, PostStatus } from '../../global_utils/enum';
 import { JobAction as BtnAction } from '../../global_utils/enum';
 import { useFetcher } from '@remix-run/react';
 import { IApiResponse } from '../route';
+import moment from 'moment';
 
 interface ButtonProps {
     action: string;
@@ -51,13 +52,27 @@ export function PostBtn(props: Props) {
         btnText = 'Retry Schedule';
     }
 
+    let formattedScheduledDate = '';
+    let formattedScheduledTime = '';
+
+    if (moment().isBefore(scheduledDate)) {
+        formattedScheduledDate = moment(scheduledDate).format('YYYY-MM-DD');
+        formattedScheduledTime = moment(scheduledDate).format('hh:mm');
+    }
+
     return (
         <div>
             <div>{actionMessage}</div>
             {!isProductScheduled && (
                 <div>
-                    <DatePicker name={`scheduled_date`} />
-                    <input type="time" id="scheduled_time" required name={`scheduled_time`} />
+                    <DatePicker name={`scheduled_date`} defaultValue={formattedScheduledDate} />
+                    <input
+                        type="time"
+                        id="scheduled_time"
+                        required
+                        name={`scheduled_time`}
+                        defaultValue={formattedScheduledTime}
+                    />
                     <Button action={BtnAction.draft} text="Save as draft" />
                 </div>
             )}

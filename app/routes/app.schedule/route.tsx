@@ -6,11 +6,11 @@ import moment from 'moment';
 import { ScheduledQueueService } from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
-import { scheduleUtils } from './scheduleUtils';
+import { ActionMessage, scheduleUtils } from './scheduleUtils';
 import { JobAction, PlaceholderVariable, PostForm, PostStatus } from '../global_utils/enum';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
-import { useState } from 'react';
+import { ErrorInfo, useState } from 'react';
 import { PostBtn } from './components/PostBtn';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import TextArea from '~/routes/ui.components/PostRow/TextArea';
@@ -118,7 +118,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     try {
         if (postImageUrl.length === 0) {
-            throw new Error();
+            throw new Error('please select an image');
         } else if (scheduleJob || saveAsDraft) {
             return scheduleUtils.scheduleJobFunc(
                 productId,
@@ -134,7 +134,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             return scheduleUtils.cancelJobFunc(productId);
         }
     } catch (error) {
-        return scheduleUtils.errorMessage(productId);
+        return scheduleUtils.errorMessage(productId, (error as { message: string }).message);
     }
 };
 
@@ -286,8 +286,6 @@ export default function Schedule() {
                                         currentScheduledItem.scheduleStatus === PostStatus.draft &&
                                         currentScheduledItem.productId > 0;
 
-                                    console.log('isDraft', isDraft);
-
                                     return (
                                         <div key={key}>
                                             <fetcher.Form method="post" key={`${productId}`}>
@@ -301,23 +299,22 @@ export default function Schedule() {
                                                     name="product_title"
                                                     value={e.title}
                                                 />
+                                                {isDraft && <div>saved as draft</div>}
                                                 <div>
                                                     <Text variant="headingXl" as="h4">
                                                         {e.title}
                                                     </Text>
-
                                                     <ImagePicker
                                                         images={images}
                                                         scheduledItemImgUrls={scheduledItemImgUrls}
                                                     />
-                                                    {/* <DiscountsPicker discountsArray={discountsArray} /> */}
+
                                                     <TextArea
                                                         placeholders={customPlaceholder}
                                                         scheduledItemDesc={scheduledItemDesc}
                                                         product={e}
                                                         defaultCaption={defaultCaptionContent}
                                                     />
-
                                                     {isEligibleForScheduling ? (
                                                         <PostBtn
                                                             productId={productId}
@@ -333,9 +330,18 @@ export default function Schedule() {
                                                             image and a description for this product
                                                         </div>
                                                     )}
-                                                    {isDraft && (
-                                                        <div>Successfully saved as draft</div>
+
+                                                    {(fetcher?.data as ActionMessage)?.productId ===
+                                                        productId && (
+                                                        <div style={{ color: 'red' }}>
+                                                            Draft could not be saved:{' '}
+                                                            {
+                                                                (fetcher?.data as ActionMessage)
+                                                                    .message
+                                                            }
+                                                        </div>
                                                     )}
+
                                                     <hr />
                                                 </div>
                                             </fetcher.Form>

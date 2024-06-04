@@ -5,7 +5,7 @@ import { Action as MqAction, PostStatus } from '../global_utils/enum'
 
 type MqMessageKeys = "action" | "productId" | "scheduledTime" | "sessionId";
 
-interface ActionMessage { error: boolean, message: string, action: string, productId: string }
+export interface ActionMessage { error: boolean, message: string, action: string, productId: string }
 
 export interface ScheduleAction {
     error: boolean,
@@ -60,12 +60,18 @@ export const scheduleUtils = {
         postDescription: string,
         sessionId: string,
         scheduleStatus: PostStatus,
-        platform: PlatformType
+        platform: PlatformType,
+        message: any = null
     ) => {
+
 
         if (scheduleStatus === PostStatus.scheduled) {
             let mqScheduleMessageJSON = createMqMessageJson(MqAction.schedule, productId, scheduledPostDateTime, sessionId)
             messageBrokerService.addItemToQueue(mqScheduleMessageJSON);
+            message = `Set to be scheduled on ${moment(scheduledPostDateTime).format('YYYY MM DD')} at ${moment(scheduledPostDateTime).format('hh:mm')}`
+            console.log('post Product', productId, 'on', scheduledPostDateTime);
+        } else if (scheduleStatus === PostStatus.draft) {
+            message = `successfully saved as draft`
         }
 
         new ScheduledQueueService(platform).addToPostScheduleQueue(
@@ -78,9 +84,6 @@ export const scheduleUtils = {
             scheduleStatus
         );
 
-        console.log('post Product', productId, 'on', scheduledPostDateTime);
-
-        let message = `Set to be scheduled on ${moment(scheduledPostDateTime).format('YYYY MM DD')} at ${moment(scheduledPostDateTime).format('hh:mm')}`
         let actionMessage = createActionMessage(false, message, MqAction.schedule, productId)
 
         return actionMessage
@@ -106,8 +109,10 @@ export const scheduleUtils = {
 
     },
 
-    errorMessage: (productId: string) => {
-        let message = "This action did not work. please try again"
+    errorMessage: (productId: string, message: any = null) => {
+        if (message == null) {
+            message = "This action did not work. please try again"
+        }
         let actionMessage = createActionMessage(true, message, MqAction.error, productId)
         return actionMessage
     }
