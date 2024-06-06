@@ -12,7 +12,7 @@ import { shopSettingsService } from '~/services/SettingsService.server';
 import { getDefaultCaptionContent } from '../app.settings/components/DefaultCaptionForm';
 import { ErrorInfo, useState } from 'react';
 import { PostBtn } from './components/PostBtn';
-import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
+import ImagePicker from '~/routes/ui.components/ImagePicker/ImagePicker';
 import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
 import { PostScheduleQueue, Settings } from '@prisma/client';

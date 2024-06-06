@@ -6,7 +6,7 @@ import { queries } from '~/utils/queries';
 import { Text } from '@shopify/polaris';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
-import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
+import ImagePicker from '~/routes/ui.components/ImagePicker/ImagePicker';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
