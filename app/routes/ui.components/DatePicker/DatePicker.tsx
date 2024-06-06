@@ -1,5 +1,6 @@
 import moment from 'moment';
 import React, { useState } from 'react';
+import styles from './DatePicker.module.css';
 
 interface Props {
     name: string;
@@ -25,6 +26,7 @@ function DatePicker(props: Props) {
 
     return (
         <input
+            className={`${styles.date_picker} w-50 form-control me-3`}
             type="date"
             id="scheduled_date"
             name={name}

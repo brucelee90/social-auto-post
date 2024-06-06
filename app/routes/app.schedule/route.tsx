@@ -1,7 +1,7 @@
 import { ActionFunctionArgs } from '@remix-run/node';
 import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
-import { Text } from '@shopify/polaris';
+import { Badge, BlockStack, Box, Card, Layout, Page, Select, Text } from '@shopify/polaris';
 import moment from 'moment';
 import { ScheduledQueueService } from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
@@ -13,7 +13,7 @@ import { getDefaultCaptionContent } from '../app.settings/components/DefaultCapt
 import { ErrorInfo, useState } from 'react';
 import { PostBtn } from './components/PostBtn';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
-import TextArea from '~/routes/ui.components/PostRow/TextArea';
+import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
 import { PostScheduleQueue, Settings } from '@prisma/client';
 import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
@@ -194,39 +194,49 @@ export default function Schedule() {
         const fetcher = useFetcher();
 
         return (
-            <div>
-                <Text variant="heading2xl" as="h3">
-                    Schedule
-                </Text>
+            <Page fullWidth>
+                <div className="pb-4">
+                    <Text variant="heading2xl" as="h3">
+                        Schedule
+                    </Text>
+                </div>
+
                 {!fbAccessToken || !fbPageId ? (
                     <AccountNotConnected />
                 ) : (
                     <>
-                        <div>
-                            <div style={{ paddingBottom: '2rem' }}>
+                        <div className="row g-4 w-50" style={{ paddingBottom: '2rem' }}>
+                            <div className="col">
                                 <select
+                                    className="form-select col"
                                     id="product_filter"
                                     onChange={(e) => handleCollectionFilter(e.target.value)}
                                 >
-                                    <option value="">Alle</option>
+                                    <option value="">All</option>
                                     {collections.map((collection: ICollection, index) => (
                                         <option key={index} value={collection.id}>
                                             {collection.title}
                                         </option>
                                     ))}
                                 </select>
+                            </div>
+                            <div className="col ">
                                 <input
+                                    className="form-control col"
                                     type="text"
-                                    placeholder="Suche"
+                                    placeholder="Search"
                                     value={searchString}
                                     onChange={(e) => handleSearchString(e.target.value)}
                                 />
                             </div>
+                        </div>
 
+                        <BlockStack gap="600">
                             {productsArray
                                 .filter((product: IShopifyProduct) => {
                                     const title = product.title.toLowerCase();
                                     const search = searchString.toLowerCase();
+
                                     return title.includes(search);
                                 })
                                 .filter((product: IShopifyProduct) => {
@@ -286,8 +296,11 @@ export default function Schedule() {
                                         currentScheduledItem.scheduleStatus === PostStatus.draft &&
                                         currentScheduledItem.productId > 0;
 
+                                    console.log('test e', e);
+
                                     return (
-                                        <div key={key}>
+                                        <Card key={key} padding={'800'}>
+                                            {/* <div className="container-fluid"> */}
                                             <fetcher.Form method="post" key={`${productId}`}>
                                                 <input
                                                     type="hidden"
@@ -299,7 +312,13 @@ export default function Schedule() {
                                                     name="product_title"
                                                     value={e.title}
                                                 />
-                                                {isDraft && <div>saved as draft</div>}
+                                                {isDraft && (
+                                                    <div className="pb-2">
+                                                        <Badge tone="attention">
+                                                            saved as draft
+                                                        </Badge>
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <Text variant="headingXl" as="h4">
                                                         {e.title}
@@ -333,27 +352,35 @@ export default function Schedule() {
 
                                                     {(fetcher?.data as ActionMessage)?.productId ===
                                                         productId && (
-                                                        <div style={{ color: 'red' }}>
-                                                            Draft could not be saved:{' '}
+                                                        <Text
+                                                            as="p"
+                                                            tone={`${(fetcher?.data as ActionMessage)?.error === true ? 'critical' : 'success'}`}
+                                                        >
+                                                            {(fetcher?.data as ActionMessage)
+                                                                ?.error === true ? (
+                                                                <span>
+                                                                    Draft could not be saved:{' '}
+                                                                </span>
+                                                            ) : (
+                                                                ''
+                                                            )}
                                                             {
                                                                 (fetcher?.data as ActionMessage)
                                                                     .message
                                                             }
-                                                        </div>
+                                                        </Text>
                                                     )}
-
-                                                    <hr />
                                                 </div>
                                             </fetcher.Form>
-                                        </div>
+                                        </Card>
                                     );
                                 })}
-                        </div>
+                        </BlockStack>
                     </>
                 )}
-            </div>
+            </Page>
         );
     } catch (error) {
-        return <div>There are no items to be scheduled </div>;
+        return <Page>There are no items to be scheduled </Page>;
     }
 }

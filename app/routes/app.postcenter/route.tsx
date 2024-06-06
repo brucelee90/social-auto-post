@@ -8,7 +8,7 @@ import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
-import TextArea from '~/routes/ui.components/PostRow/TextArea';
+import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';

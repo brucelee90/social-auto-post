@@ -3,7 +3,7 @@ import { Text } from '@shopify/polaris';
 import { PostBtn } from './PostBtn';
 import { TSMap } from 'typescript-map';
 import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
-import TextArea from '~/routes/ui.components/PostRow/TextArea';
+import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
 import { useState } from 'react';
