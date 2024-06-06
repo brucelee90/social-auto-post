@@ -5,7 +5,7 @@ import { useFetcher } from '@remix-run/react';
 import { IApiResponse } from '../route';
 import moment from 'moment';
 import TimePicker from '~/routes/ui.components/TimePicker/TimePicker';
-import { Text } from '@shopify/polaris';
+import { BlockStack, Text } from '@shopify/polaris';
 
 interface ButtonProps {
     action: string;
@@ -64,22 +64,22 @@ export function PostBtn(props: Props) {
     }
 
     return (
-        <div>
+        <>
             <div>{actionMessage}</div>
             {!isProductScheduled && (
-                <>
+                <BlockStack gap={'200'}>
                     <div className="pb-1">
                         <Text variant="headingSm" as="h6">
                             Please select a Date and Time For Scheduling
                         </Text>
                     </div>
-                    <div className="d-flex w-50 pb-2">
+                    <div className="d-flex w-50 ">
                         <DatePicker name={`scheduled_date`} defaultValue={formattedScheduledDate} />
                         <TimePicker name="scheduled_time" defaultValue={formattedScheduledTime} />
                     </div>
-                </>
+                </BlockStack>
             )}
-            <div className="">
+            <div className="pt-5">
                 <Button
                     className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3"
                     action={btnAction}
@@ -87,12 +87,12 @@ export function PostBtn(props: Props) {
                 />
 
                 <Button
-                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantPlain Polaris-Button--sizeMedium Polaris-Button--textAlignCenter"
+                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter"
                     action={BtnAction.draft}
                     text="Save as draft"
                 />
             </div>
-        </div>
+        </>
     );
 }
 

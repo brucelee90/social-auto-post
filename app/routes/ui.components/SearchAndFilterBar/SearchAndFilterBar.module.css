@@ -1,0 +1,4 @@
+.filter_bar select,
+.filter_bar input {
+    font-size: var(--p-font-size-325);
+}

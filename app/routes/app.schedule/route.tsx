@@ -17,6 +17,7 @@ import TextArea from '~/routes/ui.components/TextArea/TextArea';
 import { ICollection, IShopifyProduct, InstagramPostDetails } from '~/routes/global_utils/types';
 import { PostScheduleQueue, Settings } from '@prisma/client';
 import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
+import SearchAndFilterBar from '../ui.components/SearchAndFilterBar/SearchAndFilterBar';
 
 export interface IApiResponse {
     action: string;
@@ -194,146 +195,128 @@ export default function Schedule() {
         const fetcher = useFetcher();
 
         return (
-            <Page fullWidth>
-                <div className="pb-4">
-                    <Text variant="heading2xl" as="h3">
-                        Schedule
-                    </Text>
-                </div>
-
+            <Page
+                fullWidth
+                title="Schedule"
+                primaryAction={
+                    <SearchAndFilterBar
+                        collections={collections}
+                        searchString={searchString}
+                        handleCollectionFilter={handleCollectionFilter}
+                        handleSearchString={handleSearchString}
+                    />
+                }
+            >
                 {!fbAccessToken || !fbPageId ? (
                     <AccountNotConnected />
                 ) : (
-                    <>
-                        <div className="row g-4 w-50" style={{ paddingBottom: '2rem' }}>
-                            <div className="col">
-                                <select
-                                    className="form-select col"
-                                    id="product_filter"
-                                    onChange={(e) => handleCollectionFilter(e.target.value)}
-                                >
-                                    <option value="">All</option>
-                                    {collections.map((collection: ICollection, index) => (
-                                        <option key={index} value={collection.id}>
-                                            {collection.title}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="col ">
-                                <input
-                                    className="form-control col"
-                                    type="text"
-                                    placeholder="Search"
-                                    value={searchString}
-                                    onChange={(e) => handleSearchString(e.target.value)}
-                                />
-                            </div>
-                        </div>
+                    <BlockStack gap="600">
+                        {productsArray
+                            .filter((product: IShopifyProduct) => {
+                                const title = product.title.toLowerCase();
+                                const search = searchString.toLowerCase();
 
-                        <BlockStack gap="600">
-                            {productsArray
-                                .filter((product: IShopifyProduct) => {
-                                    const title = product.title.toLowerCase();
-                                    const search = searchString.toLowerCase();
+                                return title.includes(search);
+                            })
+                            .filter((product: IShopifyProduct) => {
+                                if (collectionFilter === '') {
+                                    return true;
+                                }
+                                return product.collections?.nodes?.find((collection) => {
+                                    return collection?.id === collectionFilter;
+                                });
+                            })
+                            .map((e: IShopifyProduct, key) => {
+                                let productIdArr = e.id.split('/');
+                                let productId = productIdArr[productIdArr.length - 1];
+                                let imageUrl = e.featuredImage?.url;
+                                let images = e.images?.nodes;
 
-                                    return title.includes(search);
-                                })
-                                .filter((product: IShopifyProduct) => {
-                                    if (collectionFilter === '') {
-                                        return true;
-                                    }
-                                    return product.collections?.nodes?.find((collection) => {
-                                        return collection?.id === collectionFilter;
-                                    });
-                                })
-                                .map((e: IShopifyProduct, key) => {
-                                    let productIdArr = e.id.split('/');
-                                    let productId = productIdArr[productIdArr.length - 1];
-                                    let imageUrl = e.featuredImage?.url;
-                                    let images = e.images?.nodes;
+                                let isEligibleForScheduling = false;
+                                if (productId !== undefined && imageUrl !== undefined) {
+                                    isEligibleForScheduling = true;
+                                }
 
-                                    let isEligibleForScheduling = false;
-                                    if (productId !== undefined && imageUrl !== undefined) {
-                                        isEligibleForScheduling = true;
-                                    }
+                                let currentScheduledItem = allScheduledItemsArr.find(
+                                    (item: PostScheduleQueue) =>
+                                        Number(item.productId) === Number(productId)
+                                );
 
-                                    let currentScheduledItem = allScheduledItemsArr.find(
-                                        (item: PostScheduleQueue) =>
-                                            Number(item.productId) === Number(productId)
-                                    );
+                                let hasItemInScheduleQueue = true;
+                                if (currentScheduledItem === undefined) {
+                                    hasItemInScheduleQueue = false;
+                                    currentScheduledItem = {
+                                        productId: BigInt(0),
+                                        dateScheduled: new Date(0),
+                                        postImgUrl: '',
+                                        postDescription: '',
+                                        shopName: '',
+                                        scheduleStatus: 'draft',
+                                        sessionId: null,
+                                        postDetails: '',
+                                        platform: ''
+                                    };
+                                }
 
-                                    let hasItemInScheduleQueue = true;
-                                    if (currentScheduledItem === undefined) {
-                                        hasItemInScheduleQueue = false;
-                                        currentScheduledItem = {
-                                            productId: BigInt(0),
-                                            dateScheduled: new Date(0),
-                                            postImgUrl: '',
-                                            postDescription: '',
-                                            shopName: '',
-                                            scheduleStatus: 'draft',
-                                            sessionId: null,
-                                            postDetails: '',
-                                            platform: ''
-                                        };
-                                    }
+                                let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
+                                    JSON.stringify(currentScheduledItem.postDetails)
+                                );
 
-                                    let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
-                                        JSON.stringify(currentScheduledItem.postDetails)
-                                    );
+                                let scheduledItemDesc = currentScheduledItem.postDescription;
+                                let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
 
-                                    let scheduledItemDesc = currentScheduledItem.postDescription;
-                                    let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
+                                let scheduledDate = moment(
+                                    currentScheduledItem.dateScheduled
+                                ).toISOString();
+                                let scheduleStatus = currentScheduledItem.scheduleStatus;
 
-                                    let scheduledDate = moment(
-                                        currentScheduledItem.dateScheduled
-                                    ).toISOString();
-                                    let scheduleStatus = currentScheduledItem.scheduleStatus;
+                                scheduledItemDesc = scheduledItemPostDetails.postDescription;
+                                let isDraft =
+                                    currentScheduledItem.scheduleStatus === PostStatus.draft &&
+                                    currentScheduledItem.productId > 0;
 
-                                    scheduledItemDesc = scheduledItemPostDetails.postDescription;
-                                    let isDraft =
-                                        currentScheduledItem.scheduleStatus === PostStatus.draft &&
-                                        currentScheduledItem.productId > 0;
+                                console.log('test e', e);
 
-                                    console.log('test e', e);
+                                return (
+                                    <Card key={key} padding={'800'}>
+                                        <fetcher.Form method="post" key={`${productId}`}>
+                                            <input
+                                                type="hidden"
+                                                name="product_id"
+                                                value={productId}
+                                            />
+                                            <input
+                                                type="hidden"
+                                                name="product_title"
+                                                value={e.title}
+                                            />
+                                            <BlockStack gap={'400'}>
+                                                <BlockStack gap={'200'}>
+                                                    {isDraft && (
+                                                        <div>
+                                                            <Badge tone="attention">
+                                                                saved as draft
+                                                            </Badge>
+                                                        </div>
+                                                    )}
 
-                                    return (
-                                        <Card key={key} padding={'800'}>
-                                            {/* <div className="container-fluid"> */}
-                                            <fetcher.Form method="post" key={`${productId}`}>
-                                                <input
-                                                    type="hidden"
-                                                    name="product_id"
-                                                    value={productId}
-                                                />
-                                                <input
-                                                    type="hidden"
-                                                    name="product_title"
-                                                    value={e.title}
-                                                />
-                                                {isDraft && (
-                                                    <div className="pb-2">
-                                                        <Badge tone="attention">
-                                                            saved as draft
-                                                        </Badge>
-                                                    </div>
-                                                )}
-                                                <div>
                                                     <Text variant="headingXl" as="h4">
                                                         {e.title}
                                                     </Text>
-                                                    <ImagePicker
-                                                        images={images}
-                                                        scheduledItemImgUrls={scheduledItemImgUrls}
-                                                    />
+                                                </BlockStack>
+                                                <ImagePicker
+                                                    images={images}
+                                                    scheduledItemImgUrls={scheduledItemImgUrls}
+                                                />
 
-                                                    <TextArea
-                                                        placeholders={customPlaceholder}
-                                                        scheduledItemDesc={scheduledItemDesc}
-                                                        product={e}
-                                                        defaultCaption={defaultCaptionContent}
-                                                    />
+                                                <TextArea
+                                                    placeholders={customPlaceholder}
+                                                    scheduledItemDesc={scheduledItemDesc}
+                                                    product={e}
+                                                    defaultCaption={defaultCaptionContent}
+                                                />
+
+                                                <BlockStack>
                                                     {isEligibleForScheduling ? (
                                                         <PostBtn
                                                             productId={productId}
@@ -370,13 +353,13 @@ export default function Schedule() {
                                                             }
                                                         </Text>
                                                     )}
-                                                </div>
-                                            </fetcher.Form>
-                                        </Card>
-                                    );
-                                })}
-                        </BlockStack>
-                    </>
+                                                </BlockStack>
+                                            </BlockStack>
+                                        </fetcher.Form>
+                                    </Card>
+                                );
+                            })}
+                    </BlockStack>
                 )}
             </Page>
         );

@@ -3,15 +3,15 @@ import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/nod
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
-import { Text } from '@shopify/polaris';
+import { BlockStack, Card, Page, Text } from '@shopify/polaris';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
 import ImagePicker from '~/routes/ui.components/ImagePicker/ImagePicker';
-import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
 import TextArea from '~/routes/ui.components/TextArea/TextArea';
-import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
+import { IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
+import SearchAndFilterBar from '../ui.components/SearchAndFilterBar/SearchAndFilterBar';
 
 function createApiResponse(
     error: boolean,
@@ -114,36 +114,24 @@ export default function PublishMedia() {
     };
 
     return (
-        <div>
-            <Text variant="heading2xl" as="h3">
-                Postcenter
-            </Text>
+        <Page
+            fullWidth
+            title="Postcenter"
+            primaryAction={
+                <SearchAndFilterBar
+                    collections={collections}
+                    searchString={searchString}
+                    handleCollectionFilter={handleCollectionFilter}
+                    handleSearchString={handleSearchString}
+                />
+            }
+        >
             {!fbAccessToken || !fbPageId ? (
                 <div>
                     <AccountNotConnected />
                 </div>
             ) : (
-                <>
-                    <div style={{ paddingBottom: '2rem' }}>
-                        <select
-                            id="product_filter"
-                            onChange={(e) => handleCollectionFilter(e.target.value)}
-                        >
-                            <option value="">Alle</option>
-                            {collections.map((collection: ICollection, index) => (
-                                <option key={index} value={collection.id}>
-                                    {collection.title}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Suche"
-                            value={searchString}
-                            onChange={(e) => handleSearchString(e.target.value)}
-                        />
-                    </div>
-
+                <BlockStack gap="600">
                     {productsArray &&
                         productsArray
                             .filter((product: IShopifyProduct) => {
@@ -166,7 +154,7 @@ export default function PublishMedia() {
                                 let description = product.description;
 
                                 return (
-                                    <div key={key}>
+                                    <Card key={key} padding={'800'}>
                                         <Form method="post">
                                             <input
                                                 type="hidden"
@@ -184,57 +172,60 @@ export default function PublishMedia() {
                                                 name="fb_page_id"
                                                 value={fbPageId != null ? fbPageId : ''}
                                             />
-
                                             <div key={key} id={productId}>
-                                                <Text variant="headingLg" as="h3">
-                                                    {title}
-                                                </Text>
+                                                <BlockStack gap={'400'}>
+                                                    <Text variant="headingXl" as="h4">
+                                                        {title}
+                                                    </Text>
 
-                                                <ImagePicker images={images} />
-                                                <DiscountsPicker discountsArray={discountsArray} />
-                                                <TextArea
-                                                    placeholders={customPlaceholder}
-                                                    product={product}
-                                                    defaultCaption={undefined}
-                                                />
+                                                    <ImagePicker images={images} />
+                                                    {/* <DiscountsPicker discountsArray={discountsArray} /> */}
+                                                    <TextArea
+                                                        placeholders={customPlaceholder}
+                                                        product={product}
+                                                        defaultCaption={undefined}
+                                                    />
 
-                                                <div>
-                                                    {images ? (
-                                                        <div>
-                                                            <button
-                                                                type="submit"
-                                                                name={Action.post}
-                                                                value={PublishType.publishMedia}
-                                                            >
-                                                                PUBLISH MEDIA
-                                                            </button>
-                                                            <button
-                                                                type="submit"
-                                                                name={Action.post}
-                                                                value={PublishType.publishStory}
-                                                            >
-                                                                PUBLISH STORY
-                                                            </button>
-                                                            {actionData?.productId ===
-                                                                productId && (
-                                                                <div>{actionData.message}</div>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <div>
-                                                            This product can not be posted. Please
-                                                            make sure your product has an image
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                    <div>
+                                                        {images ? (
+                                                            <div>
+                                                                <button
+                                                                    type="submit"
+                                                                    name={Action.post}
+                                                                    value={PublishType.publishMedia}
+                                                                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3"
+                                                                >
+                                                                    PUBLISH MEDIA
+                                                                </button>
+                                                                <button
+                                                                    type="submit"
+                                                                    name={Action.post}
+                                                                    value={PublishType.publishStory}
+                                                                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter"
+                                                                >
+                                                                    PUBLISH STORY
+                                                                </button>
+                                                                {actionData?.productId ===
+                                                                    productId && (
+                                                                    <div>{actionData.message}</div>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <div>
+                                                                This product can not be posted.
+                                                                Please make sure your product has an
+                                                                image
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </BlockStack>
                                             </div>
                                         </Form>
-                                        <hr />
-                                    </div>
+                                    </Card>
                                 );
                             })}
-                </>
+                </BlockStack>
             )}
-        </div>
+        </Page>
     );
 }
