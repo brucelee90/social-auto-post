@@ -11,7 +11,7 @@ input[type='checkbox'] {
     display: none;
 }
 
-label {
+.image_picker__label {
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 10px;
@@ -21,7 +21,7 @@ label {
     cursor: pointer;
 }
 
-label:before {
+.image_picker__label:before {
     background-color: white;
     color: white;
     content: ' ';
@@ -39,14 +39,14 @@ label:before {
     transform: scale(0);
 }
 
-label img {
+.image_picker__label img {
     /* height: 100px; */
     /* width: 100px; */
     transition-duration: 0.2s;
     transform-origin: 50% 50%;
 }
 
-:checked + label {
+:checked + .image_picker__label {
     border-color: var(--background-bg-success-strong, #008656);
     border-radius: 5px;
 }

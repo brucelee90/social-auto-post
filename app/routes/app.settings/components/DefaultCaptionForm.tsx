@@ -1,5 +1,6 @@
 import { DefaultCaption } from '@prisma/client';
 import { useFetcher } from '@remix-run/react';
+import { BlockStack } from '@shopify/polaris';
 import { IApiResponse } from '~/routes/global_utils/types';
 
 interface IDefaultCaptionProps {
@@ -25,18 +26,28 @@ export default function DefaultCaptionForm(props: IDefaultCaptionProps) {
 
     return (
         <fetcher.Form method="post" key="default_caption">
-            <div>
-                <textarea
-                    rows={10}
-                    style={{ width: '50%' }}
-                    id="default_caption"
-                    name="default_caption"
-                    defaultValue={defaultCaptionContent}
-                />
-                <button name="handle_default_caption" value="save">
-                    save default caption
-                </button>
-            </div>
+            <BlockStack gap={'400'}>
+                <BlockStack gap={'200'}>
+                    <label htmlFor="default_caption">Default caption</label>
+                    <textarea
+                        rows={10}
+                        id="default_caption"
+                        name="default_caption"
+                        className="form-control"
+                        defaultValue={defaultCaptionContent}
+                    />
+                </BlockStack>
+                <div>
+                    <button
+                        name="handle_default_caption"
+                        value="save"
+                        className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter"
+                    >
+                        save default caption
+                    </button>
+                </div>
+            </BlockStack>
+
             {message !== undefined && <div>{message}</div>}
         </fetcher.Form>
     );

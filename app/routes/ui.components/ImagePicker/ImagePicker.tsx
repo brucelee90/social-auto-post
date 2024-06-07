@@ -62,8 +62,7 @@ const ImageCheckbox: React.FC<ImageCheckboxProps> = (props: ImageCheckboxProps) 
                 onChange={handleCheckboxChange}
                 checked={checkedState}
             />
-            <label htmlFor={imageElement.url}>
-                {/* <img src="http://townandcountryremovals.com/wp-content/uploads/2013/10/firefox-logo-200x200.png" /> */}
+            <label htmlFor={imageElement.url} className={styles.image_picker__label}>
                 <img src={imageElement.url} height={150} alt="Selected" />
             </label>
         </li>
