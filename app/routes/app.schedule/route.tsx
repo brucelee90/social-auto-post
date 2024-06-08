@@ -207,160 +207,140 @@ export default function Schedule() {
                     />
                 }
             >
-                {!fbAccessToken || !fbPageId ? (
-                    <AccountNotConnected />
-                ) : (
-                    <BlockStack gap="600">
-                        {productsArray
-                            .filter((product: IShopifyProduct) => {
-                                const title = product.title.toLowerCase();
-                                const search = searchString.toLowerCase();
+                <BlockStack gap="600">
+                    {productsArray
+                        .filter((product: IShopifyProduct) => {
+                            const title = product.title.toLowerCase();
+                            const search = searchString.toLowerCase();
 
-                                return title.includes(search);
-                            })
-                            .filter((product: IShopifyProduct) => {
-                                if (collectionFilter === '') {
-                                    return true;
-                                }
-                                return product.collections?.nodes?.find((collection) => {
-                                    return collection?.id === collectionFilter;
-                                });
-                            })
-                            .map((e: IShopifyProduct, key) => {
-                                let productIdArr = e.id.split('/');
-                                let productId = productIdArr[productIdArr.length - 1];
-                                let imageUrl = e.featuredImage?.url;
-                                let images = e.images?.nodes;
+                            return title.includes(search);
+                        })
+                        .filter((product: IShopifyProduct) => {
+                            if (collectionFilter === '') {
+                                return true;
+                            }
+                            return product.collections?.nodes?.find((collection) => {
+                                return collection?.id === collectionFilter;
+                            });
+                        })
+                        .map((e: IShopifyProduct, key) => {
+                            let productIdArr = e.id.split('/');
+                            let productId = productIdArr[productIdArr.length - 1];
+                            let imageUrl = e.featuredImage?.url;
+                            let images = e.images?.nodes;
 
-                                let isEligibleForScheduling = false;
-                                if (productId !== undefined && imageUrl !== undefined) {
-                                    isEligibleForScheduling = true;
-                                }
+                            let isEligibleForScheduling = false;
+                            if (productId !== undefined && imageUrl !== undefined) {
+                                isEligibleForScheduling = true;
+                            }
 
-                                let currentScheduledItem = allScheduledItemsArr.find(
-                                    (item: PostScheduleQueue) =>
-                                        Number(item.productId) === Number(productId)
-                                );
+                            let currentScheduledItem = allScheduledItemsArr.find(
+                                (item: PostScheduleQueue) =>
+                                    Number(item.productId) === Number(productId)
+                            );
 
-                                let hasItemInScheduleQueue = true;
-                                if (currentScheduledItem === undefined) {
-                                    hasItemInScheduleQueue = false;
-                                    currentScheduledItem = {
-                                        productId: BigInt(0),
-                                        dateScheduled: new Date(0),
-                                        postImgUrl: '',
-                                        postDescription: '',
-                                        shopName: '',
-                                        scheduleStatus: 'draft',
-                                        sessionId: null,
-                                        postDetails: '',
-                                        platform: ''
-                                    };
-                                }
+                            let hasItemInScheduleQueue = true;
+                            if (currentScheduledItem === undefined) {
+                                hasItemInScheduleQueue = false;
+                                currentScheduledItem = {
+                                    productId: BigInt(0),
+                                    dateScheduled: new Date(0),
+                                    postImgUrl: '',
+                                    postDescription: '',
+                                    shopName: '',
+                                    scheduleStatus: 'draft',
+                                    sessionId: null,
+                                    postDetails: '',
+                                    platform: ''
+                                };
+                            }
 
-                                let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
-                                    JSON.stringify(currentScheduledItem.postDetails)
-                                );
+                            let scheduledItemPostDetails: InstagramPostDetails = JSON.parse(
+                                JSON.stringify(currentScheduledItem.postDetails)
+                            );
 
-                                let scheduledItemDesc = currentScheduledItem.postDescription;
-                                let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
+                            let scheduledItemDesc = currentScheduledItem.postDescription;
+                            let scheduledItemImgUrls = currentScheduledItem.postImgUrl;
 
-                                let scheduledDate = moment(
-                                    currentScheduledItem.dateScheduled
-                                ).toISOString();
-                                let scheduleStatus = currentScheduledItem.scheduleStatus;
+                            let scheduledDate = moment(
+                                currentScheduledItem.dateScheduled
+                            ).toISOString();
+                            let scheduleStatus = currentScheduledItem.scheduleStatus;
 
-                                scheduledItemDesc = scheduledItemPostDetails.postDescription;
-                                let isDraft =
-                                    currentScheduledItem.scheduleStatus === PostStatus.draft &&
-                                    currentScheduledItem.productId > 0;
+                            scheduledItemDesc = scheduledItemPostDetails.postDescription;
+                            let isDraft =
+                                currentScheduledItem.scheduleStatus === PostStatus.draft &&
+                                currentScheduledItem.productId > 0;
 
-                                console.log('test e', e);
+                            console.log('test e', e);
 
-                                return (
-                                    <Card key={key} padding={'800'}>
-                                        <fetcher.Form method="post" key={`${productId}`}>
-                                            <input
-                                                type="hidden"
-                                                name="product_id"
-                                                value={productId}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name="product_title"
-                                                value={e.title}
-                                            />
-                                            <BlockStack gap={'400'}>
-                                                <BlockStack gap={'200'}>
-                                                    {isDraft && (
-                                                        <div>
-                                                            <Badge tone="attention">
-                                                                saved as draft
-                                                            </Badge>
-                                                        </div>
-                                                    )}
+                            return (
+                                <Card key={key} padding={'800'}>
+                                    <fetcher.Form method="post" key={`${productId}`}>
+                                        <input type="hidden" name="product_id" value={productId} />
+                                        <input type="hidden" name="product_title" value={e.title} />
+                                        <BlockStack gap={'400'}>
+                                            <BlockStack gap={'200'}>
+                                                {isDraft && (
+                                                    <div>
+                                                        <Badge tone="attention">
+                                                            saved as draft
+                                                        </Badge>
+                                                    </div>
+                                                )}
 
-                                                    <Text variant="headingXl" as="h4">
-                                                        {e.title}
-                                                    </Text>
-                                                </BlockStack>
-                                                <ImagePicker
-                                                    images={images}
-                                                    scheduledItemImgUrls={scheduledItemImgUrls}
-                                                />
-
-                                                <TextArea
-                                                    placeholders={customPlaceholder}
-                                                    scheduledItemDesc={scheduledItemDesc}
-                                                    product={e}
-                                                    defaultCaption={defaultCaptionContent}
-                                                />
-
-                                                <BlockStack>
-                                                    {isEligibleForScheduling ? (
-                                                        <PostBtn
-                                                            productId={productId}
-                                                            isScheduleSuccessfull={
-                                                                isScheduleSuccessfull
-                                                            }
-                                                            scheduledDate={scheduledDate}
-                                                            scheduleStatus={scheduleStatus}
-                                                        />
-                                                    ) : (
-                                                        <div>
-                                                            Please make sure that you have set an
-                                                            image and a description for this product
-                                                        </div>
-                                                    )}
-
-                                                    {(fetcher?.data as ActionMessage)?.productId ===
-                                                        productId && (
-                                                        <Text
-                                                            as="p"
-                                                            tone={`${(fetcher?.data as ActionMessage)?.error === true ? 'critical' : 'success'}`}
-                                                        >
-                                                            {(fetcher?.data as ActionMessage)
-                                                                ?.error === true ? (
-                                                                <span>
-                                                                    Draft could not be saved:{' '}
-                                                                </span>
-                                                            ) : (
-                                                                ''
-                                                            )}
-                                                            {
-                                                                (fetcher?.data as ActionMessage)
-                                                                    .message
-                                                            }
-                                                        </Text>
-                                                    )}
-                                                </BlockStack>
+                                                <Text variant="headingXl" as="h4">
+                                                    {e.title}
+                                                </Text>
                                             </BlockStack>
-                                        </fetcher.Form>
-                                    </Card>
-                                );
-                            })}
-                    </BlockStack>
-                )}
+                                            <ImagePicker
+                                                images={images}
+                                                scheduledItemImgUrls={scheduledItemImgUrls}
+                                            />
+
+                                            <TextArea
+                                                placeholders={customPlaceholder}
+                                                scheduledItemDesc={scheduledItemDesc}
+                                                product={e}
+                                                defaultCaption={defaultCaptionContent}
+                                            />
+
+                                            {isEligibleForScheduling ? (
+                                                <PostBtn
+                                                    productId={productId}
+                                                    isScheduleSuccessfull={isScheduleSuccessfull}
+                                                    scheduledDate={scheduledDate}
+                                                    scheduleStatus={scheduleStatus}
+                                                    isDisabled={fbAccessToken === null}
+                                                />
+                                            ) : (
+                                                <div>
+                                                    Please make sure that you have set an image and
+                                                    a description for this product
+                                                </div>
+                                            )}
+
+                                            {(fetcher?.data as ActionMessage)?.productId ===
+                                                productId && (
+                                                <Text
+                                                    as="p"
+                                                    tone={`${(fetcher?.data as ActionMessage)?.error === true ? 'critical' : 'success'}`}
+                                                >
+                                                    {(fetcher?.data as ActionMessage)?.error ===
+                                                    true ? (
+                                                        <span>Draft could not be saved: </span>
+                                                    ) : (
+                                                        ''
+                                                    )}
+                                                    {(fetcher?.data as ActionMessage).message}
+                                                </Text>
+                                            )}
+                                        </BlockStack>
+                                    </fetcher.Form>
+                                </Card>
+                            );
+                        })}
+                </BlockStack>
             </Page>
         );
     } catch (error) {

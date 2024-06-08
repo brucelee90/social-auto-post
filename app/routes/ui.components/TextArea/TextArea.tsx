@@ -32,7 +32,7 @@ function TextArea(props: Props) {
     };
 
     return (
-        <div className="pb-4 row mx-0">
+        <div className="row mx-0">
             <textarea
                 style={{ width: '50%' }}
                 rows={10}

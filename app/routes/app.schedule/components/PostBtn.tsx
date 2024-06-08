@@ -5,7 +5,7 @@ import { useFetcher } from '@remix-run/react';
 import { IApiResponse } from '../route';
 import moment from 'moment';
 import TimePicker from '~/routes/ui.components/TimePicker/TimePicker';
-import { BlockStack, Text } from '@shopify/polaris';
+import { BlockStack, Divider, Text } from '@shopify/polaris';
 
 interface ButtonProps {
     action: string;
@@ -17,10 +17,11 @@ interface Props {
     isScheduleSuccessfull: boolean;
     scheduledDate: string;
     scheduleStatus: 'draft' | 'scheduled' | 'posted';
+    isDisabled: boolean;
 }
 
 export function PostBtn(props: Props) {
-    const { productId, isScheduleSuccessfull, scheduledDate, scheduleStatus } = props;
+    const { productId, isScheduleSuccessfull, scheduledDate, scheduleStatus, isDisabled } = props;
 
     const fetcher = useFetcher({ key: `${productId}` });
 
@@ -64,11 +65,11 @@ export function PostBtn(props: Props) {
     }
 
     return (
-        <>
+        <BlockStack gap={'400'}>
             <div>{actionMessage}</div>
             {!isProductScheduled && (
                 <BlockStack gap={'200'}>
-                    <div className="pb-1">
+                    <div>
                         <Text variant="headingSm" as="h6">
                             Please select a Date and Time For Scheduling
                         </Text>
@@ -79,20 +80,29 @@ export function PostBtn(props: Props) {
                     </div>
                 </BlockStack>
             )}
-            <div className="pt-5">
-                <Button
-                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3"
-                    action={btnAction}
-                    text={btnText}
-                />
+            <Divider borderColor="border-inverse" />
+            <BlockStack gap={'200'}>
+                {isDisabled && (
+                    <Text variant="bodyMd" as="p">
+                        Please go to your dashboard and connect your social media account first in
+                        order to start scheduling
+                    </Text>
+                )}
+                <div>
+                    <Button
+                        className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3 ${isDisabled === true && 'Polaris-Button--disabled'}`}
+                        action={btnAction}
+                        text={btnText}
+                    />
 
-                <Button
-                    className="Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter"
-                    action={BtnAction.draft}
-                    text="Save as draft"
-                />
-            </div>
-        </>
+                    <Button
+                        className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter ${isDisabled === true && 'Polaris-Button--disabled'}`}
+                        action={BtnAction.draft}
+                        text="Save as draft"
+                    />
+                </div>
+            </BlockStack>
+        </BlockStack>
     );
 }
 

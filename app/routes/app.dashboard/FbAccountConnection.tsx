@@ -40,8 +40,7 @@ export function FbAccountConnection(props: Props) {
     const terms = connected ? null : (
         <p>
             By clicking <strong>Connect</strong>, you agree to accept Autobuzz’{' '}
-            <Link url="Example App">terms and conditions</Link>. You’ll pay a commission rate of 15%
-            on sales made through Sample App.
+            <Link url="#">terms and conditions</Link>.
         </p>
     );
 
