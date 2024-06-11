@@ -18,7 +18,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const body = await request.json();
         console.log('Request body:', body.data, body.data.fbAccessToken);
 
-        shopSettingsService.upsertFacebookAccessToken(body.data.sessionId, body.data.fbAccessToken);
+        // shopSettingsService.upsertFacebookAccessToken(body.data.sessionId, body.data.fbAccessToken);
     } catch (error) {
         console.log('DAS HAT NICHT FUNKTIONIERT', error);
     }

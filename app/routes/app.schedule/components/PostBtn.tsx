@@ -13,6 +13,9 @@ interface ButtonProps {
     className?: string;
 }
 interface Props {
+    actionProductId?: any;
+    actionMessage?: any;
+    action?: any;
     productId: string;
     isScheduleSuccessfull: boolean;
     scheduledDate: string;
