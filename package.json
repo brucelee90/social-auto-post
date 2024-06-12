@@ -1,6 +1,9 @@
 {
   "name": "social-auto-post",
   "private": true,
+  "engines": {
+    "node": "20.9.0"
+  },
   "scripts": {
     "build": "tsc && remix build",
     "predev": "prisma generate && prisma migrate deploy",
