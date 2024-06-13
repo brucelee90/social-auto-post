@@ -2,7 +2,8 @@
   "name": "social-auto-post",
   "private": true,
   "scripts": {
-    "build": "tsc && remix build",
+    "build": "prisma generate && tsc && remix build",
+    "postinstall": "prisma migrate deploy && prisma generate",
     "predev": "prisma generate && prisma migrate deploy",
     "dev:x": "concurrently \"npm:dev\" \"npm:dev:remix\"",
     "dev": "shopify app dev",
