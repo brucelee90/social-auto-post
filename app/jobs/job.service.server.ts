@@ -18,7 +18,12 @@ interface JobService {
     jobs: [{}]
 }
 
-const agenda = new Agenda({ db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" } });
+const agenda = new Agenda({
+    db: {
+        address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs", options: { tls: true, tlsAllowInvalidCertificates: true }
+
+    }
+});
 
 const jobService = {
 
