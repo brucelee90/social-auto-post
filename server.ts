@@ -28,6 +28,8 @@ app.all(
 let host = process.env.HOST || 'localhost';
 let port = process.env.PORT || 3000;
 
+
+
 const scheduleJob = (jobId: string, sessionId: string) => {
     // THIS NEEDS REFACTORING !!!
     // THERE SHOULD BE POST REQUEST, MAKING IT POSSIBLE TO SEND A DESCRIPTION AS WELL

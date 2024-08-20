@@ -4,23 +4,22 @@ import {
     GetPageInfoRequest,
     PageField
 } from 'instagram-graph-api';
-import { Form, Link, useLoaderData } from '@remix-run/react';
+import { useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { authenticate } from '~/shopify.server';
-import { queries } from '~/utils/queries';
 import { shopSettingsService } from '~/services/SettingsService.server';
-import postScheduleQueueService, {
-    scheduledQueueService
-} from '~/jobs/schedulequeue.service.server';
+import { scheduledQueueService } from '~/jobs/schedulequeue.service.server';
 import { PostScheduleQueue } from '@prisma/client';
-import { Agenda, Job } from '@hokify/agenda';
 import jobService from '~/jobs/job.service.server';
 import moment from 'moment';
-import { InstagramPostDetails } from './global_utils/types';
-import checkLoginStatus, { handleFBLogin } from '../components/FacebookSDK';
-import { useEffect, useRef, useState } from 'react';
+import { InstagramPostDetails } from '../global_utils/types';
+import { handleFBLogin } from '../../components/FacebookSDK';
+
 import { ActionFunctionArgs } from '@remix-run/node';
 import { useSubmit } from '@remix-run/react';
+import { Badge, BlockStack, Divider, Page, Text } from '@shopify/polaris';
+import { FbAccountConnection } from './FbAccountConnection';
+import { PostTable } from './PostTable';
 
 enum FormNames {
     fbAccessToken = 'fb_access_token',
@@ -242,129 +241,84 @@ function Dashboard() {
         return data.data;
     };
 
+    let scheduledPosts = allScheduledItemsArr?.map((scheduledItem: PostScheduleQueue, key) => {
+        let scheduledItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+            JSON.stringify(scheduledItem.postDetails)
+        );
+        let scheduleDate = moment(scheduledItem.dateScheduled).format(
+            'dddd, YYYY-MM-DD [at] hh:mma'
+        );
+
+        let BadgeMarkup =
+            scheduledItem.scheduleStatus === 'draft' ? (
+                <Badge progress="incomplete" tone="attention">
+                    {scheduledItem.scheduleStatus.toUpperCase()}
+                </Badge>
+            ) : (
+                <Badge progress="partiallyComplete" tone="warning-strong">
+                    {scheduledItem.scheduleStatus.toUpperCase()}
+                </Badge>
+            );
+
+        return {
+            id: key.toString(),
+            imgUrl: scheduledItemPostDetailsJSON.postImgUrl,
+            description: scheduledItemPostDetailsJSON.postDescription,
+            scheduleDate: scheduleDate,
+            postStatus: BadgeMarkup
+        };
+    });
+
+    let finishedPosts = allFinishedJobs.map(
+        (
+            job: {
+                id: string | undefined;
+                name: string;
+                imgUrl: string;
+                postDescription: string;
+                nextRunAt: Date | null;
+                lastFinishedAt: Date | undefined;
+                failedAt: Date | undefined;
+            },
+            key: any
+        ) => {
+            let lastFinishedAt = moment(job.lastFinishedAt).format('dddd, YYYY-MM-DD [at] hh:mma');
+            return {
+                id: job.id,
+                imgUrl: job.imgUrl,
+                description: job.postDescription as TrustedHTML,
+                scheduleDate: lastFinishedAt,
+                postStatus: (
+                    <Badge progress="complete" tone="success">
+                        POSTED
+                    </Badge>
+                )
+            };
+        }
+    );
+
+    let posts = scheduledPosts.concat(finishedPosts);
+    console.log('is Connected?', isUserFbAccountConnected);
     return (
-        <>
-            {!isUserFbAccountConnected && (
-                <div>
-                    status: not connected
-                    <button onClick={handleLogin}>Login with Facebook</button>
-                    <hr />
-                </div>
-            )}
-            {isUserFbAccountConnected && (
-                <div>
-                    status: connected
-                    <button onClick={handleLogin}>Reconfigure Facebook Connection</button>
-                    <hr />
-                    <div>You are connected with: {igRes?.username} </div>
-                    <ul>
-                        <li>{igRes?.followers_count} Follower</li>
-                        <li>{igRes?.follows_count} Follows</li>
-                        <li>{igRes?.media_count} Bilder hochgeladen</li>
-                    </ul>
-                    <hr />
-                    <div>Your Schedule Queue</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <td>image</td>
-                                <td>description:</td>
-                                <td>posted at:</td>
-                                <td>Post Status:</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {allScheduledItemsArr.length > 0 ? (
-                                <div>
-                                    {allScheduledItemsArr?.map(
-                                        (scheduledItem: PostScheduleQueue, key) => {
-                                            let scheduledItemPostDetailsJSON: InstagramPostDetails =
-                                                JSON.parse(
-                                                    JSON.stringify(scheduledItem.postDetails)
-                                                );
-                                            let scheduleDate = moment(
-                                                scheduledItem.dateScheduled
-                                            ).format('dddd, YYYY-MM-DD [at] hh:mma');
-
-                                            return (
-                                                <tr key={key}>
-                                                    <td>
-                                                        <img
-                                                            src={
-                                                                scheduledItemPostDetailsJSON.postImgUrl.split(
-                                                                    ';'
-                                                                )[0]
-                                                            }
-                                                            height="100"
-                                                            width="150"
-                                                        />
-                                                    </td>
-                                                    <td style={{ width: '10rem' }}>
-                                                        {
-                                                            scheduledItemPostDetailsJSON.postDescription
-                                                        }
-                                                    </td>
-                                                    <td style={{ width: '20rem' }}>
-                                                        {scheduleDate}
-                                                    </td>
-                                                    <td>{scheduledItem.scheduleStatus}</td>
-                                                </tr>
-                                            );
-                                        }
-                                    )}
-                                </div>
-                            ) : (
-                                <tr>
-                                    <td colSpan={4}>No scheduled items</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                    <hr />
-                    <div>ALL FINISHED JOBS:</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <td>image</td>
-                                <td>description:</td>
-                                <td>posted at:</td>
-                            </tr>
-                        </thead>
-                        {allFinishedJobs.map(
-                            (
-                                job: {
-                                    id: string | undefined;
-                                    name: string;
-                                    imgUrl: string;
-                                    postDescription: string;
-                                    nextRunAt: Date | null;
-                                    lastFinishedAt: Date | undefined;
-                                    failedAt: Date | undefined;
-                                },
-                                key: any
-                            ) => {
-                                let lastFinishedAt = moment(job.lastFinishedAt).format(
-                                    'dddd, YYYY-MM-DD [at] hh:mma'
-                                );
-                                return (
-                                    <tr key={key}>
-                                        <td>
-                                            <img src={job.imgUrl} height="100" width="150" />
-                                        </td>
-
-                                        <td style={{ width: '10rem' }}>{job.postDescription}</td>
-                                        <td style={{ width: '20rem' }}>
-                                            {lastFinishedAt.toString()}
-                                        </td>
-                                    </tr>
-                                );
-                            }
-                        )}
-                    </table>
-                    <hr />
-                </div>
-            )}
-        </>
+        <Page fullWidth title="Dashboard">
+            <BlockStack gap={'400'}>
+                <FbAccountConnection
+                    isConnected={isUserFbAccountConnected}
+                    accName={igRes?.username}
+                    handleLogin={handleLogin}
+                    connectionDetails={igRes}
+                />
+                {isUserFbAccountConnected && (
+                    <BlockStack gap={'400'}>
+                        <Divider />
+                        <Text as="h2" variant="headingLg">
+                            Your Schedule Queue
+                        </Text>
+                        <PostTable posts={posts} />
+                    </BlockStack>
+                )}
+            </BlockStack>
+        </Page>
     );
 }
 

@@ -2,6 +2,7 @@ import { useFetcher } from '@remix-run/react';
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { ActionMessage } from '~/routes/app.schedule/scheduleUtils';
 import { PostForm } from '~/routes/global_utils/enum';
+import styles from './ImagePicker.module.css';
 
 interface Props {
     images: { url: string }[];
@@ -12,7 +13,7 @@ function ImagePicker(props: Props) {
     const { images, scheduledItemImgUrls } = props;
 
     return (
-        <ul>
+        <ul className={styles.ul}>
             <fieldset style={{ display: 'flex' }}>
                 {images.map((e, key) => {
                     let isCurrentImageSelected = false;
@@ -55,13 +56,15 @@ const ImageCheckbox: React.FC<ImageCheckboxProps> = (props: ImageCheckboxProps) 
         <li>
             <input
                 type="checkbox"
-                id={PostForm.imgUrl}
+                id={imageElement.url}
                 name={PostForm.imgUrl}
                 value={imageElement.url}
                 onChange={handleCheckboxChange}
                 checked={checkedState}
             />
-            <img src={imageElement.url} height={150} alt="Selected" />
+            <label htmlFor={imageElement.url} className={styles.image_picker__label}>
+                <img src={imageElement.url} height={150} alt="Selected" />
+            </label>
         </li>
     );
 };

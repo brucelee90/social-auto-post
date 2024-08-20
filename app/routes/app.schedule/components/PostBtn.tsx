@@ -1,23 +1,30 @@
-import DatePicker from '~/routes/ui.components/mediaqueue/DatePicker';
+import DatePicker from '~/routes/ui.components/DatePicker/DatePicker';
 import { Action, PostStatus } from '../../global_utils/enum';
 import { JobAction as BtnAction } from '../../global_utils/enum';
 import { useFetcher } from '@remix-run/react';
 import { IApiResponse } from '../route';
 import moment from 'moment';
+import TimePicker from '~/routes/ui.components/TimePicker/TimePicker';
+import { BlockStack, Divider, Text } from '@shopify/polaris';
 
 interface ButtonProps {
     action: string;
     text: string;
+    className?: string;
 }
 interface Props {
+    actionProductId?: any;
+    actionMessage?: any;
+    action?: any;
     productId: string;
     isScheduleSuccessfull: boolean;
     scheduledDate: string;
     scheduleStatus: 'draft' | 'scheduled' | 'posted';
+    isDisabled: boolean;
 }
 
 export function PostBtn(props: Props) {
-    const { productId, isScheduleSuccessfull, scheduledDate, scheduleStatus } = props;
+    const { productId, isScheduleSuccessfull, scheduledDate, scheduleStatus, isDisabled } = props;
 
     const fetcher = useFetcher({ key: `${productId}` });
 
@@ -61,31 +68,52 @@ export function PostBtn(props: Props) {
     }
 
     return (
-        <div>
+        <BlockStack gap={'400'}>
             <div>{actionMessage}</div>
             {!isProductScheduled && (
-                <div>
-                    <DatePicker name={`scheduled_date`} defaultValue={formattedScheduledDate} />
-                    <input
-                        type="time"
-                        id="scheduled_time"
-                        required
-                        name={`scheduled_time`}
-                        defaultValue={formattedScheduledTime}
-                    />
-                    <Button action={BtnAction.draft} text="Save as draft" />
-                </div>
+                <BlockStack gap={'200'}>
+                    <div>
+                        <Text variant="headingSm" as="h6">
+                            Please select a Date and Time For Scheduling
+                        </Text>
+                    </div>
+                    <div className="d-flex w-50 ">
+                        <DatePicker name={`scheduled_date`} defaultValue={formattedScheduledDate} />
+                        <TimePicker name="scheduled_time" defaultValue={formattedScheduledTime} />
+                    </div>
+                </BlockStack>
             )}
-            <Button action={btnAction} text={btnText} />
-        </div>
+            <Divider borderColor="border-inverse" />
+            <BlockStack gap={'200'}>
+                {isDisabled && (
+                    <Text variant="bodyMd" as="p">
+                        Please go to your dashboard and connect your social media account first in
+                        order to start scheduling
+                    </Text>
+                )}
+                <div>
+                    <Button
+                        className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3 ${isDisabled === true && 'Polaris-Button--disabled'}`}
+                        action={btnAction}
+                        text={btnText}
+                    />
+
+                    <Button
+                        className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter ${isDisabled === true && 'Polaris-Button--disabled'}`}
+                        action={BtnAction.draft}
+                        text="Save as draft"
+                    />
+                </div>
+            </BlockStack>
+        </BlockStack>
     );
 }
 
 function Button(props: ButtonProps) {
-    const { action, text } = props;
+    const { action, text, className } = props;
 
     return (
-        <button type="submit" name={action} value={action}>
+        <button className={className} type="submit" name={action} value={action}>
             {text}
         </button>
     );

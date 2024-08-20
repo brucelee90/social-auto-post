@@ -3,15 +3,15 @@ import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/nod
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { authenticate } from '~/shopify.server';
 import { queries } from '~/utils/queries';
-import { Text } from '@shopify/polaris';
+import { BlockStack, Card, Divider, Page, Text } from '@shopify/polaris';
 import instagramApiService from '~/instagram/instagram.service.server';
 import { Action, PlaceholderVariable, PostForm, PublishType } from '../global_utils/enum';
-import ImagePicker from '~/routes/ui.components/PostRow/ImagePicker';
-import DiscountsPicker from '~/routes/ui.components/PostRow/DiscountsPicker';
-import TextArea from '~/routes/ui.components/PostRow/TextArea';
-import { ICollection, IShopifyProduct } from '~/routes/global_utils/types';
+import ImagePicker from '~/routes/ui.components/ImagePicker/ImagePicker';
+import TextArea from '~/routes/ui.components/TextArea/TextArea';
+import { IShopifyProduct } from '~/routes/global_utils/types';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import AccountNotConnected from '~/ui.components/AccountNotConnected/AccountNotConnected';
+import SearchAndFilterBar from '../ui.components/SearchAndFilterBar/SearchAndFilterBar';
 
 function createApiResponse(
     error: boolean,
@@ -114,97 +114,85 @@ export default function PublishMedia() {
     };
 
     return (
-        <div>
-            <Text variant="heading2xl" as="h3">
-                Postcenter
-            </Text>
-            {!fbAccessToken || !fbPageId ? (
-                <div>
-                    <AccountNotConnected />
-                </div>
-            ) : (
-                <>
-                    <div style={{ paddingBottom: '2rem' }}>
-                        <select
-                            id="product_filter"
-                            onChange={(e) => handleCollectionFilter(e.target.value)}
-                        >
-                            <option value="">Alle</option>
-                            {collections.map((collection: ICollection, index) => (
-                                <option key={index} value={collection.id}>
-                                    {collection.title}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Suche"
-                            value={searchString}
-                            onChange={(e) => handleSearchString(e.target.value)}
-                        />
-                    </div>
+        <Page
+            fullWidth
+            title="Postcenter"
+            primaryAction={
+                <SearchAndFilterBar
+                    collections={collections}
+                    searchString={searchString}
+                    handleCollectionFilter={handleCollectionFilter}
+                    handleSearchString={handleSearchString}
+                />
+            }
+        >
+            <BlockStack gap="600">
+                {productsArray &&
+                    productsArray
+                        .filter((product: IShopifyProduct) => {
+                            const title = product.title.toLowerCase();
+                            const search = searchString.toLowerCase();
+                            return title.includes(search);
+                        })
+                        .filter((product: IShopifyProduct) => {
+                            if (collectionFilter === '') {
+                                return true;
+                            }
+                            return product.collections?.nodes?.find((collection) => {
+                                return collection?.id === collectionFilter;
+                            });
+                        })
+                        .map((product: IShopifyProduct, key) => {
+                            let productId = product.id;
+                            let images = product.images?.nodes;
+                            let title = product.title;
+                            let description = product.description;
 
-                    {productsArray &&
-                        productsArray
-                            .filter((product: IShopifyProduct) => {
-                                const title = product.title.toLowerCase();
-                                const search = searchString.toLowerCase();
-                                return title.includes(search);
-                            })
-                            .filter((product: IShopifyProduct) => {
-                                if (collectionFilter === '') {
-                                    return true;
-                                }
-                                return product.collections?.nodes?.find((collection) => {
-                                    return collection?.id === collectionFilter;
-                                });
-                            })
-                            .map((product: IShopifyProduct, key) => {
-                                let productId = product.id;
-                                let images = product.images?.nodes;
-                                let title = product.title;
-                                let description = product.description;
+                            return (
+                                <Card key={key} padding={'800'}>
+                                    <Form method="post">
+                                        <input type="hidden" name="product_id" value={productId} />
+                                        <input
+                                            type="hidden"
+                                            name="fb_access_token"
+                                            value={fbAccessToken != null ? fbAccessToken : ''}
+                                        />
 
-                                return (
-                                    <div key={key}>
-                                        <Form method="post">
-                                            <input
-                                                type="hidden"
-                                                name="product_id"
-                                                value={productId}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name="fb_access_token"
-                                                value={fbAccessToken != null ? fbAccessToken : ''}
-                                            />
-
-                                            <input
-                                                type="hidden"
-                                                name="fb_page_id"
-                                                value={fbPageId != null ? fbPageId : ''}
-                                            />
-
-                                            <div key={key} id={productId}>
-                                                <Text variant="headingLg" as="h3">
+                                        <input
+                                            type="hidden"
+                                            name="fb_page_id"
+                                            value={fbPageId != null ? fbPageId : ''}
+                                        />
+                                        <div key={key} id={productId}>
+                                            <BlockStack gap={'400'}>
+                                                <Text variant="headingXl" as="h4">
                                                     {title}
                                                 </Text>
 
                                                 <ImagePicker images={images} />
-                                                <DiscountsPicker discountsArray={discountsArray} />
+                                                {/* <DiscountsPicker discountsArray={discountsArray} /> */}
                                                 <TextArea
                                                     placeholders={customPlaceholder}
                                                     product={product}
                                                     defaultCaption={undefined}
                                                 />
 
-                                                <div>
-                                                    {images ? (
+                                                <Divider borderColor="border-inverse" />
+                                                {images ? (
+                                                    <BlockStack gap={'200'}>
+                                                        {fbAccessToken == null && (
+                                                            <Text variant="bodyMd" as="p">
+                                                                Please go to your dashboard and
+                                                                connect your social media account
+                                                                first in order to start scheduling
+                                                            </Text>
+                                                        )}
                                                         <div>
                                                             <button
                                                                 type="submit"
                                                                 name={Action.post}
                                                                 value={PublishType.publishMedia}
+                                                                className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantPrimary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter me-3 ${fbAccessToken == null && 'Polaris-Button--disabled'}`}
                                                             >
                                                                 PUBLISH MEDIA
                                                             </button>
@@ -212,6 +200,7 @@ export default function PublishMedia() {
                                                                 type="submit"
                                                                 name={Action.post}
                                                                 value={PublishType.publishStory}
+                                                                className={`Polaris-Button Polaris-Button--pressable Polaris-Button--variantTertiary Polaris-Button--sizeMedium Polaris-Button--textAlignCenter ${fbAccessToken == null && 'Polaris-Button--disabled'}`}
                                                             >
                                                                 PUBLISH STORY
                                                             </button>
@@ -220,21 +209,20 @@ export default function PublishMedia() {
                                                                 <div>{actionData.message}</div>
                                                             )}
                                                         </div>
-                                                    ) : (
-                                                        <div>
-                                                            This product can not be posted. Please
-                                                            make sure your product has an image
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </Form>
-                                        <hr />
-                                    </div>
-                                );
-                            })}
-                </>
-            )}
-        </div>
+                                                    </BlockStack>
+                                                ) : (
+                                                    <div>
+                                                        This product can not be posted. Please make
+                                                        sure your product has an image
+                                                    </div>
+                                                )}
+                                            </BlockStack>
+                                        </div>
+                                    </Form>
+                                </Card>
+                            );
+                        })}
+            </BlockStack>
+        </Page>
     );
 }

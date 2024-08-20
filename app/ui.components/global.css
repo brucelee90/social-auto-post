@@ -1,0 +1,8 @@
+.form-control {
+    font-size: var(--p-font-size-325) !important;
+}
+
+.form-control:focus {
+    box-shadow: unset;
+    border-color: #008656;
+}
