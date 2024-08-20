@@ -1,6 +1,9 @@
 {
   "name": "autobuzz",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "build": "prisma generate && tsc && remix build",
     "postinstall": "prisma migrate deploy && prisma generate",
