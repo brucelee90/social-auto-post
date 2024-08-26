@@ -158,9 +158,12 @@ export default postScheduleQueueService
 
 export namespace scheduledQueueService {
 
-
-
     export const getAllScheduledItems = async (sessionId: string) => {
+
+        if (prisma === undefined) {
+            throw new Error()
+        }
+
         const scheduluedItems = await prisma.session.findUniqueOrThrow({
             where: {
                 id: sessionId
@@ -169,6 +172,8 @@ export namespace scheduledQueueService {
                 postScheduleQueue: true
             }
         })
+
+        console.log('scheduluedItems:', scheduluedItems);
 
         scheduluedItems.postScheduleQueue.map(async e => {
             try {

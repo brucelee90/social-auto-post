@@ -9,7 +9,6 @@ import { LoaderFunctionArgs } from '@remix-run/server-runtime';
 import { authenticate } from '~/shopify.server';
 import { shopSettingsService } from '~/services/SettingsService.server';
 import { scheduledQueueService } from '~/jobs/schedulequeue.service.server';
-import { PostScheduleQueue } from '@prisma/client';
 import jobService from '~/jobs/job.service.server';
 import moment from 'moment';
 import { InstagramPostDetails } from '../global_utils/types';
@@ -20,6 +19,7 @@ import { useSubmit } from '@remix-run/react';
 import { Badge, BlockStack, Divider, Page, Text } from '@shopify/polaris';
 import { FbAccountConnection } from './FbAccountConnection';
 import { PostTable } from './PostTable';
+import { PostScheduleQueue } from '@prisma/client';
 
 enum FormNames {
     fbAccessToken = 'fb_access_token',
