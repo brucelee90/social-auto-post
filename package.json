@@ -5,7 +5,7 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "build": "prisma generate && tsc && remix build && npm run start",
+    "build": "prisma generate && tsc && remix build",
     "build_old": "prisma generate && tsc && remix build",
     "postinstall": "prisma migrate deploy && prisma generate",
     "predev": "prisma generate && prisma migrate deploy",
