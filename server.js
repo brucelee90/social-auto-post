@@ -9,7 +9,7 @@ require('dotenv').config();
 
 let app = express();
 
-app.use(express.static('./build'));
+app.use(express.static(path.resolve(__dirname, 'build')));
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
