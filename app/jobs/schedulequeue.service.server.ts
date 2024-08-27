@@ -3,7 +3,6 @@ import * as yup from 'yup'
 import { object, string, AnyObjectSchema } from 'yup';
 import { JsonValue } from "@prisma/client/runtime/library";
 import { InstagramPostDetails } from "~/routes/global_utils/types";
-import { PrismaClient } from "@prisma/client";
 
 
 
@@ -57,17 +56,6 @@ const postScheduleQueueService = {} as postScheduleQueueService
 
 postScheduleQueueService.addToPostScheduleQueue = async function addToPostScheduleQueue(productId: string, dateScheduled: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: string) {
 
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     let postImgUrlStr = postImgUrl.join(";")
 
     scheduleStatus = "scheduled"
@@ -114,17 +102,6 @@ postScheduleQueueService.addToPostScheduleQueue = async function addToPostSchedu
 
 postScheduleQueueService.getScheduledItemsByDate = async function getScheduledItemsByDate(date: Date) {
 
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     let scheduleQueue = await prisma.postScheduleQueue.findMany({
         where: {
             dateScheduled: { gte: date }
@@ -135,18 +112,6 @@ postScheduleQueueService.getScheduledItemsByDate = async function getScheduledIt
 }
 
 postScheduleQueueService.getUnremovedItems = async () => {
-
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     let unremovedItems = await prisma.postScheduleQueue.findMany({
         where: {
             dateScheduled: { lt: new Date() }
@@ -157,17 +122,6 @@ postScheduleQueueService.getUnremovedItems = async () => {
 }
 
 postScheduleQueueService.removeScheduledItemFromQueue = async function removeScheduledItemFromQueue(productId: string) {
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     try {
         await prisma.postScheduleQueue.delete({
             where: { productId: BigInt(productId) }
@@ -179,18 +133,6 @@ postScheduleQueueService.removeScheduledItemFromQueue = async function removeSch
 }
 
 postScheduleQueueService.getScheduledItem = async function (productId: string) {
-
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     const scheduledItem = await prisma.postScheduleQueue.findFirstOrThrow({
         where: {
             productId: BigInt(productId),
@@ -208,18 +150,6 @@ postScheduleQueueService.getScheduledItem = async function (productId: string) {
 }
 
 postScheduleQueueService.getAllScheduledItems = async () => {
-
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     return await prisma.postScheduleQueue.findMany()
 }
 
@@ -228,29 +158,7 @@ export default postScheduleQueueService
 
 export namespace scheduledQueueService {
 
-    let prisma: PrismaClient;
-
-    if (process.env.NODE_ENV === 'production') {
-        prisma = new PrismaClient();
-    } else {
-        if (!global.prisma) {
-            global.prisma = new PrismaClient();
-        }
-        prisma = global.prisma;
-    }
-
     export const getAllScheduledItems = async (sessionId: string) => {
-
-        let prisma: PrismaClient;
-
-        if (process.env.NODE_ENV === 'production') {
-            prisma = new PrismaClient();
-        } else {
-            if (!global.prisma) {
-                global.prisma = new PrismaClient();
-            }
-            prisma = global.prisma;
-        }
 
         if (prisma === undefined) {
             throw new Error()
@@ -299,17 +207,6 @@ export class ScheduledQueueService {
 
     public async addToPostScheduleQueue(productId: string, dateScheduled: string, productTitle: string, postImgUrl: string[], postDescription: string, sessionId: string, scheduleStatus: PostStatus) {
 
-        let prisma: PrismaClient;
-
-        if (process.env.NODE_ENV === 'production') {
-            prisma = new PrismaClient();
-        } else {
-            if (!global.prisma) {
-                global.prisma = new PrismaClient();
-            }
-            prisma = global.prisma;
-        }
-
         let postImgUrlStr = postImgUrl.join(";")
 
         let postStatus
@@ -357,18 +254,6 @@ export class ScheduledQueueService {
     }
 
     public async getAllScheduledItems(sessionId: string) {
-
-        let prisma: PrismaClient;
-
-        if (process.env.NODE_ENV === 'production') {
-            prisma = new PrismaClient();
-        } else {
-            if (!global.prisma) {
-                global.prisma = new PrismaClient();
-            }
-            prisma = global.prisma;
-        }
-
         const scheduluedItems = await prisma.session.findUniqueOrThrow({
             where: {
                 id: sessionId
@@ -390,18 +275,6 @@ export class ScheduledQueueService {
     }
 
     public async getScheduledItem(productId: string) {
-
-        let prisma: PrismaClient;
-
-        if (process.env.NODE_ENV === 'production') {
-            prisma = new PrismaClient();
-        } else {
-            if (!global.prisma) {
-                global.prisma = new PrismaClient();
-            }
-            prisma = global.prisma;
-        }
-
         const scheduledItem = await prisma.postScheduleQueue.findFirstOrThrow({
             where: {
                 productId: BigInt(productId),
