@@ -6,6 +6,7 @@ const amqp = require('amqplib');
 var Agenda = require('agenda');
 var Agendash = require('agendash');
 require('dotenv').config();
+const path = require('path'); // Importiere das path-Modul
 
 let app = express();
 
