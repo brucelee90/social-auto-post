@@ -3,6 +3,7 @@ import * as yup from 'yup'
 import { object, string, AnyObjectSchema } from 'yup';
 import { JsonValue } from "@prisma/client/runtime/library";
 import { InstagramPostDetails } from "~/routes/global_utils/types";
+import { PrismaClient } from "@prisma/client";
 
 
 
@@ -159,6 +160,8 @@ export default postScheduleQueueService
 export namespace scheduledQueueService {
 
     export const getAllScheduledItems = async (sessionId: string) => {
+
+        let prisma = new PrismaClient();
 
         if (prisma === undefined) {
             throw new Error()
