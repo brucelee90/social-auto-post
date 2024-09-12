@@ -170,8 +170,16 @@ function Dashboard() {
     } = useLoaderData<typeof loader>();
 
     let allScheduledItemsArr = [{}] as PostScheduleQueue[];
-    if (allScheduledItems != undefined) {
-        allScheduledItemsArr = JSON.parse(JSON.stringify(allScheduledItems)) as PostScheduleQueue[];
+    if (allScheduledItems !== undefined && allScheduledItems !== null) {
+        try {
+            allScheduledItemsArr = JSON.parse(
+                JSON.stringify(allScheduledItems)
+            ) as PostScheduleQueue[];
+        } catch (error) {
+            console.error('Error parsing allScheduledItems:', error);
+        }
+    } else {
+        console.warn('allScheduledItems is undefined or null');
     }
 
     const isUserFbAccountConnected = fbAccessToken !== '' && fbAccessToken !== null ? true : false;
@@ -241,33 +249,47 @@ function Dashboard() {
         return data.data;
     };
 
-    let scheduledPosts = allScheduledItemsArr?.map((scheduledItem: PostScheduleQueue, key) => {
-        let scheduledItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
-            JSON.stringify(scheduledItem.postDetails)
-        );
-        let scheduleDate = moment(scheduledItem.dateScheduled).format(
-            'dddd, YYYY-MM-DD [at] hh:mma'
-        );
+    interface ScheduledPost {
+        id: string;
+        imgUrl: string;
+        description: string;
+        scheduleDate: string;
+        postStatus: JSX.Element;
+    }
 
-        let BadgeMarkup =
-            scheduledItem.scheduleStatus === 'draft' ? (
-                <Badge progress="incomplete" tone="attention">
-                    {scheduledItem.scheduleStatus.toUpperCase()}
-                </Badge>
-            ) : (
-                <Badge progress="partiallyComplete" tone="warning-strong">
-                    {scheduledItem.scheduleStatus.toUpperCase()}
-                </Badge>
+    let scheduledPosts = [] as ScheduledPost[];
+
+    if (Array.isArray(allScheduledItemsArr) && allScheduledItemsArr.length > 0) {
+        scheduledPosts = allScheduledItemsArr.map((scheduledItem: PostScheduleQueue, key) => {
+            let scheduledItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+                JSON.stringify(scheduledItem.postDetails)
+            );
+            let scheduleDate = moment(scheduledItem.dateScheduled).format(
+                'dddd, YYYY-MM-DD [at] hh:mma'
             );
 
-        return {
-            id: key.toString(),
-            imgUrl: scheduledItemPostDetailsJSON.postImgUrl,
-            description: scheduledItemPostDetailsJSON.postDescription,
-            scheduleDate: scheduleDate,
-            postStatus: BadgeMarkup
-        };
-    });
+            let BadgeMarkup =
+                scheduledItem.scheduleStatus === 'draft' ? (
+                    <Badge progress="incomplete" tone="attention">
+                        {scheduledItem.scheduleStatus.toUpperCase()}
+                    </Badge>
+                ) : (
+                    <Badge progress="partiallyComplete" tone="warning-strong">
+                        {scheduledItem.scheduleStatus.toUpperCase()}
+                    </Badge>
+                );
+
+            return {
+                id: key.toString(),
+                imgUrl: scheduledItemPostDetailsJSON.postImgUrl,
+                description: scheduledItemPostDetailsJSON.postDescription,
+                scheduleDate: scheduleDate,
+                postStatus: BadgeMarkup
+            };
+        });
+    } else {
+        console.warn('allScheduledItemsArr is undefined or empty');
+    }
 
     let finishedPosts = allFinishedJobs.map(
         (
