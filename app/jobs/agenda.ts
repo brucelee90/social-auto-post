@@ -1,6 +1,8 @@
 // import moment from "moment";
 // import postScheduleQueueService from "~/services/postScheduleQueueService.server";
 import { Agenda, Job } from "@hokify/agenda";
+import { config } from 'config';
+
 
 // const scheduler = require('node-schedule');
 // const env = process.env.NODE_ENV || "development";
@@ -9,8 +11,7 @@ import { Agenda, Job } from "@hokify/agenda";
 
 // establised a connection to our mongoDB database.
 const agenda = new Agenda({
-    db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" }, processEvery: "1 minute",
-    maxConcurrency: 20,
+    db: { address: config.mongoDbConnectionUrl, collection: config.agendaCollection }
 });
 
 // listen for the ready or error event.

@@ -5,6 +5,8 @@ import { Agenda, Job } from "@hokify/agenda";
 import { PostScheduleQueue } from "@prisma/client";
 import { InstagramPostDetails } from "~/routes/global_utils/types";
 import { json } from "@remix-run/react";
+import { config } from 'config';
+
 
 const scheduler = require('node-schedule');
 
@@ -19,7 +21,7 @@ interface JobService {
 }
 
 const agenda = new Agenda({
-    db: { address: process.env.MONGO_DB_CONNECTION_URL as string, collection: "agendaJobs" }
+    db: { address: config.mongoDbConnectionUrl, collection: config.agendaCollection }
 });
 
 const jobService = {
