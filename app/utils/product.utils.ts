@@ -1,6 +1,7 @@
 import { createAdminApiClient } from "@shopify/admin-api-client";
 import { IShopifyProduct } from "~/routes/global_utils/types";
 import { queries } from "./queries";
+import prisma from "~/db.server";
 
 const apiVersion = "2024-01"
 

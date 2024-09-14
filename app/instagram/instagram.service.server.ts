@@ -17,6 +17,8 @@ const instagramApiService = {} as InstagramApiService
 
 instagramApiService.publishMedia = async function (featuredImageUrlArray: string[], caption: string, productId: string, sessionId: string) {
 
+
+
     let accessToken = ""
     let pageId = ""
 

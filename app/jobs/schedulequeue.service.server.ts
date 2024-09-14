@@ -4,6 +4,7 @@ import { object, string, AnyObjectSchema } from 'yup';
 import { JsonValue } from "@prisma/client/runtime/library";
 import { InstagramPostDetails } from "~/routes/global_utils/types";
 import { PrismaClient } from "@prisma/client";
+import prisma from "~/db.server";
 
 
 
