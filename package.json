@@ -17,7 +17,7 @@
     "deploy": "shopify app deploy",
     "config:use": "shopify app config use",
     "env": "shopify app env",
-    "start": "remix-serve build/index.js",
+    "start": "concurrently \"remix-serve build/index.js\" \"ts-node server.ts\"",
     "start_backup": "remix-serve build/index.js",
     "docker-start": "npm run setup && npm run start",
     "setup": "prisma generate && prisma migrate deploy",

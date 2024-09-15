@@ -34,7 +34,7 @@ const scheduleJob = (jobId: string, sessionId: string) => {
     // THIS NEEDS REFACTORING !!!
     // THERE SHOULD BE POST REQUEST, MAKING IT POSSIBLE TO SEND A DESCRIPTION AS WELL
     request(
-        `http://localhost:3000/api/v1/job?job_action=schedule_job?job_id=${jobId}&shop_name=${sessionId}`,
+        `http://${host}:${port}/api/v1/job?job_action=schedule_job?job_id=${jobId}&shop_name=${sessionId}`,
         function (response: { statusCode: string }) {
             console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
         }
@@ -43,7 +43,7 @@ const scheduleJob = (jobId: string, sessionId: string) => {
 
 const cancelJob = (jobId: string) => {
     request(
-        `http://localhost:3000/api/v1/job?job_action=cancel_job&job_id=${jobId}`,
+        `http://${host}:${port}/api/v1/job?job_action=cancel_job&job_id=${jobId}`,
         function (response: { statusCode: string }) {
             console.log('statusCode:', response && response.statusCode, 'HIT CANCEL ROUTE'); // Print the response status code if a response was received
         }
@@ -54,7 +54,7 @@ app.listen(port, () => {
     console.log(`Express server started on http://${host}:${port}`);
 
     request(
-        `http://localhost:3000/api/v1/job?job_action=start_job_service`,
+        `http://${host}:${port}/api/v1/job?job_action=start_job_service`,
         function (response: { statusCode: string }) {
             console.log('statusCode:', response && response.statusCode, 'agenda service started'); // Print the response status code if a response was received
         }
