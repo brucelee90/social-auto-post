@@ -226,7 +226,11 @@ export class ScheduledQueueService {
             postImgUrl: postImgUrlStr,
         }
 
-        await this.validationSchema.validate(postDetails)
+        try {
+            await this.validationSchema.validate(postDetails)
+        } catch (error) {
+            console.log("Post Details JSON is not validated", postDetails);
+        }
 
         return await prisma.postScheduleQueue.upsert({
             where: { productId: BigInt(productId) },
@@ -286,11 +290,11 @@ export class ScheduledQueueService {
             }
         })
 
-        try {
-            this.validationSchema.validate(scheduledItem.postDetails)
-        } catch (error) {
-            console.log("Post Details JSON is not validated", scheduledItem.postDetails);
-        }
+
+        this.validationSchema.validate(scheduledItem.postDetails)
+        // } catch (error) {
+        // console.log("Post Details JSON is not validated", scheduledItem.postDetails);
+        // }
 
         return scheduledItem
     }

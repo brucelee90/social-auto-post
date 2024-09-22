@@ -11,6 +11,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     let sessionId = url.searchParams.get('session_id') as string;
     let responseMessage: string;
 
+    console.log('jobAction:', jobAction);
+
     try {
         switch (jobAction) {
             case JobAction.start:
@@ -35,9 +37,12 @@ export const loader: LoaderFunction = async ({ request }) => {
                 break;
 
             case JobAction.schedule:
+                console.log('jobId:', jobId, 'shopName:', shopName);
+
                 if (jobId) {
                     jobService.scheduleJob(jobId, shopName);
                 } else {
+                    responseMessage = 'JOB NOT SCHEDULED';
                     throw new Error('No job ID provided');
                 }
 

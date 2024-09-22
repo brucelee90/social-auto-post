@@ -110,6 +110,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const scheduleJob = formData.get(JobAction.schedule) as string;
     const saveAsDraft = formData.get(JobAction.draft) as string;
 
+    console.log('cancelJob:', cancelJob);
+
     const scheduledPostDateTime = moment(
         `${scheduledDate} ${scheduledTime}`,
         'YYYY-MM-DD HH:mm'
@@ -132,6 +134,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                 'instagram'
             );
         } else if (cancelJob) {
+            console.log('calling cancelJob');
+
             return scheduleUtils.cancelJobFunc(productId);
         }
     } catch (error) {

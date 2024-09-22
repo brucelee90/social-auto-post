@@ -7,9 +7,9 @@
   "scripts": {
     "build": "prisma generate && tsc && remix build",
     "build_old": "prisma generate && tsc && remix build",
-    "postinstall": "prisma migrate deploy && prisma generate",
+    "postinstall": "prisma migrate deploy --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma",
     "predev": "prisma generate && prisma migrate deploy",
-    "dev:x": "concurrently \"npm:dev\" \"npm:dev:remix\"",
+    "dev:x": "concurrently \"npm:dev\" \"npm:dev:express\"",
     "dev": "shopify app dev",
     "dev:express": "remix dev --manual -c \"ts-node server.ts\"",
     "config:link": "shopify app config link",

@@ -1,20 +1,30 @@
-FROM node:18-alpine
+# Verwende einen Node-basierten Basis-Image
+FROM node:20-alpine
 
-EXPOSE 3000
-
+# Arbeitsverzeichnis setzen
 WORKDIR /app
+
+# Kopiere die package.json und die package-lock.json (falls vorhanden)
+COPY package*.json ./
+
+# Kopiere Prisma-Dateien
+COPY prisma ./prisma
+
+COPY .env .env
+
+RUN ls -la ./prisma
+
+# Installiere die Abhängigkeiten
+RUN npm install
+
+# Kopiere den Rest der Anwendung
 COPY . .
 
-ENV NODE_ENV=production
-
-RUN npm install --omit=dev
-# Remove CLI packages since we don't need them in production by default.
-# Remove this line if you want to run CLI commands in your container.
-RUN npm remove @shopify/app @shopify/cli
-RUN npx prisma migrate deploy
+# Build den Remix App
 RUN npm run build
 
-# You'll probably want to remove this in production, it's here to make it easier to test things!
-# RUN rm -f prisma/dev.sqlite
+# Setze den Port für die App
+EXPOSE 3000
 
-CMD ["npm", "run", "docker-start"]
+# Definiere den Startbefehl
+CMD ["npm", "run", "start"]

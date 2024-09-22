@@ -27,7 +27,7 @@ app.all(
 );
 
 let host = process.env.HOST || 'localhost';
-let port = process.env.PORT || 3000;
+let port = process.env.EXPRESS_PORT || 4000;
 
 const scheduleJob = (jobId, sessionId) => {
     // THIS NEEDS REFACTORING !!!

@@ -1,0 +1,30 @@
+# version: '3.8'
+
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NODE_ENV=production
+#       - PORT=3000
+#       - DATABASE_URL=${DATABASE_URL}
+#       - AMQPS_CONNECTION_URL=${AMQPS_CONNECTION_URL}
+#       - AMQPS_QUEUE=${AMQPS_QUEUE}
+#     command: ["npm", "run", "docker-start"]
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"  # Mappt den Host-Port 8080 auf den Container-Port 5000 für Remix
+      - "4000:4000"  # Mappt den Host-Port 8081 auf den Container-Port 4000 für Express
+    environment:
+      - NODE_ENV=production
+      - PORT=4000  # Setzen Sie den PORT auf 5000 für die Remix-App
+      - EXPRESS_PORT=3000  # Setzen Sie den PORT auf 4000 für den Express-Server
+      - DATABASE_URL=${DB_URL}
+      - AMQPS_CONNECTION_URL=${AMQPS_CONNECTION_URL}
+      - AMQPS_QUEUE=${AMQPS_QUEUE}
+    command: ["npm", "run", "start"]

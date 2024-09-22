@@ -50,8 +50,8 @@ export function PostTable(props: Props) {
         }
     ];
     const resourceName = {
-        singular: 'order',
-        plural: 'orders'
+        singular: 'scheduled post',
+        plural: 'scheduled posts'
     };
 
     const rowMarkup = posts.map(({ id, description, scheduleDate, postStatus, imgUrl }, index) => (

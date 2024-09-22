@@ -156,31 +156,32 @@ const jobService = {
 
     scheduleJob: async (jobId: string, shopName: string) => {
 
+        try {
+            let scheduleItem: PostScheduleQueue
+            scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
 
-        let scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
-
-        let scheduleItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
-            JSON.stringify(
-                scheduleItem.postDetails
+            let scheduleItemPostDetailsJSON: InstagramPostDetails = JSON.parse(
+                JSON.stringify(
+                    scheduleItem.postDetails
+                )
             )
-        )
 
-        agenda.define(
-            `${jobId}`,
-            async (job, done) => {
+            agenda.define(
+                `${jobId}`,
+                async (job, done) => {
+                    publishMedia(scheduleItemPostDetailsJSON.postImgUrl, scheduleItemPostDetailsJSON.postDescription, jobId, shopName)
+                    postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
+                    console.log('Posted media at.', scheduleItem.dateScheduled);
+                    done()
+                });
 
-
-
-                publishMedia(scheduleItemPostDetailsJSON.postImgUrl, scheduleItemPostDetailsJSON.postDescription, jobId, shopName)
-                postScheduleQueueService.removeScheduledItemFromQueue(scheduleItem.productId.toString())
-                console.log('Posted media at.', scheduleItem.dateScheduled);
-                done()
-            });
-
-        (async function () {
-            await agenda.start();
-            await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItemPostDetailsJSON.postImgUrl}`, postDescription: `${scheduleItemPostDetailsJSON.postDescription}`, postTitle: `${scheduleItemPostDetailsJSON.postTitle}`, shop: shopName });
-        })();
+            (async function () {
+                await agenda.start();
+                await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItemPostDetailsJSON.postImgUrl}`, postDescription: `${scheduleItemPostDetailsJSON.postDescription}`, postTitle: `${scheduleItemPostDetailsJSON.postTitle}`, shop: shopName });
+            })();
+        } catch (error) {
+            console.log('Error while getting scheduled item:', error);
+        }
     }
 }
 

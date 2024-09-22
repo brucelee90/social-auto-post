@@ -1,3 +1,6 @@
+import { string } from "yup";
+import { action } from "~/routes/api.v1.job/route";
+
 const express = require('express');
 const morgan = require('morgan');
 const { createRequestHandler } = require('@remix-run/express');
@@ -8,6 +11,9 @@ var Agendash = require('agendash');
 require('dotenv').config();
 
 let app = express();
+
+let host = process.env.HOST || 'localhost';
+let port = process.env.EXPRESS_PORT || 4000;
 
 app.use(express.static('./build'));
 
@@ -25,20 +31,17 @@ app.all(
     })
 );
 
-let host = process.env.HOST || 'localhost';
-let port = process.env.PORT || 3000;
-
-
-
 const scheduleJob = (jobId: string, sessionId: string) => {
     // THIS NEEDS REFACTORING !!!
     // THERE SHOULD BE POST REQUEST, MAKING IT POSSIBLE TO SEND A DESCRIPTION AS WELL
-    request(
-        `http://${host}:${port}/api/v1/job?job_action=schedule_job?job_id=${jobId}&shop_name=${sessionId}`,
-        function (response: { statusCode: string }) {
-            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-        }
-    );
+    setTimeout(() => {
+        request(
+            `http://${host}:${port}/api/v1/job?job_action=schedule_job&job_id=${jobId}&shop_name=${sessionId}`,
+            function (response: { statusCode: string }) {
+                console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+            }
+        );
+    }, 5500)
 };
 
 const cancelJob = (jobId: string) => {
@@ -77,7 +80,7 @@ app.listen(port, () => {
                     let messageContent = message.content.toString();
                     console.log(" [x] Received '%s'", message.content.toString());
 
-                    let messageJSON;
+                    let messageJSON: { action: string, productId: string, sessionId: string };
 
                     try {
                         messageJSON = JSON.parse(message.content.toString());
@@ -86,7 +89,11 @@ app.listen(port, () => {
                         if (messageJSON.action === 'cancel') {
                             cancelJob(messageJSON.productId);
                         } else if (messageJSON.action === 'schedule') {
-                            scheduleJob(messageJSON.productId, messageJSON.sessionId);
+
+                            setTimeout(() => {
+                                scheduleJob(messageJSON.productId, messageJSON.sessionId);
+                            }, 5500)
+
                         }
                     } catch (error) {
                         console.log('ERROR while parsing message content');
