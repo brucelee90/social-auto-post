@@ -73,6 +73,7 @@ app.listen(port, () => {
                 await connection.close();
             });
 
+
             await channel.assertQueue(process.env.AMQPS_QUEUE, { durable: false });
             await channel.consume(
                 process.env.AMQPS_QUEUE,
