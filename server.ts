@@ -8,6 +8,7 @@ const request = require('request');
 const amqp = require('amqplib');
 var Agenda = require('agenda');
 var Agendash = require('agendash');
+
 require('dotenv').config();
 
 let app = express();
@@ -93,7 +94,7 @@ app.listen(port, () => {
 
                             setTimeout(() => {
                                 scheduleJob(messageJSON.productId, messageJSON.sessionId);
-                            }, 5500)
+                            }, 2500)
 
                         }
                         channel.ack(message);

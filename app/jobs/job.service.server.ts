@@ -28,6 +28,13 @@ const jobService = {
 
     start: async () => {
         agenda.on("ready", async () => {
+
+            await agenda.start().then(() => {
+                console.log('Agenda started');
+            }).catch((error: any) => {
+                console.error('Error starting Agenda:', error);
+            });
+
             // @ts-ignore
             // a queued job will stay queued forever by agenda js if it didn't run. If the server is stopped during the time a job should have run.
             let allQueuedJobs = await agenda.jobs({ lastRunAt: { $in: [null, false] } })
