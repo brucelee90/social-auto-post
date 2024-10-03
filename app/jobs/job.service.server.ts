@@ -157,8 +157,6 @@ const jobService = {
 
     scheduleJob: async (jobId: string, shopName: string) => {
 
-        console.log("scheduleJob Route HIT!!");
-
         try {
             let scheduleItem: PostScheduleQueue
             scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
@@ -168,9 +166,6 @@ const jobService = {
                     scheduleItem.postDetails
                 )
             )
-
-            console.log("scheduleJob HIT!!");
-
 
             agenda.define(
                 `${jobId}`,
@@ -184,10 +179,8 @@ const jobService = {
             (async function () {
                 // await agenda.start();
                 await agenda.start().then(() => {
-                    console.log('Agenda started', agenda.jobs({}), scheduleItem.dateScheduled);
-                }).catch((error: any) => {
-                    console.error('Error starting Agenda:', error);
-                });
+                    console.log('Agenda started');
+                })
 
                 await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItemPostDetailsJSON.postImgUrl}`, postDescription: `${scheduleItemPostDetailsJSON.postDescription}`, postTitle: `${scheduleItemPostDetailsJSON.postTitle}`, shop: shopName });
             })();

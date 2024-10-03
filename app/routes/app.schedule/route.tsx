@@ -1,7 +1,17 @@
 import { ActionFunctionArgs } from '@remix-run/node';
 import { json, useActionData, useFetcher, useLoaderData } from '@remix-run/react';
 import { LoaderFunctionArgs } from '@remix-run/server-runtime';
-import { Badge, BlockStack, Box, Card, Layout, Page, Select, Text } from '@shopify/polaris';
+import {
+    Badge,
+    BlockStack,
+    Box,
+    Card,
+    Layout,
+    Page,
+    Select,
+    Spinner,
+    Text
+} from '@shopify/polaris';
 import moment from 'moment';
 import { ScheduledQueueService } from '~/jobs/schedulequeue.service.server';
 import { authenticate } from '~/shopify.server';
@@ -109,8 +119,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const cancelJob = formData.get(JobAction.cancel) as string;
     const scheduleJob = formData.get(JobAction.schedule) as string;
     const saveAsDraft = formData.get(JobAction.draft) as string;
-
-    console.log('cancelJob:', cancelJob);
 
     const scheduledPostDateTime = moment(
         `${scheduledDate} ${scheduledTime}`,
@@ -269,14 +277,13 @@ export default function Schedule() {
                             let scheduledDate = moment(
                                 currentScheduledItem.dateScheduled
                             ).toISOString();
+
                             let scheduleStatus = currentScheduledItem.scheduleStatus;
 
                             scheduledItemDesc = scheduledItemPostDetails.postDescription;
                             let isDraft =
                                 currentScheduledItem.scheduleStatus === PostStatus.draft &&
                                 currentScheduledItem.productId > 0;
-
-                            console.log('test e', e);
 
                             return (
                                 <Card key={key} padding={'800'}>
@@ -301,14 +308,12 @@ export default function Schedule() {
                                                 images={images}
                                                 scheduledItemImgUrls={scheduledItemImgUrls}
                                             />
-
                                             <TextArea
                                                 placeholders={customPlaceholder}
                                                 scheduledItemDesc={scheduledItemDesc}
                                                 product={e}
                                                 defaultCaption={defaultCaptionContent}
                                             />
-
                                             {isEligibleForScheduling ? (
                                                 <PostBtn
                                                     productId={productId}
@@ -324,6 +329,19 @@ export default function Schedule() {
                                                 </div>
                                             )}
 
+                                            {fetcher?.state === 'loading' && (
+                                                <Spinner
+                                                    accessibilityLabel="Spinner example"
+                                                    size="small"
+                                                />
+                                            )}
+
+                                            <Text as="p" tone="success">
+                                                {scheduledDate !== new Date(0).toISOString()
+                                                    ? `Scheduled Date: ${moment(scheduledDate).format('MMMM Do YYYY, h:mm: a')}`
+                                                    : ''}
+                                            </Text>
+
                                             {(fetcher?.data as ActionMessage)?.productId ===
                                                 productId && (
                                                 <Text
@@ -336,7 +354,6 @@ export default function Schedule() {
                                                     ) : (
                                                         ''
                                                     )}
-                                                    {(fetcher?.data as ActionMessage).message}
                                                 </Text>
                                             )}
                                         </BlockStack>
