@@ -17,7 +17,7 @@ messageBrokerService.addItemToQueue = async function (messageText: string) {
         connection = await amqp.connect(CONNECTION_URL);
         const channel = await connection.createChannel();
 
-        await channel.assertQueue(QUEUE, { durable: false });
+        await channel.assertQueue(QUEUE, { durable: true });
 
 
         // NB: `sentToQueue` and `publish` both return a boolean

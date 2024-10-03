@@ -74,7 +74,7 @@ app.listen(port, () => {
             });
 
 
-            await channel.assertQueue(process.env.AMQPS_QUEUE, { durable: false });
+            await channel.assertQueue(process.env.AMQPS_QUEUE, { durable: true });
             await channel.consume(
                 process.env.AMQPS_QUEUE,
                 (message: { content: string }) => {
@@ -96,11 +96,13 @@ app.listen(port, () => {
                             }, 5500)
 
                         }
+                        channel.ack(message);
+
                     } catch (error) {
                         console.log('ERROR while parsing message content');
                     }
                 },
-                { noAck: true }
+                { noAck: false }
             );
 
             console.log(' [*] Waiting for messages. To exit press CTRL+C');
