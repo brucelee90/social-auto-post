@@ -29,12 +29,6 @@ const jobService = {
     start: async () => {
         agenda.on("ready", async () => {
 
-            await agenda.start().then(() => {
-                console.log('Agenda started');
-            }).catch((error: any) => {
-                console.error('Error starting Agenda:', error);
-            });
-
             // @ts-ignore
             // a queued job will stay queued forever by agenda js if it didn't run. If the server is stopped during the time a job should have run.
             let allQueuedJobs = await agenda.jobs({ lastRunAt: { $in: [null, false] } })
@@ -188,7 +182,13 @@ const jobService = {
                 });
 
             (async function () {
-                await agenda.start();
+                // await agenda.start();
+                await agenda.start().then(() => {
+                    console.log('Agenda started', agenda.jobs({}), scheduleItem.dateScheduled);
+                }).catch((error: any) => {
+                    console.error('Error starting Agenda:', error);
+                });
+
                 await agenda.schedule(scheduleItem.dateScheduled, `${scheduleItem.productId}`, { imgUrl: `${scheduleItemPostDetailsJSON.postImgUrl}`, postDescription: `${scheduleItemPostDetailsJSON.postDescription}`, postTitle: `${scheduleItemPostDetailsJSON.postTitle}`, shop: shopName });
             })();
         } catch (error) {
