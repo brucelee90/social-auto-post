@@ -11,7 +11,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     let sessionId = url.searchParams.get('session_id') as string;
     let responseMessage: string;
 
-    console.log('jobAction:', jobAction);
+    console.log('api.v1.job Route: jobAction:', jobAction);
 
     try {
         switch (jobAction) {

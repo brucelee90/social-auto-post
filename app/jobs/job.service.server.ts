@@ -156,6 +156,8 @@ const jobService = {
 
     scheduleJob: async (jobId: string, shopName: string) => {
 
+        console.log("scheduleJob Route HIT!!");
+
         try {
             let scheduleItem: PostScheduleQueue
             scheduleItem = await new ScheduledQueueService("instagram").getScheduledItem(jobId)
@@ -165,6 +167,9 @@ const jobService = {
                     scheduleItem.postDetails
                 )
             )
+
+            console.log("scheduleJob HIT!!");
+
 
             agenda.define(
                 `${jobId}`,
